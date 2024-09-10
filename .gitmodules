@@ -1,6 +1,0 @@
-[submodule "ScriptsOfTribute-GUI"]
-	path = ScriptsOfTribute-GUI
-	url = git@github.com-aau:ScriptsOfTribute/ScriptsOfTribute-GUI.git
-[submodule "ScriptsOfTribute-Core"]
-	path = ScriptsOfTribute-Core
-	url = git@github.com-aau:ScriptsOfTribute/ScriptsOfTribute-Core.git
