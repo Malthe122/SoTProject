@@ -4,10 +4,61 @@ using Bots;
 using ScriptsOfTribute;
 using ScriptsOfTribute.AI;
 using ScriptsOfTribute.Board;
+using ScriptsOfTribute.Board.Cards;
 using ScriptsOfTribute.Serializers;
+
 
 public class Aau903Bot : AI
 {
+public static readonly List<CardId> OBVIOUS_ACTION_PLAYS = new List<CardId>(){
+    CardId.LUXURY_EXPORTS,
+    CardId.GOODS_SHIPMENT,
+    CardId.MIDNIGHT_RAID,
+    CardId.WAR_SONG,
+    CardId.PLUNDER,
+    CardId.TOLL_OF_FLESH,
+    CardId.TOLL_OF_SILVER,
+    CardId.MURDER_OF_CROWS,
+    CardId.PILFER,
+    CardId.SQUAWKING_ORATORY,
+    CardId.LAW_OF_SOVEREIGN_ROOST,
+    CardId.POOL_OF_SHADOW,
+    CardId.SCRATCH,
+    CardId.PECK,
+    CardId.MAINLAND_INQUIRIES,
+    CardId.RALLY,
+    CardId.SIEGE_WEAPON_VOLLEY,
+    CardId.THE_ARMORY,
+    CardId.REINFORCEMENTS,
+    CardId.ARCHERS_VOLLEY,
+    CardId.LEGIONS_ARRIVAL,
+    CardId.THE_PORTCULLIS,
+    CardId.FORTIFY,
+    CardId.BEWILDERMENT,
+    CardId.SWIPE,
+    CardId.GHOSTSCALE_SEA_SERPENT,
+    CardId.MAORMER_BOARDING_PARTY,
+    CardId.PYANDONEAN_WAR_FLEET,
+    CardId.SEA_ELF_RAID,
+    CardId.SEA_SERPENT_COLOSSUS,
+    CardId.SERPENTPROW_SCHOONER,
+    CardId.SUMMERSET_SACKING,
+    CardId.GOLD,
+    CardId.WRIT_OF_COIN
+};
+
+public static readonly List<CardId> OBVIOUS_AGENT_EFFECTS = new List<CardId>(){
+    CardId.BLACKFEATHER_KNAVE,
+    CardId.BLACKFEATHER_BRIGAND,
+    CardId.BANNERET,
+    CardId.KNIGHT_COMMANDER,
+    CardId.SHIELD_BEARER,
+    CardId.BANGKORAI_SENTRIES,
+    CardId.KNIGHTS_OF_SAINT_PELIN,
+    CardId.JEERING_SHADOW,
+    CardId.PROWLING_SHADOW,
+    CardId.STUBBORN_SHADOW,
+};
     public override void GameEnd(EndGameState state, FullGameState? finalBoardState)
     {
         throw new NotImplementedException();
@@ -129,7 +180,7 @@ public class Aau903Bot : AI
 
 
             if (VisitCount == 0){
-                AvailableMoves = ApplyAllDeterministicAndObviousMoves(GameState); //TODO maybe move this call to constructor
+                ApplyAllDeterministicAndObviousMoves(); //TODO maybe move this call to constructor
                 score = Rollout();
             }
             else if(AvailableMoves.Count > AvailableMoves.Count()){
@@ -178,11 +229,28 @@ public class Aau903Bot : AI
             return TotalScore - VisitCount;
         }
 
-        private List<Move> ApplyAllDeterministicAndObviousMoves(GameState gameState)
+        private void ApplyAllDeterministicAndObviousMoves()
         {
-            //TODO implement this to play all cards that only has positive effects and that does not include any choices.
-            // This will be cards like gold or power gathering cards
-            // Then update the gamestate to the gamestate after applying these and return the new list of available moves
+            foreach(Move currMove in AvailableMoves) {
+                if(currMove.Command == CommandEnum.PLAY_CARD) {
+                    if (OBVIOUS_ACTION_PLAYS.Contains(((SimpleCardMove)currMove).Card.CommonId)){
+                        // TODO do not generate a new random here. We should use a global one
+                        // TODO maybe we need to substitute our gamestate for seeded game state
+                        // TODO consider if some of the choice cards are also obvious moves, since the choice will be a new move
+                        // or how to handle this issue
+                        (GameState, AvailableMoves) = GameState.ApplyMove(currMove,  (ulong)(new Random().Next()));
+                        ApplyAllDeterministicAndObviousMoves();
+                        break;
+                    }
+                }
+                else if(currMove.Command == CommandEnum.ACTIVATE_AGENT) {
+                    if (OBVIOUS_AGENT_EFFECTS.Contains(((SimpleCardMove)currMove).Card.CommonId){
+                        (GameState, AvailableMoves) = GameState.ApplyMove(currMove,  (ulong)(new Random().Next()));
+                        ApplyAllDeterministicAndObviousMoves();
+                        break;
+                    }
+                }
+            }
         }
     }
 
