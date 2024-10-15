@@ -20,7 +20,7 @@ public class Node{
             GameState = gameState;
             TotalScore = 0;
             VisitCount = 0;
-            GenerateGameStateHash();
+            GameStateHash = GameState.GenerateHash();
             AppliedMove = appliedMove;
             AvailableMoves = availableMoves;
             ChildNodes = new List<Node>();
@@ -28,12 +28,11 @@ public class Node{
 
         private void GenerateGameStateHash()
         {
-            // TODO We properly need to optimize this for performance
             GameStateHash = GameState.GenerateHash();
         }
 
-        public virtual Node Simulate(out double score){
-            score = 0; //TODO update this in simulation
+        public virtual Node? Simulate(out double score){
+            Node visitedChild = null;
 
 
             if (VisitCount == 0){
@@ -44,24 +43,24 @@ public class Node{
                 Move moveToExplore = null;
                 foreach(Move currMove in AvailableMoves){
                     if(!ChildNodes.Any(n => n.AppliedMove == currMove)) {
+                        //TODO insert here checks that if a move can lead to several different stages, we need to create a chance node
                         moveToExplore = currMove;
                         break;
                     }
                 }
-                // TODO do not generate a new random here. We should use a global one
-                (var newState, var newMoves) = GameState.ApplyMove(moveToExplore!, (ulong)(new Random().Next()));
+                (var newState, var newMoves) = GameState.ApplyMove(moveToExplore!, (ulong)Utility.Rng.Next());
                 // TODO check here if it is a chanceNode and in that case create one of those instead
-                var newChild = new Node(newState, moveToExplore, newMoves); //TODO this is where i reached. Might need to change all our gamestates to seeded game states
-                newChild.Simulate(out score);
+                visitedChild = new Node(newState, moveToExplore, newMoves);
+                visitedChild.Simulate(out score);
             }
             else{
-                var nodeToSimulate = GetHighestConfidenceChild();
-                nodeToSimulate.Simulate(out score);
+                visitedChild = GetHighestConfidenceChild();
+                visitedChild.Simulate(out score);
             }
 
             TotalScore += score;
             VisitCount++;
-            return null; // TODO simulate and return resulting node
+            return visitedChild;
         }
 
     private double Rollout()
@@ -88,26 +87,35 @@ public class Node{
 
         public double GetConfidenceScore()
         {
-            //TODO use an algorithm like UCB1 or UCT to decide this using visitcount and totalscore;¨
-            return TotalScore - VisitCount;
+            switch(Utility.CHOSEN_EVALUATION_FUNCTION){ //TODO i do it like this, so we can edit this and try to benchmark them against each other
+                case EvaluationFunction.UCB1:
+                    // TODO implement
+                    return 0;
+                case EvaluationFunction.UCT:
+                    // TODO implement
+                    return 0;
+                case EvaluationFunction.Custom:
+                    //TODO replace this with something meaningful or remove it
+                    return TotalScore - VisitCount;
+            }            
         }
 
         private void ApplyAllDeterministicAndObviousMoves()
         {
             foreach(Move currMove in AvailableMoves) {
                 if(currMove.Command == CommandEnum.PLAY_CARD) {
-                    if (OBVIOUS_ACTION_PLAYS.Contains(((SimpleCardMove)currMove).Card.CommonId)){
+                    if (Utility.OBVIOUS_ACTION_PLAYS.Contains(((SimpleCardMove)currMove).Card.CommonId)){
                         // TODO do not generate a new random here. We should use a global one
                         // TODO maybe we need to substitute our gamestate for seeded game state
                         // TODO consider if some of the choice cards are also obvious moves, since the choice will be a new move
                         // or how to handle this issue
-                        (GameState.ToSeededGameState(), AvailableMoves) = GameState.ApplyMove(currMove,  (ulong)(new Random().Next()));
+                        (GameState, AvailableMoves) = GameState.ApplyMove(currMove,  (ulong)(new Random().Next()));
                         ApplyAllDeterministicAndObviousMoves();
                         break;
                     }
                 }
                 else if(currMove.Command == CommandEnum.ACTIVATE_AGENT) {
-                    if (OBVIOUS_AGENT_EFFECTS.Contains(((SimpleCardMove)currMove).Card.CommonId){
+                    if (Utility.OBVIOUS_AGENT_EFFECTS.Contains(((SimpleCardMove)currMove).Card.CommonId){
                         (GameState, AvailableMoves) = GameState.ApplyMove(currMove,  (ulong)(new Random().Next()));
                         ApplyAllDeterministicAndObviousMoves();
                         break;

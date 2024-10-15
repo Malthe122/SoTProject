@@ -1,7 +1,12 @@
+using System.Linq.Expressions;
 using ScriptsOfTribute;
 using ScriptsOfTribute.Serializers;
 
 public static class Utility {
+
+    public const EvaluationFunction CHOSEN_EVALUATION_FUNCTION = EvaluationFunction.Custom;
+
+    public static Random Rng = new Random();
 
     public static readonly List<CardId> OBVIOUS_ACTION_PLAYS = new List<CardId>(){
     CardId.LUXURY_EXPORTS,
@@ -40,7 +45,7 @@ public static class Utility {
     CardId.WRIT_OF_COIN
 };
 
-public static readonly List<CardId> OBVIOUS_AGENT_EFFECTS = new List<CardId>(){
+    public static readonly List<CardId> OBVIOUS_AGENT_EFFECTS = new List<CardId>(){
     CardId.BLACKFEATHER_KNAVE,
     CardId.BLACKFEATHER_BRIGAND,
     CardId.BANNERET,
@@ -53,9 +58,9 @@ public static readonly List<CardId> OBVIOUS_AGENT_EFFECTS = new List<CardId>(){
     CardId.STUBBORN_SHADOW,
 };
 
-public static int GenerateHash(this SeededGameState seededGameState){
+    public static int GenerateHash(this SeededGameState seededGameState){
     //TODO implement
     throw new NotImplementedException();
-}
+    }
     
 }
