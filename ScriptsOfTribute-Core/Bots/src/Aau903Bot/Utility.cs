@@ -3,8 +3,15 @@ using ScriptsOfTribute;
 using ScriptsOfTribute.Serializers;
 
 public static class Utility {
-
+    // TODO probably move these to some MCTS setting static class or something as these are the ones we want to try to modify when benchmarking
     public const EvaluationFunction CHOSEN_EVALUATION_FUNCTION = EvaluationFunction.Custom;
+    public const int NUMBER_OF_ROLLOUTS = 10; //Set low for initial tests
+    /// <summary>
+    /// Tells in the rollout whether the agents plays all their possible moves before ending turn or if end turn is an allowed move in any part of their turn
+    /// Idea is that setting this to true will first of all be closer to a realistic simulation and also it should end the game quicker, making the simulation
+    /// faster than if agents were allowed to spend moves ending turns without really doing anything in the game
+    /// </summary>
+    public const bool FORCE_DELAY_TURN_END_IN_ROLLOUT = true;
 
     public static Random Rng = new Random();
 
@@ -57,6 +64,7 @@ public static class Utility {
     CardId.PROWLING_SHADOW,
     CardId.STUBBORN_SHADOW,
 };
+
 
     public static int GenerateHash(this SeededGameState seededGameState){
     //TODO implement

@@ -26,11 +26,6 @@ public class Node{
             ChildNodes = new List<Node>();
         }
 
-        private void GenerateGameStateHash()
-        {
-            GameStateHash = GameState.GenerateHash();
-        }
-
         public virtual Node? Simulate(out double score){
             Node visitedChild = null;
 
@@ -65,8 +60,31 @@ public class Node{
 
     private double Rollout()
     {
-        // TODO implement
-        throw new NotImplementedException();
+        double result = 0;
+        for(int i = 0; i <= Utility.NUMBER_OF_ROLLOUTS; i++){
+            SeededGameState rollOutGameState = GameState;
+            List<Move> rolloutAvailableMoves = new List<Move>(AvailableMoves);
+            while(rollOutGameState.GameEndState == null) {
+                // TODO also apply the playing obvious moves in here
+                // Choosing here to remove the "end turn" move before its the last move. This is done to make the random plays a bit more realistic
+                if (Utility.FORCE_DELAY_TURN_END_IN_ROLLOUT){
+                    if(rolloutAvailableMoves.Count > 1) {
+                        rolloutAvailableMoves.RemoveAll(move => move.Command == CommandEnum.END_TURN);
+                    }
+                }
+                Move moveToMake = rolloutAvailableMoves[Utility.Rng.Next(rolloutAvailableMoves.Count)];
+                (rollOutGameState, AvailableMoves) = rollOutGameState.ApplyMove(moveToMake, (ulong)Utility.Rng.Next());
+            }
+            if(rollOutGameState.GameEndState.Winner != PlayerEnum.NO_PLAYER_SELECTED) { //TODO here i assume that winner = NO_PLAYER_SELECTED is how they show a draw. Need to confirm this
+                if(rollOutGameState.GameEndState.Winner == GameState.CurrentPlayer.PlayerID){
+                    result += 1;
+                }
+                else{
+                    result -= 1;
+                }
+            }
+        }
+        return result;
     }
 
     private Node GetHighestConfidenceChild()
@@ -105,18 +123,16 @@ public class Node{
             foreach(Move currMove in AvailableMoves) {
                 if(currMove.Command == CommandEnum.PLAY_CARD) {
                     if (Utility.OBVIOUS_ACTION_PLAYS.Contains(((SimpleCardMove)currMove).Card.CommonId)){
-                        // TODO do not generate a new random here. We should use a global one
-                        // TODO maybe we need to substitute our gamestate for seeded game state
                         // TODO consider if some of the choice cards are also obvious moves, since the choice will be a new move
                         // or how to handle this issue
-                        (GameState, AvailableMoves) = GameState.ApplyMove(currMove,  (ulong)(new Random().Next()));
+                        (GameState, AvailableMoves) = GameState.ApplyMove(currMove,  (ulong)Utility.Rng.Next());
                         ApplyAllDeterministicAndObviousMoves();
                         break;
                     }
                 }
                 else if(currMove.Command == CommandEnum.ACTIVATE_AGENT) {
-                    if (Utility.OBVIOUS_AGENT_EFFECTS.Contains(((SimpleCardMove)currMove).Card.CommonId){
-                        (GameState, AvailableMoves) = GameState.ApplyMove(currMove,  (ulong)(new Random().Next()));
+                    if (Utility.OBVIOUS_AGENT_EFFECTS.Contains(((SimpleCardMove)currMove).Card.CommonId)){
+                        (GameState, AvailableMoves) = GameState.ApplyMove(currMove,  (ulong)Utility.Rng.Next());
                         ApplyAllDeterministicAndObviousMoves();
                         break;
                     }
