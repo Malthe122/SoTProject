@@ -66,13 +66,13 @@ public class Node{
     private double Rollout()
     {
         double result = 0;
-        for(int i = 0; i <= Utility.NUMBER_OF_ROLLOUTS; i++){
+        for(int i = 0; i <= MCTSSettings.NUMBER_OF_ROLLOUTS; i++){
             SeededGameState rollOutGameState = GameState;
             List<Move> rolloutAvailableMoves = new List<Move>(AvailableMoves);
             while(rollOutGameState.GameEndState == null) {
                 // TODO also apply the playing obvious moves in here
                 // Choosing here to remove the "end turn" move before its the last move. This is done to make the random plays a bit more realistic
-                if (Utility.FORCE_DELAY_TURN_END_IN_ROLLOUT){
+                if (MCTSSettings.FORCE_DELAY_TURN_END_IN_ROLLOUT){
                     if(rolloutAvailableMoves.Count > 1) {
                         rolloutAvailableMoves.RemoveAll(move => move.Command == CommandEnum.END_TURN);
                     }
@@ -118,10 +118,10 @@ public class Node{
 
         public double GetConfidenceScore()
         {
-            switch(Utility.CHOSEN_EVALUATION_FUNCTION){
+            switch(MCTSSettings.CHOSEN_EVALUATION_FUNCTION){
                 case EvaluationFunction.UCB1:
                     double exploitation = TotalScore / VisitCount;
-                    double exploration = Utility.UCB1_EXPLORATION_CONSTANT * Math.Sqrt(Math.Log(Parent.VisitCount) / VisitCount);
+                    double exploration = MCTSSettings.UCB1_EXPLORATION_CONSTANT * Math.Sqrt(Math.Log(Parent.VisitCount) / VisitCount);
                     return exploitation + exploration;
                 case EvaluationFunction.UCT:
                     // TODO implement

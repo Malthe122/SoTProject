@@ -24,7 +24,7 @@ public class Aau903Bot : AI
             Console.WriteLine("------");
             //TODO implement
             var rootNode = new Node(gameState.ToSeededGameState((ulong)rng.Next()), null, possibleMoves, null);
-            for(int i = 0; i <= Utility.ITERATIONS; i++) {
+            for(int i = 0; i <= MCTSSettings.ITERATIONS; i++) {
                 rootNode.Simulate(out double score);
             }
 
