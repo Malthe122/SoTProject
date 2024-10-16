@@ -77,15 +77,14 @@ public class Node{
                         rolloutAvailableMoves.RemoveAll(move => move.Command == CommandEnum.END_TURN);
                     }
                 }
-                //TODO fix issue here. Looks very wierd. It changes player on random moves, but not on endTurn
+                Console.WriteLine("Current player is:");
+                Console.WriteLine(rollOutGameState.CurrentPlayer.PlayerID);
                 Console.WriteLine("Rollout moves size: " + rolloutAvailableMoves.Count);
                 var chosenIndex = Utility.Rng.Next(rolloutAvailableMoves.Count);
                 Console.WriteLine("Chosen index: " + chosenIndex);
                 Move moveToMake = rolloutAvailableMoves[chosenIndex];
                 Console.WriteLine("Chosen move is:");
                 Console.WriteLine(moveToMake);
-                Console.WriteLine("Current player is:");
-                Console.WriteLine(rollOutGameState.CurrentPlayer.PlayerID);
                 // Move moveToMake = rolloutAvailableMoves[Utility.Rng.Next(rolloutAvailableMoves.Count)];
                 (rollOutGameState, rolloutAvailableMoves) = rollOutGameState.ApplyMove(moveToMake, (ulong)Utility.Rng.Next());
             }
