@@ -25,7 +25,7 @@ public class Aau903Bot : AI
             //TODO implement
             var rootNode = new Node(gameState.ToSeededGameState((ulong)rng.Next()), null, possibleMoves, null);
             for(int i = 0; i <= MCTSSettings.ITERATIONS; i++) {
-                rootNode.Simulate(out double score);
+                rootNode.Visit(out double score);
             }
 
             var bestNode = rootNode.ChildNodes.OrderByDescending(child => (child.TotalScore / child.VisitCount)).First();

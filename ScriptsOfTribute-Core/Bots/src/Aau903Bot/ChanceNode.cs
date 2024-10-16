@@ -10,9 +10,9 @@ public class ChanceNode : Node
             NodeVersions = new List<Node>();
         }
 
-        override public Node Simulate(out double score){
+        override public Node Visit(out double score){
             var chosenNode = NodeVersions.ElementAt(rng.Next(NodeVersions.Count));
-            var resultingNode = chosenNode.Simulate(out double chosenNodeScore);
+            var resultingNode = chosenNode.Visit(out double chosenNodeScore);
 
             score = chosenNodeScore;
             TotalScore += score;

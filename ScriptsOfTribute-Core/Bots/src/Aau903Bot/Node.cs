@@ -28,7 +28,7 @@ public class Node{
             Parent = parent;
         }
 
-        public virtual Node? Simulate(out double score){
+        public virtual Node? Visit(out double score){
             Node visitedChild = null;
 
 
@@ -48,11 +48,11 @@ public class Node{
                 (var newState, var newMoves) = GameState.ApplyMove(moveToExplore!, (ulong)Utility.Rng.Next());
                 // TODO check here if it is a chanceNode and in that case create one of those instead
                 visitedChild = new Node(newState, moveToExplore, newMoves, this);
-                visitedChild.Simulate(out score);
+                visitedChild.Visit(out score);
             }
             else{
                 visitedChild = GetHighestConfidenceChild();
-                visitedChild.Simulate(out score);
+                visitedChild.Visit(out score);
                 if(visitedChild.GameState.CurrentPlayer.PlayerID != GameState.CurrentPlayer.PlayerID) {
                     score *= -1;
                 }
