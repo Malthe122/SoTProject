@@ -1,0 +1,20 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Run GameRunner",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "dotnet: build",
+            "program": "${workspaceFolder}/ScriptsOfTribute-Core/GameRunner/bin/Debug/net7.0/GameRunner.dll",  // Make sure this points to your .dll file
+            "args": [
+                "RandomBot",
+                "ExampleBot",
+                "-n",
+                "1"
+            ],
+            "cwd": "${workspaceFolder}/ScriptsOfTribute-Core/GameRunner/bin/Debug/net7.0/",
+            "stopAtEntry": false,
+        }
+    ]
+}
