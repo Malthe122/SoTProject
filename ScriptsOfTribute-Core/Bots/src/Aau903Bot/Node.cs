@@ -14,9 +14,10 @@ public class Node{
         public int VisitCount;
         public Move AppliedMove;
         public List<Move> AvailableMoves;
+        public Node Parent;
         
 
-        public Node(SeededGameState gameState, Move appliedMove, List<Move> availableMoves){
+        public Node(SeededGameState gameState, Move appliedMove, List<Move> availableMoves, Node parent){
             GameState = gameState;
             TotalScore = 0;
             VisitCount = 0;
@@ -24,6 +25,7 @@ public class Node{
             AppliedMove = appliedMove;
             AvailableMoves = availableMoves;
             ChildNodes = new List<Node>();
+            Parent = parent;
         }
 
         public virtual Node? Simulate(out double score){
@@ -34,7 +36,7 @@ public class Node{
                 ApplyAllDeterministicAndObviousMoves(); //TODO maybe move this call to constructor
                 score = Rollout();
             }
-            else if(AvailableMoves.Count > AvailableMoves.Count()){
+            else if(AvailableMoves.Count > ChildNodes.Count){
                 Move moveToExplore = null;
                 foreach(Move currMove in AvailableMoves){
                     if(!ChildNodes.Any(n => n.AppliedMove == currMove)) {
@@ -45,12 +47,15 @@ public class Node{
                 }
                 (var newState, var newMoves) = GameState.ApplyMove(moveToExplore!, (ulong)Utility.Rng.Next());
                 // TODO check here if it is a chanceNode and in that case create one of those instead
-                visitedChild = new Node(newState, moveToExplore, newMoves);
+                visitedChild = new Node(newState, moveToExplore, newMoves, this);
                 visitedChild.Simulate(out score);
             }
             else{
                 visitedChild = GetHighestConfidenceChild();
                 visitedChild.Simulate(out score);
+                if(visitedChild.GameState.CurrentPlayer.PlayerID != GameState.CurrentPlayer.PlayerID) {
+                    score *= -1;
+                }
             }
 
             TotalScore += score;
@@ -72,8 +77,17 @@ public class Node{
                         rolloutAvailableMoves.RemoveAll(move => move.Command == CommandEnum.END_TURN);
                     }
                 }
-                Move moveToMake = rolloutAvailableMoves[Utility.Rng.Next(rolloutAvailableMoves.Count)];
-                (rollOutGameState, AvailableMoves) = rollOutGameState.ApplyMove(moveToMake, (ulong)Utility.Rng.Next());
+                //TODO fix issue here. Looks very wierd. It changes player on random moves, but not on endTurn
+                Console.WriteLine("Rollout moves size: " + rolloutAvailableMoves.Count);
+                var chosenIndex = Utility.Rng.Next(rolloutAvailableMoves.Count);
+                Console.WriteLine("Chosen index: " + chosenIndex);
+                Move moveToMake = rolloutAvailableMoves[chosenIndex];
+                Console.WriteLine("Chosen move is:");
+                Console.WriteLine(moveToMake);
+                Console.WriteLine("Current player is:");
+                Console.WriteLine(rollOutGameState.CurrentPlayer.PlayerID);
+                // Move moveToMake = rolloutAvailableMoves[Utility.Rng.Next(rolloutAvailableMoves.Count)];
+                (rollOutGameState, rolloutAvailableMoves) = rollOutGameState.ApplyMove(moveToMake, (ulong)Utility.Rng.Next());
             }
             if(rollOutGameState.GameEndState.Winner != PlayerEnum.NO_PLAYER_SELECTED) { //TODO here i assume that winner = NO_PLAYER_SELECTED is how they show a draw. Need to confirm this
                 if(rollOutGameState.GameEndState.Winner == GameState.CurrentPlayer.PlayerID){
@@ -105,10 +119,11 @@ public class Node{
 
         public double GetConfidenceScore()
         {
-            switch(Utility.CHOSEN_EVALUATION_FUNCTION){ //TODO i do it like this, so we can edit this and try to benchmark them against each other
+            switch(Utility.CHOSEN_EVALUATION_FUNCTION){
                 case EvaluationFunction.UCB1:
-                    // TODO implement
-                    return 0;
+                    double exploitation = TotalScore / VisitCount;
+                    double exploration = Utility.UCB1_EXPLORATION_CONSTANT * Math.Sqrt(Math.Log(Parent.VisitCount) / VisitCount);
+                    return exploitation + exploration;
                 case EvaluationFunction.UCT:
                     // TODO implement
                     return 0;

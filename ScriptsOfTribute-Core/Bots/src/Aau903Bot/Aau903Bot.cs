@@ -14,13 +14,32 @@ public class Aau903Bot : AI
     private Random rng = new Random();
     public override void GameEnd(EndGameState state, FullGameState? finalBoardState)
     {
-        throw new NotImplementedException();
     }
 
     public override Move Play(GameState gameState, List<Move> possibleMoves, TimeSpan remainingTime)
     {
-        //TODO implement
-        throw new NotImplementedException();
+        try{
+            Console.WriteLine("Available Moves:\n------");
+            possibleMoves.ForEach(move => Console.WriteLine(move));
+            Console.WriteLine("------");
+            //TODO implement
+            var rootNode = new Node(gameState.ToSeededGameState((ulong)rng.Next()), null, possibleMoves, null);
+            for(int i = 0; i <= Utility.ITERATIONS; i++) {
+                rootNode.Simulate(out double score);
+            }
+
+            var bestNode = rootNode.ChildNodes.OrderByDescending(child => (child.TotalScore / child.VisitCount)).First();
+
+            Console.WriteLine("Trying to play move:");
+            Console.WriteLine(bestNode.AppliedMove.ToString());
+            
+            return bestNode.AppliedMove;
+        } catch(Exception e) {
+            Console.WriteLine("Something went wrong while trying to compute move. Playing random move instead. Exception:");
+            Console.WriteLine("Message: " + e.Message);
+            Console.WriteLine("Stacktrace: " + e.StackTrace);
+            return possibleMoves[0];
+        }
     }
 
     public void LogFromThis(string log){

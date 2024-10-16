@@ -5,7 +5,7 @@ public class ChanceNode : Node
     {
         private Random rng = new Random();
         public List<Node> NodeVersions;
-        public ChanceNode(SeededGameState gameState, Move appliedMove, List<Move> availableMoves) : base(gameState, appliedMove, availableMoves)
+        public ChanceNode(SeededGameState gameState, Move appliedMove, List<Move> availableMoves, Node parentNode) : base(gameState, appliedMove, availableMoves, parentNode)
         {
             NodeVersions = new List<Node>();
         }
