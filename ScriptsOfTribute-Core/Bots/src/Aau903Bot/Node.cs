@@ -31,31 +31,42 @@ public class Node{
         public virtual Node? Visit(out double score){
             Node visitedChild = null;
 
-
-            if (VisitCount == 0){
-                ApplyAllDeterministicAndObviousMoves(); //TODO maybe move this call to constructor
-                score = Rollout();
-            }
-            else if(AvailableMoves.Count > ChildNodes.Count){
-                Move moveToExplore = null;
-                foreach(Move currMove in AvailableMoves){
-                    if(!ChildNodes.Any(n => n.AppliedMove == currMove)) {
-                        //TODO insert here checks that if a move can lead to several different stages, we need to create a chance node
-                        moveToExplore = currMove;
-                        break;
+            if (GameState.GameEndState == null){
+                if (VisitCount == 0){
+                    ApplyAllDeterministicAndObviousMoves(); //TODO maybe move this call to constructor
+                    score = Rollout();
+                }
+                else if(AvailableMoves.Count > ChildNodes.Count){
+                    Move moveToExplore = null;
+                    foreach(Move currMove in AvailableMoves){
+                        if(!ChildNodes.Any(n => n.AppliedMove == currMove)) {
+                            //TODO insert here checks that if a move can lead to several different stages, we need to create a chance node
+                            moveToExplore = currMove;
+                            break;
+                        }
+                    }
+                    (var newState, var newMoves) = GameState.ApplyMove(moveToExplore!, (ulong)Utility.Rng.Next());
+                    // TODO check here if it is a chanceNode and in that case create one of those instead
+                    visitedChild = new Node(newState, moveToExplore, newMoves, this);
+                    ChildNodes.Add(visitedChild);
+                    visitedChild.Visit(out score);
+                }
+                else{
+                    visitedChild = GetHighestConfidenceChild();
+                    visitedChild.Visit(out score);
+                    if(visitedChild.GameState.CurrentPlayer.PlayerID != GameState.CurrentPlayer.PlayerID) {
+                        score *= -1;
                     }
                 }
-                (var newState, var newMoves) = GameState.ApplyMove(moveToExplore!, (ulong)Utility.Rng.Next());
-                // TODO check here if it is a chanceNode and in that case create one of those instead
-                visitedChild = new Node(newState, moveToExplore, newMoves, this);
-                visitedChild.Visit(out score);
+            }
+            else if(GameState.GameEndState.Winner == PlayerEnum.NO_PLAYER_SELECTED){
+                score = 0;
+            }
+            else if(GameState.GameEndState.Winner == GameState.CurrentPlayer.PlayerID) {
+                score = 1;
             }
             else{
-                visitedChild = GetHighestConfidenceChild();
-                visitedChild.Visit(out score);
-                if(visitedChild.GameState.CurrentPlayer.PlayerID != GameState.CurrentPlayer.PlayerID) {
-                    score *= -1;
-                }
+                score = -1;
             }
 
             TotalScore += score;
@@ -77,15 +88,7 @@ public class Node{
                         rolloutAvailableMoves.RemoveAll(move => move.Command == CommandEnum.END_TURN);
                     }
                 }
-                Console.WriteLine("Current player is:");
-                Console.WriteLine(rollOutGameState.CurrentPlayer.PlayerID);
-                Console.WriteLine("Rollout moves size: " + rolloutAvailableMoves.Count);
-                var chosenIndex = Utility.Rng.Next(rolloutAvailableMoves.Count);
-                Console.WriteLine("Chosen index: " + chosenIndex);
-                Move moveToMake = rolloutAvailableMoves[chosenIndex];
-                Console.WriteLine("Chosen move is:");
-                Console.WriteLine(moveToMake);
-                // Move moveToMake = rolloutAvailableMoves[Utility.Rng.Next(rolloutAvailableMoves.Count)];
+                Move moveToMake = rolloutAvailableMoves[Utility.Rng.Next(rolloutAvailableMoves.Count)];
                 (rollOutGameState, rolloutAvailableMoves) = rollOutGameState.ApplyMove(moveToMake, (ulong)Utility.Rng.Next());
             }
             if(rollOutGameState.GameEndState.Winner != PlayerEnum.NO_PLAYER_SELECTED) { //TODO here i assume that winner = NO_PLAYER_SELECTED is how they show a draw. Need to confirm this
