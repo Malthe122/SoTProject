@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Linq;
 using System.Security.Cryptography.X509Certificates;
 using Bots;
@@ -13,33 +14,55 @@ public class Aau903Bot : AI
 
     private Random rng = new Random();
     public override void GameEnd(EndGameState state, FullGameState? finalBoardState)
-    {
-    }
 
     public override Move Play(GameState gameState, List<Move> possibleMoves, TimeSpan remainingTime)
     {
         try{
+            MyTurnNumber++;
             Console.WriteLine("Available Moves:\n------");
             possibleMoves.ForEach(move => Console.WriteLine(move));
             Console.WriteLine("------");
-            //TODO implement
+
+            var obviousMove = FindObviousMove(possibleMoves);
+
+            if(obviousMove != null) {
+                return obviousMove;
+            }
+
             var rootNode = new Node(gameState.ToSeededGameState((ulong)rng.Next()), null, possibleMoves, null);
             for(int i = 0; i <= MCTSSettings.ITERATIONS; i++) {
                 rootNode.Visit(out double score);
             }
 
-            var bestNode = rootNode.ChildNodes.OrderByDescending(child => (child.TotalScore / child.VisitCount)).First();
-
-            Console.WriteLine("Trying to play move:");
-            Console.WriteLine(bestNode.AppliedMove.ToString());
-            
+            var bestNode = rootNode.ChildNodes.OrderByDescending(child => (child.TotalScore / child.VisitCount)).First();            
             return bestNode.AppliedMove;
         } catch(Exception e) {
             Console.WriteLine("Something went wrong while trying to compute move. Playing random move instead. Exception:");
             Console.WriteLine("Message: " + e.Message);
             Console.WriteLine("Stacktrace: " + e.StackTrace);
+            Console.WriteLine("Data: " + e.Data);
+            Console.WriteLine("Inner excpetion: " + e.InnerException.Message);
+            Console.WriteLine("Inner stacktrace: " + e.InnerException.StackTrace);
             return possibleMoves[0];
         }
+    }
+
+    private Move FindObviousMove(List<Move> possibleMoves)
+    {
+        foreach(Move currMove in possibleMoves) {
+            if(currMove.Command == CommandEnum.PLAY_CARD) {
+                if (Utility.OBVIOUS_ACTION_PLAYS.Contains(((SimpleCardMove)currMove).Card.CommonId)){
+                    return currMove;
+                }
+            }
+            else if(currMove.Command == CommandEnum.ACTIVATE_AGENT) {
+                if (Utility.OBVIOUS_AGENT_EFFECTS.Contains(((SimpleCardMove)currMove).Card.CommonId)){
+                    return currMove;
+                }
+            }
+        }
+    
+        return null;
     }
 
     public void LogFromThis(string log){
