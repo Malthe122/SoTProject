@@ -17,20 +17,11 @@ public class Node {
     public Move? AppliedMove = null;
     public List<Move> PossibleMoves;
     
-    public Node(SeededGameState gameState, List<Move> possibleMoves) {
+    public Node(SeededGameState gameState, Node parent, List<Move> possibleMoves, Move appliedMove) {
         GameState = gameState;
-        GameStateHash = GameState.GenerateHash();
-        PossibleMoves = possibleMoves;
-    }
-
-    public Node(Node parent, Move appliedMove) {
         Parent = parent;
+        PossibleMoves = possibleMoves;
         AppliedMove = appliedMove;
-
-        ulong randomSeed = (ulong)Utility.Rng.Next();
-        var (newGameState, newPossibleMoves) = parent.GameState.ApplyMove(AppliedMove, randomSeed);
-        GameState = newGameState;
-        PossibleMoves = newPossibleMoves;
         GameStateHash = GameState.GenerateHash();
     }
 
@@ -70,7 +61,9 @@ public class Node {
         foreach (var move in PossibleMoves) {
             if (!ChildNodes.Any(child => child.AppliedMove == move)) {
                 //TODO insert here checks that if a move can lead to several different stages, we need to create a chance node
-                var expandedChild = new Node(this, move);
+                ulong randomSeed = (ulong)Utility.Rng.Next();
+                var (newGameState, newPossibleMoves) = GameState.ApplyMove(move, randomSeed); 
+                var expandedChild = new Node(newGameState, this, newPossibleMoves, move);
                 ChildNodes.Add(expandedChild);
                 return expandedChild;
             }
