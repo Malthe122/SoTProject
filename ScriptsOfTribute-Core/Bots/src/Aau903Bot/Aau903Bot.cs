@@ -14,15 +14,13 @@ public class Aau903Bot : AI
 
     private Random rng = new Random();
     public override void GameEnd(EndGameState state, FullGameState? finalBoardState)
+    {
+        Console.WriteLine("@@@ Game ended because of " + state.Reason + " @@@");
+    }
 
     public override Move Play(GameState gameState, List<Move> possibleMoves, TimeSpan remainingTime)
     {
         try{
-            MyTurnNumber++;
-            Console.WriteLine("Available Moves:\n------");
-            possibleMoves.ForEach(move => Console.WriteLine(move));
-            Console.WriteLine("------");
-
             var obviousMove = FindObviousMove(possibleMoves);
 
             if(obviousMove != null) {
@@ -31,10 +29,11 @@ public class Aau903Bot : AI
 
             var rootNode = new Node(gameState.ToSeededGameState((ulong)rng.Next()), null, possibleMoves, null);
             for(int i = 0; i <= MCTSSettings.ITERATIONS; i++) {
+                Console.WriteLine("Completed " + i + " iterations");
                 rootNode.Visit(out double score);
             }
 
-            var bestNode = rootNode.ChildNodes.OrderByDescending(child => (child.TotalScore / child.VisitCount)).First();            
+            var bestNode = rootNode.ChildNodes.OrderByDescending(child => (child.TotalScore / child.VisitCount)).First();
             return bestNode.AppliedMove;
         } catch(Exception e) {
             Console.WriteLine("Something went wrong while trying to compute move. Playing random move instead. Exception:");
