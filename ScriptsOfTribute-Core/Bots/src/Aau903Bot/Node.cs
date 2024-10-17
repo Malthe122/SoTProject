@@ -38,19 +38,27 @@ public class Node {
         Node visitedChild = null;
         var playerId = GameState.CurrentPlayer.PlayerID;
 
-        if (VisitCount == 0) {
-            ApplyAllDeterministicAndObviousMoves();
-            score = Rollout();
-        } else if (PossibleMoves.Count > ChildNodes.Count) {
-            var expandedChild = Expand();
-            expandedChild.Visit(out score);
-        } else {
-            var selectedChild = Select();
-            selectedChild.Visit(out score);
+        if (GameState.GameEndState == null) {
+            if (VisitCount == 0) {
+                ApplyAllDeterministicAndObviousMoves();
+                score = Rollout();
+            } else if (PossibleMoves.Count > ChildNodes.Count) {
+                var expandedChild = Expand();
+                expandedChild.Visit(out score);
+            } else {
+                var selectedChild = Select();
+                selectedChild.Visit(out score);
 
-            if (selectedChild.GameState.CurrentPlayer.PlayerID != playerId) {
-                score *= -1;
+                if (selectedChild.GameState.CurrentPlayer.PlayerID != playerId) {
+                    score *= -1;
+                }
             }
+        } else if (GameState.GameEndState.Winner == PlayerEnum.NO_PLAYER_SELECTED) {
+            score = 0;
+        } else if (GameState.GameEndState.Winner == GameState.CurrentPlayer.PlayerID) {
+            score = 1;
+        } else {
+            score = -1;
         }
 
         TotalScore += score;
@@ -97,17 +105,10 @@ public class Node {
                         rolloutPossibleMoves.RemoveAll(move => move.Command == CommandEnum.END_TURN);
                     }
                 }
-                Console.WriteLine("Current player is:");
-                Console.WriteLine(rolloutGameState.CurrentPlayer.PlayerID);
-                Console.WriteLine("Rollout moves size: " + rolloutPossibleMoves.Count);
                 var chosenIndex = Utility.Rng.Next(rolloutPossibleMoves.Count);
-                Console.WriteLine("Chosen index: " + chosenIndex);
                 var moveToMake = rolloutPossibleMoves[chosenIndex];
 
-                Console.WriteLine("Chosen move is:");
-                Console.WriteLine(moveToMake);
                 var (newGameState, newPossibleMoves) = rolloutGameState.ApplyMove(moveToMake);
-
                 rolloutGameState = newGameState;
                 rolloutPossibleMoves = newPossibleMoves;
             }
