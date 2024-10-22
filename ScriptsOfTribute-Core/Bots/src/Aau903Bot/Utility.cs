@@ -55,10 +55,78 @@ public static class Utility {
 };
 
 
-    public static int GenerateHash(this SeededGameState seededGameState){
-    //TODO implement
-    // throw new NotImplementedException();
-    return 0;
+    public static int GenerateHash(this SeededGameState state){
+
+        // Here i chose to do a quick "hash" code to save performance, meaning we can run more iterations. I view the likelyhood of 2 unequal states counting as equal
+        // even with this basic method is extremely low and should it happen the loss in evaluation precision also being minor compared to how much we can gain by running 
+        // more iterations. I added it as an option though in case we change our minds
+        switch(MCTSSettings.CHOSEN_HASH_GENERATION_TYPE){
+            case HashGenerationType.Quick:
+                int handHash = 0;
+                foreach(var currCard in state.CurrentPlayer.Hand){
+                    handHash *= 1 * (int)currCard.CommonId;
+                }
+
+                int tavernHash = 0;
+                foreach(var currCard in state.TavernAvailableCards){
+                    tavernHash *= 2 * ((int)currCard.CommonId);
+                }
+                foreach(var currCard in state.TavernCards){
+                    tavernHash *= 3 * ((int)currCard.CommonId);
+                }
+
+                int cooldownHash = 0;
+                foreach(var currCard in state.CurrentPlayer.CooldownPile){
+                    cooldownHash *= 4 * ((int)currCard.CommonId);
+                }
+                foreach(var currCard in state.EnemyPlayer.CooldownPile){
+                    cooldownHash *= 5 * ((int)currCard.CommonId);
+                }
+
+                int upcomingDrawsHash = 0;
+                foreach(var currCard in state.CurrentPlayer.KnownUpcomingDraws){
+                    upcomingDrawsHash *= 6 * ((int)currCard.CommonId);
+                }
+                foreach(var currCard in state.EnemyPlayer.KnownUpcomingDraws){
+                    cooldownHash *= 7 * ((int)currCard.CommonId);
+                }
+
+                int drawPileHash = 0;
+                foreach(var currCard in state.CurrentPlayer.DrawPile){
+                    drawPileHash *= 8 * ((int)currCard.CommonId);
+                }
+                foreach(var currCard in state.EnemyPlayer.DrawPile){
+                    drawPileHash *= 9 * ((int)currCard.CommonId);
+                }
+
+                int commingEffectsHash = 0; //TODO
+
+                int resourceHash = state.CurrentPlayer.Coins * 10 + state.CurrentPlayer.Prestige * 11 + state.CurrentPlayer.Power * 12 + state.EnemyPlayer.Prestige * 13;
+
+                int agentHash = 0;
+
+                foreach(var currAgent in state.CurrentPlayer.Agents) {
+                    agentHash *= 14 * (currAgent.Activated ? 2 : 3);
+                    agentHash *= 15 * currAgent.CurrentHp;
+                }
+
+                foreach(var currAgent in state.EnemyPlayer.Agents){
+                   agentHash *= 16 * (currAgent.Activated ? 2 : 3);
+                   agentHash *= 17 * currAgent.CurrentHp; 
+                }
+
+                // TODO patron hash
+                int patronHash = 0;
+                // TODO pending choice hash
+                int pendingChoiceHash = 0;
+
+
+                // return HashCode.Combine(handHash, tavernHash, cooldownHash, upcomingDrawsHash, drawPileHash, commingEffectsHash, resourceHash, agentHash, patronHash, pendingChoiceHash);
+                return handHash + tavernHash + cooldownHash + upcomingDrawsHash + drawPileHash + commingEffectsHash + resourceHash + agentHash + patronHash + pendingChoiceHash;
+            case HashGenerationType.Precise:
+            //TODO implement
+            throw new NotImplementedException(); 
+        }
     }
     
 }

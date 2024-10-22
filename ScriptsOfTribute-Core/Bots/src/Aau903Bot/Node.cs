@@ -22,6 +22,9 @@ public class Node {
         Parent = parent;
         PossibleMoves = possibleMoves;
         AppliedMove = appliedMove;
+        /// <summary>
+        /// TODO if this takes too much performance, look into only calling this method on children of chance nodes
+        /// </summary>
         GameStateHash = GameState.GenerateHash();
     }
 
@@ -57,7 +60,7 @@ public class Node {
         // return visitedChild;
     }
 
-    private Node Expand() {
+    internal Node Expand() {
         foreach (var move in PossibleMoves) {
             if (!ChildNodes.Any(child => child.AppliedMove == move)) {
                 //TODO insert here checks that if a move can lead to several different stages, we need to create a chance node
@@ -72,7 +75,7 @@ public class Node {
         return null;
     }
 
-    private double Evaluate(SeededGameState gameState, PlayerEnum playerId) {
+    internal double Evaluate(SeededGameState gameState, PlayerEnum playerId) {
         if (gameState.GameEndState.Winner != PlayerEnum.NO_PLAYER_SELECTED) { //TODO here i assume that winner = NO_PLAYER_SELECTED is how they show a draw. Need to confirm this
             if (gameState.GameEndState.Winner == playerId) {
                 return +1;
@@ -83,7 +86,7 @@ public class Node {
         return 0;
     }
 
-    private double Rollout() {
+    internal double Rollout() {
         double result = 0;
         var rolloutGameState = GameState;
         var rolloutPlayerId = rolloutGameState.CurrentPlayer.PlayerID;
@@ -111,7 +114,7 @@ public class Node {
         return result;
     }
 
-    private Node Select() {
+    internal virtual Node Select() {
         double maxConfidence = -double.MaxValue;
         var highestConfidenceChild = ChildNodes[0];
 
@@ -141,7 +144,7 @@ public class Node {
         }            
     }
 
-    private void ApplyAllDeterministicAndObviousMoves() {
+    internal void ApplyAllDeterministicAndObviousMoves() {
         foreach (Move currMove in PossibleMoves) {
             if (currMove.Command == CommandEnum.PLAY_CARD) {
                 if (Utility.OBVIOUS_ACTION_PLAYS.Contains(((SimpleCardMove)currMove).Card.CommonId)) {

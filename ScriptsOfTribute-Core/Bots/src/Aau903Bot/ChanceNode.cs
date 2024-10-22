@@ -1,32 +1,38 @@
 using ScriptsOfTribute;
 using ScriptsOfTribute.Serializers;
 
-// public class ChanceNode : Node
-//     {
-        // private Random rng = new Random();
-        // public List<Node> NodeVersions;
-        // public ChanceNode(SeededGameState gameState, Move appliedMove, List<Move> availableMoves, Node parentNode) : base(gameState, appliedMove, availableMoves, parentNode)
-        // {
-        //     NodeVersions = new List<Node>();
-        // }
+public class ChanceNode : Node
+{ 
+    public ChanceNode(SeededGameState gameState, Node parent, List<Move> possibleMoves, Move appliedMove) : base(null, parent, null, appliedMove)
+    {
+    }
 
-        // override public Node Visit(out double score){
-        //     var chosenNode = NodeVersions.ElementAt(rng.Next(NodeVersions.Count));
-        //     var resultingNode = chosenNode.Visit(out double chosenNodeScore);
+    public override void Visit(out double score){
+        
+        (var newState, var newMoves) = Parent.GameState.ApplyMove(AppliedMove, (ulong)Utility.Rng.Next());
+        var newStateHash = newState.GenerateHash();
+        if (ChildNodes.Any(n => n.GameStateHash == newStateHash)){
+            // TODO consider if we should visit the child we hit instead of equal distribution. With equal distribution
+            // we assume that each outcome has the same chance
+            int lowestVisitCount = int.MaxValue;
+            var leastVisitedChild = ChildNodes[0];
 
-        //     score = chosenNodeScore;
-        //     TotalScore += score;
-        //     VisitCount++;
+            foreach(var currChild in ChildNodes){
+                if (currChild.VisitCount < lowestVisitCount) {
+                    leastVisitedChild = currChild;
+                    lowestVisitCount = currChild.VisitCount;
+                }
+            }
 
-        //     var equalGameStateNode = NodeVersions.FirstOrDefault(s => s.GameStateHash == resultingNode.GameStateHash);
-        //     if (equalGameStateNode != null){
-        //         equalGameStateNode.VisitCount++;
-        //         equalGameStateNode.TotalScore += chosenNodeScore;
-        //         return equalGameStateNode;
-        //     }
-        //     else {
-        //         NodeVersions.Add(resultingNode);
-        //         return resultingNode;
-        //     }
-        // }
-    // }
+            leastVisitedChild.Visit(out score);
+        }
+        else {
+            var newChild = new Node(newState, this, newMoves, AppliedMove);
+            this.ChildNodes.Add(newChild);
+            newChild.Visit(out score);
+        }
+
+        TotalScore += score;
+        VisitCount++;
+    }
+}
