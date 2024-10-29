@@ -3,7 +3,7 @@ using ScriptsOfTribute.Serializers;
 
 public class ChanceNode : Node
 { 
-    public ChanceNode(SeededGameState gameState, Node parent, List<Move> possibleMoves, Move appliedMove) : base(null, parent, null, appliedMove)
+    public ChanceNode(SeededGameState gameState, Node parent, Move appliedMove) : base(null, parent, null, appliedMove)
     {
     }
 
