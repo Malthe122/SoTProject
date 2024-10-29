@@ -25,7 +25,6 @@ public class Aau903Bot : AI {
             var rootNode = new Node(seededGameState, null, possibleMoves, null);
 
             for (int i = 0; i <= MCTSSettings.ITERATIONS; i++) {
-                Console.WriteLine("Completed " + i + " iterations");
                 rootNode.Visit(out double score);
             }
 
@@ -39,8 +38,10 @@ public class Aau903Bot : AI {
             Console.WriteLine("Message: " + e.Message);
             Console.WriteLine("Stacktrace: " + e.StackTrace);
             Console.WriteLine("Data: " + e.Data);
-            Console.WriteLine("Inner excpetion: " + e.InnerException.Message);
-            Console.WriteLine("Inner stacktrace: " + e.InnerException.StackTrace);
+            if (e.InnerException != null){
+                Console.WriteLine("Inner excpetion: " + e.InnerException.Message);
+                Console.WriteLine("Inner stacktrace: " + e.InnerException.StackTrace);
+            }
             return possibleMoves[0];
         }
     }
