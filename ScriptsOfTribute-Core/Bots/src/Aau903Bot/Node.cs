@@ -63,16 +63,22 @@ public class Node {
     internal Node Expand() {
         foreach (var move in PossibleMoves) {
             if (!ChildNodes.Any(child => child.AppliedMove == move)) {
-                //TODO insert here checks that if a move can lead to several different stages, we need to create a chance node
-                ulong randomSeed = (ulong)Utility.Rng.Next();
-                var (newGameState, newPossibleMoves) = GameState.ApplyMove(move, randomSeed); 
-                var expandedChild = new Node(newGameState, this, newPossibleMoves, move);
-                ChildNodes.Add(expandedChild);
-                return expandedChild;
+                if (MCTSSettings.INCLUDE_CHANCE_NODES && move.IsNonDeterministic()){
+                    var newChild = new ChanceNode(GameState, this, move);
+                    ChildNodes.Add(newChild);
+                    return newChild;
+                }
+                else {
+                    ulong randomSeed = (ulong)Utility.Rng.Next();
+                    var (newGameState, newPossibleMoves) = GameState.ApplyMove(move, randomSeed); 
+                    var newChild = new Node(newGameState, this, newPossibleMoves, move);
+                    ChildNodes.Add(newChild);
+                    return newChild;
+                }
             }
         }
 
-        return null;
+        throw new Exception("Expand was unexpectedly called on a node that was fully expanded");
     }
 
     internal double Evaluate(SeededGameState gameState, PlayerEnum playerId) {
@@ -93,8 +99,8 @@ public class Node {
         var rolloutPossibleMoves = new List<Move>(PossibleMoves);
 
         for (int i = 0; i <= MCTSSettings.NUMBER_OF_ROLLOUTS; i++) {
+            // TODO also apply the playing obvious moves in here
             while (rolloutGameState.GameEndState == null) {
-                // TODO also apply the playing obvious moves in here
                 // Choosing here to remove the "end turn" move before its the last move. This is done to make the random plays a bit more realistic
                 if (MCTSSettings.FORCE_DELAY_TURN_END_IN_ROLLOUT) {
                     if (rolloutPossibleMoves.Count > 1) {

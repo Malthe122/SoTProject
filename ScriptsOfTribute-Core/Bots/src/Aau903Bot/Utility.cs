@@ -88,6 +88,10 @@ public static class Utility {
         CardId.BLACKFEATHER_BRIGAND
     };
 
+    public static readonly List<PatronId> RANDOM_PATRON_CALL_EFFECT = new List<PatronId>(){
+        PatronId.RED_EAGLE
+    };
+
     public static int GenerateHash(this SeededGameState state){
 
         // Here i chose to do a quick "hash" code to save performance, meaning we can run more iterations. I view the likelyhood of 2 unequal states counting as equal
@@ -161,5 +165,32 @@ public static class Utility {
             throw new NotImplementedException(); 
         }
     }
-    
+
+    /// <summary>
+    /// Is not taking Combo effects into account at the moment, but here we should also not look at whether the played card has an effect, but also whether there is a combo cards already played that
+    /// will be activated by playing said card
+    /// </summary>
+    /// <param name="move"></param>
+    /// <returns></returns>
+    public static bool IsNonDeterministic(this Move move)
+    {
+        switch(move.Command){
+            case CommandEnum.PLAY_CARD:
+                return RANDOM_ACTION_EFFECTS.Contains((move as SimpleCardMove).Card.CommonId);
+            case CommandEnum.ACTIVATE_AGENT:
+                return false; // None of these exists
+            case CommandEnum.ATTACK:
+                return false;
+            case CommandEnum.BUY_CARD:
+                return RANDOM_CONTRACT_ACTION_EFFECTS.Contains((move as SimpleCardMove).Card.CommonId);
+            case CommandEnum.CALL_PATRON:
+                return RANDOM_PATRON_CALL_EFFECT.Contains((move as SimplePatronMove).PatronId);
+            case CommandEnum.MAKE_CHOICE:
+                return false; //TODO we might add some check here too
+            case CommandEnum.END_TURN:
+                return false; //TODO we consider this false for now, but it should be considered true since the opponent will draw their cards which is random
+            default:
+                return false;
+        }
+    }
 }
