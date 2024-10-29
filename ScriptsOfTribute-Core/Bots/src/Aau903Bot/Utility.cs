@@ -1,9 +1,13 @@
 using System.Linq.Expressions;
 using ScriptsOfTribute;
+using ScriptsOfTribute.Board.Cards;
 using ScriptsOfTribute.Serializers;
 
 public static class Utility {
     public static Random Rng = new Random();
+
+    // TODO consider making an evaluation function at start of the game, that populates these lists
+    // based on their effects, rather than relying on manually categorising them correctly
     public static readonly List<CardId> OBVIOUS_ACTION_PLAYS = new List<CardId>(){
     CardId.LUXURY_EXPORTS,
     CardId.GOODS_SHIPMENT,
@@ -15,7 +19,6 @@ public static class Utility {
     CardId.MURDER_OF_CROWS,
     CardId.PILFER,
     CardId.SQUAWKING_ORATORY,
-    CardId.LAW_OF_SOVEREIGN_ROOST,
     CardId.POOL_OF_SHADOW,
     CardId.SCRATCH,
     CardId.PECK,
@@ -54,6 +57,36 @@ public static class Utility {
     CardId.STUBBORN_SHADOW,
 };
 
+    public static readonly List<CardId> RANDOM_ACTION_EFFECTS = new List<CardId>(){
+        CardId.PILFER,
+        CardId.SQUAWKING_ORATORY,
+        CardId.THE_DREAMING_CAVE
+    };
+    public static readonly List<CardId> RANDOM_ACTION_COMBO_EFFECTS = new List<CardId>(){
+        CardId.TOLL_OF_FLESH,
+        CardId.TOLL_OF_SILVER,
+        CardId.PILFER,
+        CardId.SQUAWKING_ORATORY,
+        CardId.RALLY,
+        CardId.TWILIGHT_REVELRY
+    };
+
+    public static readonly List<CardId> RANDOM_CONTRACT_ACTION_EFFECTS = new List<CardId>(){
+        CardId.HARVEST_SEASON
+    };
+
+    public static readonly List<CardId> RANDOM_CONTRACT_ACTION_COMBO_EFFECTS = new List<CardId>(){
+        CardId.BLOOD_SACRIFICE,
+        CardId.BLOODY_OFFERING,
+        CardId.LAW_OF_SOVEREIGN_ROOST,
+        CardId.BAG_OF_TRICKS,
+        CardId.RINGS_GUILE,
+    };
+
+    public static readonly List<CardId> RANDOM_AGENT_COMBO_EFFECTS = new List<CardId>(){
+        CardId.BLACKFEATHER_KNAVE,
+        CardId.BLACKFEATHER_BRIGAND
+    };
 
     public static int GenerateHash(this SeededGameState state){
 
