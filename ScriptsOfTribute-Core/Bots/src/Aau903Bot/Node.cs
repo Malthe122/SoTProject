@@ -22,6 +22,9 @@ public class Node {
         Parent = parent;
         PossibleMoves = possibleMoves;
         AppliedMove = appliedMove;
+        /// <summary>
+        /// TODO if this takes too much performance, look into only calling this method on children of chance nodes
+        /// </summary>
         GameStateHash = GameState.GenerateHash();
     }
 
@@ -57,22 +60,28 @@ public class Node {
         // return visitedChild;
     }
 
-    private Node Expand() {
+    internal Node Expand() {
         foreach (var move in PossibleMoves) {
             if (!ChildNodes.Any(child => child.AppliedMove == move)) {
-                //TODO insert here checks that if a move can lead to several different stages, we need to create a chance node
-                ulong randomSeed = (ulong)Utility.Rng.Next();
-                var (newGameState, newPossibleMoves) = GameState.ApplyMove(move, randomSeed); 
-                var expandedChild = new Node(newGameState, this, newPossibleMoves, move);
-                ChildNodes.Add(expandedChild);
-                return expandedChild;
+                if (MCTSSettings.INCLUDE_CHANCE_NODES && move.IsNonDeterministic()){
+                    var newChild = new ChanceNode(GameState, this, move);
+                    ChildNodes.Add(newChild);
+                    return newChild;
+                }
+                else {
+                    ulong randomSeed = (ulong)Utility.Rng.Next();
+                    var (newGameState, newPossibleMoves) = GameState.ApplyMove(move, randomSeed); 
+                    var newChild = new Node(newGameState, this, newPossibleMoves, move);
+                    ChildNodes.Add(newChild);
+                    return newChild;
+                }
             }
         }
 
-        return null;
+        throw new Exception("Expand was unexpectedly called on a node that was fully expanded");
     }
 
-    private double Evaluate(SeededGameState gameState, PlayerEnum playerId) {
+    internal double Evaluate(SeededGameState gameState, PlayerEnum playerId) {
         if (gameState.GameEndState.Winner != PlayerEnum.NO_PLAYER_SELECTED) { //TODO here i assume that winner = NO_PLAYER_SELECTED is how they show a draw. Need to confirm this
             if (gameState.GameEndState.Winner == playerId) {
                 return +1;
@@ -83,15 +92,15 @@ public class Node {
         return 0;
     }
 
-    private double Rollout() {
+    internal double Rollout() {
         double result = 0;
         var rolloutGameState = GameState;
         var rolloutPlayerId = rolloutGameState.CurrentPlayer.PlayerID;
         var rolloutPossibleMoves = new List<Move>(PossibleMoves);
 
         for (int i = 0; i <= MCTSSettings.NUMBER_OF_ROLLOUTS; i++) {
+            // TODO also apply the playing obvious moves in here
             while (rolloutGameState.GameEndState == null) {
-                // TODO also apply the playing obvious moves in here
                 // Choosing here to remove the "end turn" move before its the last move. This is done to make the random plays a bit more realistic
                 if (MCTSSettings.FORCE_DELAY_TURN_END_IN_ROLLOUT) {
                     if (rolloutPossibleMoves.Count > 1) {
@@ -111,7 +120,7 @@ public class Node {
         return result;
     }
 
-    private Node Select() {
+    internal virtual Node Select() {
         double maxConfidence = -double.MaxValue;
         var highestConfidenceChild = ChildNodes[0];
 
@@ -141,7 +150,7 @@ public class Node {
         }            
     }
 
-    private void ApplyAllDeterministicAndObviousMoves() {
+    internal void ApplyAllDeterministicAndObviousMoves() {
         foreach (Move currMove in PossibleMoves) {
             if (currMove.Command == CommandEnum.PLAY_CARD) {
                 if (Utility.OBVIOUS_ACTION_PLAYS.Contains(((SimpleCardMove)currMove).Card.CommonId)) {

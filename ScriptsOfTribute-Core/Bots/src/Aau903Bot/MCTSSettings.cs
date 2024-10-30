@@ -12,4 +12,6 @@ public static class MCTSSettings {
     /// faster than if agents were allowed to spend moves ending turns without really doing anything in the game
     /// </summary>
     public const bool FORCE_DELAY_TURN_END_IN_ROLLOUT = true;
+    public const bool INCLUDE_CHANCE_NODES = true;
+    public const HashGenerationType CHOSEN_HASH_GENERATION_TYPE = HashGenerationType.Quick;
 }
