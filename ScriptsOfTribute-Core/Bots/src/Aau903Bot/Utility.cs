@@ -94,7 +94,7 @@ public static class Utility {
 
     public static int GenerateHash(this SeededGameState state){
 
-        // Here i chose to do a quick "hash" code to save performance, meaning we can run more iterations. I view the likelyhood of 2 unequal states counting as equal
+        // Here i chose to do a quick "hash" code to save performance, meaning we can run more iterations. I view the likelyhood of 2 unequal states counting as equal being extremely low
         // even with this basic method is extremely low and should it happen the loss in evaluation precision also being minor compared to how much we can gain by running 
         // more iterations. I added it as an option though in case we change our minds
         switch(MCTSSettings.CHOSEN_HASH_GENERATION_TYPE){
