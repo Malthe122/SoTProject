@@ -157,8 +157,6 @@ public static class Utility {
                 // TODO pending choice hash
                 int pendingChoiceHash = 0;
 
-
-                // return HashCode.Combine(handHash, tavernHash, cooldownHash, upcomingDrawsHash, drawPileHash, commingEffectsHash, resourceHash, agentHash, patronHash, pendingChoiceHash);
                 return handHash + tavernHash + cooldownHash + upcomingDrawsHash + drawPileHash + commingEffectsHash + resourceHash + agentHash + patronHash + pendingChoiceHash;
             case HashGenerationType.Precise:
             //TODO implement
@@ -191,6 +189,49 @@ public static class Utility {
                 return false; //TODO we consider this false for now, but it should be considered true since the opponent will draw their cards which is random
             default:
                 return false;
+        }
+    }
+
+    public static void Log(this SeededGameState gameState){
+        Console.WriteLine("State:");
+        Console.WriteLine("You:");
+        gameState.CurrentPlayer.Log();
+        Console.WriteLine("Opponent:");
+        gameState.EnemyPlayer.Log();
+        Console.WriteLine("Tavern:");
+        Console.WriteLine("Cards in tavern: " + gameState.TavernAvailableCards.Count);
+    }
+
+    public static void Log(this SerializedPlayer player){
+        Console.WriteLine("Coins: " + player.Coins);
+        Console.WriteLine("Power: " + player.Power);
+        Console.WriteLine("Prestige: " + player.Prestige);
+        Console.WriteLine("Cards in cooldown: " + player.CooldownPile.Count);
+    }
+
+    public static void Log(this Move move){
+        switch (move.Command) {
+            case CommandEnum.PLAY_CARD:
+                Console.WriteLine("Play card: " + (move as SimpleCardMove).Card.Name);
+                break;
+            case CommandEnum.ACTIVATE_AGENT:
+                Console.WriteLine("Activating agent: " + (move as SimpleCardMove).Card.Name);
+                break;
+            case CommandEnum.ATTACK:
+                Console.WriteLine("Attacking: " + (move as SimpleCardMove).Card.Name);
+                break;
+            case CommandEnum.BUY_CARD:
+                Console.WriteLine("Buying card: " + (move as SimpleCardMove).Card.Name);
+                break;
+            case CommandEnum.CALL_PATRON:
+                Console.WriteLine("Calling patron: " + (move as SimplePatronMove).PatronId);
+                break;
+            case CommandEnum.MAKE_CHOICE:
+                Console.WriteLine("Making choice some choice");
+                break;
+            case CommandEnum.END_TURN:
+                Console.WriteLine("Ending turn");
+                break;
         }
     }
 }
