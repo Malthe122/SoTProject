@@ -1,4 +1,5 @@
-public enum HashGenerationType{
+public enum HashGenerationType
+{
     Quick,
     Precise
 }
