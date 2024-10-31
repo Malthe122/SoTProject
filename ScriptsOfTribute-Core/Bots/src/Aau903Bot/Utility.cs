@@ -1,9 +1,8 @@
-using System.Linq.Expressions;
 using ScriptsOfTribute;
-using ScriptsOfTribute.Board.Cards;
 using ScriptsOfTribute.Serializers;
 
-public static class Utility {
+public static class Utility
+{
     public static Random Rng = new Random();
 
     // TODO consider making an evaluation function at start of the game, that populates these lists
@@ -92,47 +91,58 @@ public static class Utility {
         PatronId.RED_EAGLE
     };
 
-    public static int GenerateHash(this SeededGameState state){
+    public static int GenerateHash(this SeededGameState state)
+    {
 
         // Here i chose to do a quick "hash" code to save performance, meaning we can run more iterations. I view the likelyhood of 2 unequal states counting as equal being extremely low
         // even with this basic method is extremely low and should it happen the loss in evaluation precision also being minor compared to how much we can gain by running 
         // more iterations. I added it as an option though in case we change our minds
-        switch(MCTSSettings.CHOSEN_HASH_GENERATION_TYPE){
+        switch (MCTSHyperparameters.CHOSEN_HASH_GENERATION_TYPE)
+        {
             case HashGenerationType.Quick:
                 int handHash = 0;
-                foreach(var currCard in state.CurrentPlayer.Hand){
+                foreach (var currCard in state.CurrentPlayer.Hand)
+                {
                     handHash *= 1 * (int)currCard.CommonId;
                 }
 
                 int tavernHash = 0;
-                foreach(var currCard in state.TavernAvailableCards){
+                foreach (var currCard in state.TavernAvailableCards)
+                {
                     tavernHash *= 2 * ((int)currCard.CommonId);
                 }
-                foreach(var currCard in state.TavernCards){
+                foreach (var currCard in state.TavernCards)
+                {
                     tavernHash *= 3 * ((int)currCard.CommonId);
                 }
 
                 int cooldownHash = 0;
-                foreach(var currCard in state.CurrentPlayer.CooldownPile){
+                foreach (var currCard in state.CurrentPlayer.CooldownPile)
+                {
                     cooldownHash *= 4 * ((int)currCard.CommonId);
                 }
-                foreach(var currCard in state.EnemyPlayer.CooldownPile){
+                foreach (var currCard in state.EnemyPlayer.CooldownPile)
+                {
                     cooldownHash *= 5 * ((int)currCard.CommonId);
                 }
 
                 int upcomingDrawsHash = 0;
-                foreach(var currCard in state.CurrentPlayer.KnownUpcomingDraws){
+                foreach (var currCard in state.CurrentPlayer.KnownUpcomingDraws)
+                {
                     upcomingDrawsHash *= 6 * ((int)currCard.CommonId);
                 }
-                foreach(var currCard in state.EnemyPlayer.KnownUpcomingDraws){
+                foreach (var currCard in state.EnemyPlayer.KnownUpcomingDraws)
+                {
                     cooldownHash *= 7 * ((int)currCard.CommonId);
                 }
 
                 int drawPileHash = 0;
-                foreach(var currCard in state.CurrentPlayer.DrawPile){
+                foreach (var currCard in state.CurrentPlayer.DrawPile)
+                {
                     drawPileHash *= 8 * ((int)currCard.CommonId);
                 }
-                foreach(var currCard in state.EnemyPlayer.DrawPile){
+                foreach (var currCard in state.EnemyPlayer.DrawPile)
+                {
                     drawPileHash *= 9 * ((int)currCard.CommonId);
                 }
 
@@ -142,14 +152,16 @@ public static class Utility {
 
                 int agentHash = 0;
 
-                foreach(var currAgent in state.CurrentPlayer.Agents) {
+                foreach (var currAgent in state.CurrentPlayer.Agents)
+                {
                     agentHash *= 14 * (currAgent.Activated ? 2 : 3);
                     agentHash *= 15 * currAgent.CurrentHp;
                 }
 
-                foreach(var currAgent in state.EnemyPlayer.Agents){
-                   agentHash *= 16 * (currAgent.Activated ? 2 : 3);
-                   agentHash *= 17 * currAgent.CurrentHp; 
+                foreach (var currAgent in state.EnemyPlayer.Agents)
+                {
+                    agentHash *= 16 * (currAgent.Activated ? 2 : 3);
+                    agentHash *= 17 * currAgent.CurrentHp;
                 }
 
                 // TODO patron hash
@@ -159,8 +171,10 @@ public static class Utility {
 
                 return handHash + tavernHash + cooldownHash + upcomingDrawsHash + drawPileHash + commingEffectsHash + resourceHash + agentHash + patronHash + pendingChoiceHash;
             case HashGenerationType.Precise:
-            //TODO implement
-            throw new NotImplementedException(); 
+                //TODO implement
+                throw new NotImplementedException();
+            default:
+                throw new NotImplementedException();
         }
     }
 
@@ -172,7 +186,8 @@ public static class Utility {
     /// <returns></returns>
     public static bool IsNonDeterministic(this Move move)
     {
-        switch(move.Command){
+        switch (move.Command)
+        {
             case CommandEnum.PLAY_CARD:
                 return RANDOM_ACTION_EFFECTS.Contains((move as SimpleCardMove).Card.CommonId);
             case CommandEnum.ACTIVATE_AGENT:
@@ -192,7 +207,8 @@ public static class Utility {
         }
     }
 
-    public static void Log(this SeededGameState gameState){
+    public static void Log(this SeededGameState gameState)
+    {
         Console.WriteLine("State:");
         Console.WriteLine("You:");
         gameState.CurrentPlayer.Log();
@@ -202,15 +218,18 @@ public static class Utility {
         Console.WriteLine("Cards in tavern: " + gameState.TavernAvailableCards.Count);
     }
 
-    public static void Log(this SerializedPlayer player){
+    public static void Log(this SerializedPlayer player)
+    {
         Console.WriteLine("Coins: " + player.Coins);
         Console.WriteLine("Power: " + player.Power);
         Console.WriteLine("Prestige: " + player.Prestige);
         Console.WriteLine("Cards in cooldown: " + player.CooldownPile.Count);
     }
 
-    public static void Log(this Move move){
-        switch (move.Command) {
+    public static void Log(this Move move)
+    {
+        switch (move.Command)
+        {
             case CommandEnum.PLAY_CARD:
                 Console.WriteLine("Play card: " + (move as SimpleCardMove).Card.Name);
                 break;
@@ -233,5 +252,28 @@ public static class Utility {
                 Console.WriteLine("Ending turn");
                 break;
         }
+    }
+}
+
+public static class EnumHelper
+{
+    public static HashGenerationType ToHashGenerationType(string value, HashGenerationType defaultValue = HashGenerationType.Quick)
+    {
+        if (Enum.TryParse<HashGenerationType>(value, true, out var parsedEnum))
+        {
+            return parsedEnum;
+        }
+
+        return defaultValue;
+    }
+
+    public static EvaluationFunction ToEvaluationFnction(string value, EvaluationFunction defaultValue = EvaluationFunction.UCB1)
+    {
+        if (Enum.TryParse<EvaluationFunction>(value, true, out var parsedEnum))
+        {
+            return parsedEnum;
+        }
+
+        return defaultValue;
     }
 }
