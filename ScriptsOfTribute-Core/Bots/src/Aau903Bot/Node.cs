@@ -82,7 +82,8 @@ public class Node
         {
             if (!ChildNodes.Any(child => child.AppliedMove == move))
             {
-                if (MCTSHyperparameters.INCLUDE_CHANCE_NODES && move.IsNonDeterministic())
+                if ((MCTSHyperparameters.INCLUDE_PLAY_MOVE_CHANCE_NODES && move.IsNonDeterministic())
+                    || MCTSHyperparameters.INCLUDE_END_TURN_CHANCE_NODES && move.Command == CommandEnum.END_TURN)
                 {
                     var newChild = new ChanceNode(GameState, this, move);
                     ChildNodes.Add(newChild);
