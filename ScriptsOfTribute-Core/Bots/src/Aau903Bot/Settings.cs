@@ -8,7 +8,6 @@ public static class MCTSHyperparameters
     /// </summary>
     public static double UCB1_EXPLORATION_CONSTANT { get; set; }
     public static int NUMBER_OF_ROLLOUTS { get; set; }
-    public static int ITERATIONS { get; set; }
     /// <summary>
     /// Tells in the rollout whether the agents plays all their possible moves before ending turn or if end turn is an allowed move in any part of their turn
     /// Idea is that setting this to true will first of all be closer to a realistic simulation and also it should end the game quicker, making the simulation
@@ -24,7 +23,6 @@ public static class MCTSHyperparameters
         Settings.LoadEnvFile("environment");
         var config = Settings.GetConfiguration();
 
-        ITERATIONS = config.GetRequiredSection("ITERATIONS").Get<int>();
         NUMBER_OF_ROLLOUTS = config.GetRequiredSection("NUMBER_OF_ROLLOUTS").Get<int>();
 
         UCB1_EXPLORATION_CONSTANT = config.GetRequiredSection("UCB1_EXPLORATION_CONSTANT").Get<float>();
@@ -39,7 +37,6 @@ public static class MCTSHyperparameters
         CHOSEN_HASH_GENERATION_TYPE = EnumHelper.ToHashGenerationType(chosen_hash_generation_type);
 
         Console.WriteLine("Loaded settings:");
-        Console.WriteLine($"ITERATIONS: {ITERATIONS}");
         Console.WriteLine($"NUMBER_OF_ROLLOUTS: {NUMBER_OF_ROLLOUTS}");
         Console.WriteLine($"UCB1_EXPLORATION_CONSTANT: {UCB1_EXPLORATION_CONSTANT}");
         Console.WriteLine($"FORCE_DELAY_TURN_END_IN_ROLLOUT: {FORCE_DELAY_TURN_END_IN_ROLLOUT}");
