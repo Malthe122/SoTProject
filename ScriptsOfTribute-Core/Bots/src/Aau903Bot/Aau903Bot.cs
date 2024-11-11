@@ -23,9 +23,14 @@ public class Aau903Bot : AI
             }
 
             if(possibleMoves.Count == 1){
-                // Console.WriteLine("HIT SITUATION WHERE WE ONLY HAD ONE MOVE, SO WE SKIPPED MCTS---------------------------");
+                Console.WriteLine("HIT SITUATION WHERE WE ONLY HAD ONE MOVE, SO WE SKIPPED MCTS---------------------------");
+                if(possibleMoves[0].Command == CommandEnum.END_TURN) {
+                    Console.WriteLine("----------TURN END----------");
+                    Console.WriteLine("Turn time: " + GetTimeSpentBeforeTurn(remainingTime));
+                }
                 // Console.WriteLine("Move was: " + possibleMoves[0].Command);
-                //TODO find out how MakeChoice sometimes comes as a single move. Logic would say you would always have atleast two choices to make (maybe its choosing like agent to destroy when there is only 1, but check)
+                // TODO find out how MakeChoice sometimes comes as a single move. Logic would say you would always have atleast two choices to make
+                // (maybe its choosing like agent to destroy when there is only 1, but check)
                 return possibleMoves[0];
             }
 
@@ -35,6 +40,12 @@ public class Aau903Bot : AI
             int estimatedRemainingMovesInTurn = EstimateRemainingMovesInTurn(gameState, possibleMoves);
             // TODO here is a hardcoded buffer of 0.04. Could be made as an environment variable
             double millisecondsForMove = (remainingTime.TotalMilliseconds / estimatedRemainingMovesInTurn) - 40;
+
+            // // TODO remove or explain. Rn its just for testing:
+            // if ((millisecondsForMove + GetTimeSpentBeforeTurn(remainingTime)) <= 9_000) {
+            //     Console.WriteLine("Added time");
+            //     millisecondsForMove += 500;
+            // }
 
             ulong randomSeed = (ulong)Utility.Rng.Next();
             var seededGameState = gameState.ToSeededGameState(randomSeed);
@@ -59,9 +70,10 @@ public class Aau903Bot : AI
             // Console.WriteLine("remaining time after calculating move: " + remainingTime.TotalMilliseconds);
 
             if (rootNode.ChildNodes.Count == 0) {
-                // Console.WriteLine("NO TIME FOR CALCULATING MOVE@@@@@@@@@@@@@@@");
+                Console.WriteLine("NO TIME FOR CALCULATING MOVE@@@@@@@@@@@@@@@");
                 if (possibleMoves[0].Command == CommandEnum.END_TURN){
-                // Console.WriteLine("----------TURN END----------");
+                Console.WriteLine("----------TURN END----------");
+                Console.WriteLine("Turn time: " + GetTimeSpentBeforeTurn(remainingTime) + moveTimer.ElapsedMilliseconds);
                 }
                 return possibleMoves[0];
             }
@@ -71,7 +83,8 @@ public class Aau903Bot : AI
                 .FirstOrDefault();
 
             if (bestChildNode.AppliedMove.Command == CommandEnum.END_TURN){
-                // Console.WriteLine("----------TURN END----------");
+                Console.WriteLine("----------TURN END----------");
+                Console.WriteLine("Turn time: " + GetTimeSpentBeforeTurn(remainingTime) + moveTimer.ElapsedMilliseconds);
             }
 
             return bestChildNode.AppliedMove;
@@ -114,6 +127,11 @@ public class Aau903Bot : AI
             if (obviousMove != null) {
                 (currentState, currentPossibleMoves) = currentState.ApplyMove(obviousMove);
             }
+            else if (currentPossibleMoves.Count == 1) {
+                // TODO add this to ovious moves instead
+                // we already checked that its not end turn, so this is make choice in cases where there is only one choice
+                (currentState, currentPossibleMoves) = currentState.ApplyMove(currentPossibleMoves[0]);
+            }
             else {
                 result++;
                 (currentState, currentPossibleMoves) = currentState.ApplyMove(currentPossibleMoves[0]);
@@ -148,6 +166,9 @@ public class Aau903Bot : AI
         return null;
     }
 
+    private double GetTimeSpentBeforeTurn(TimeSpan remainingTime){
+        return 10_000d - remainingTime.TotalMilliseconds;
+    }
     public override PatronId SelectPatron(List<PatronId> availablePatrons, int round)
     {
         return availablePatrons[0];
