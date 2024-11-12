@@ -12,7 +12,6 @@ public class Node
     public List<Node> ChildNodes = new List<Node>();
     public int VisitCount = 0;
     public double TotalScore = 0;
-
     public int GameStateHash;
     public SeededGameState GameState;
     public Move? AppliedMove = null;
@@ -73,7 +72,6 @@ public class Node
 
         TotalScore += score;
         VisitCount++;
-        // return visitedChild;
     }
 
     internal Node Expand()

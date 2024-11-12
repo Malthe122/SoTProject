@@ -38,36 +38,31 @@ public class Aau903Bot : AI
             moveTimer.Start();
 
             int estimatedRemainingMovesInTurn = EstimateRemainingMovesInTurn(gameState, possibleMoves);
-            // TODO here is a hardcoded buffer of 0.04. Could be made as an environment variable
-            double millisecondsForMove = (remainingTime.TotalMilliseconds / estimatedRemainingMovesInTurn) - 40;
-
-            // // TODO remove or explain. Rn its just for testing:
-            // if ((millisecondsForMove + GetTimeSpentBeforeTurn(remainingTime)) <= 9_000) {
-            //     Console.WriteLine("Added time");
-            //     millisecondsForMove += 500;
-            // }
+            double millisecondsForMove = (remainingTime.TotalMilliseconds / estimatedRemainingMovesInTurn) - MCTSHyperparameters.ITERATION_COMPLETION_MILLISECONDS_BUFFER;
 
             ulong randomSeed = (ulong)Utility.Rng.Next();
             var seededGameState = gameState.ToSeededGameState(randomSeed);
             var rootNode = new Node(seededGameState, null, possibleMoves, null);
 
             int iterationCounter = 0;
-            // Console.WriteLine("current available moves: " + possibleMoves.Count);
-            // Console.WriteLine("estimated remaining moves: " + estimatedRemainingMovesInTurn);
-            // Console.WriteLine("milliseconds for move: " + millisecondsForMove);
-            // Console.WriteLine("remaining time: " + remainingTime.TotalMilliseconds);
 
-            while (moveTimer.ElapsedMilliseconds < millisecondsForMove)
-            {
-                // var iterationTimer = new Stopwatch();
-                // iterationTimer.Start();
-                // iterationCounter++;
-                rootNode.Visit(out double score);
-                // iterationTimer.Stop();
-                // Console.WriteLine("Iteration took: " + iterationTimer.ElapsedMilliseconds + " milliseconds");
+            if (MCTSHyperparameters.DYNAMIC_MOVE_TIME_DISTRIBUTION) {
+                while (moveTimer.ElapsedMilliseconds < millisecondsForMove)
+                {
+                    // var iterationTimer = new Stopwatch();
+                    // iterationTimer.Start();
+                    // iterationCounter++;
+                    rootNode.Visit(out double score);
+                    // iterationTimer.Stop();
+                    // Console.WriteLine("Iteration took: " + iterationTimer.ElapsedMilliseconds + " milliseconds");
+                }
             }
-
-            // Console.WriteLine("remaining time after calculating move: " + remainingTime.TotalMilliseconds);
+            else {
+                while(iterationCounter <= MCTSHyperparameters.ITERATIONS){
+                    rootNode.Visit(out double score);
+                    iterationCounter++;
+                }
+            }
 
             if (rootNode.ChildNodes.Count == 0) {
                 Console.WriteLine("NO TIME FOR CALCULATING MOVE@@@@@@@@@@@@@@@");

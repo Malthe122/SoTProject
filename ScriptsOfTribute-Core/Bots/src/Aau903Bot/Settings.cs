@@ -2,17 +2,31 @@ using Microsoft.Extensions.Configuration;
 
 public static class MCTSHyperparameters
 {
-    public static EvaluationFunction CHOSEN_EVALUATION_FUNCTION { get; set; }
-    /// <summary>
-    /// Default value is 1.41421356237, which is the square root of 2
-    /// </summary>
-    public static double UCB1_EXPLORATION_CONSTANT { get; set; }
-    public static int NUMBER_OF_ROLLOUTS { get; set; }
-    /// <summary>
-    /// Tells in the rollout whether the agents plays all their possible moves before ending turn or if end turn is an allowed move in any part of their turn
-    /// Idea is that setting this to true will first of all be closer to a realistic simulation and also it should end the game quicker, making the simulation
-    /// faster than if agents were allowed to spend moves ending turns without really doing anything in the game
-    /// </summary>
+    // Here we split up, which parameters will only be changed for benchmarking purposes to proof their viability. These will have the default value
+    // provided at initialisation underneath, and should only be modified when this specific parameter is being benchmarked for showcasing. 
+    // Underneath we have the parameters than are eligable for being modified by a hyper parameter optimization algorithm
+
+    // Fixed parameters:
+        public static bool DYNAMIC_MOVE_TIME_DISTRIBUTION { get; set; } = true; // if this is false, the fixed amount of.
+        public static int ITERATIONS { get; set; } = 50; // This is only used when DYNAMIC_MOVE_TIME_DISTRIBUTION is set to false. Needs to be set to a number where it wont timeout
+
+    // Parameters for optmization:
+        /// <summary>
+        /// This variable is an upper threshold, telling how much time we need to have left for our move and still complete an iteration. This is to avoid time checking, saying that we did not exceed
+        /// time usage, but then we exceed it during an iteration. If complete rollouts are completely or partly replaced by Heuristic scoring, this can be lower while with full rollouts it should be big
+        /// </summary>
+        public static double ITERATION_COMPLETION_MILLISECONDS_BUFFER { get; set; }
+        public static EvaluationFunction CHOSEN_EVALUATION_FUNCTION { get; set; }
+        /// <summary>
+        /// Default value is 1.41421356237, which is the square root of 2
+        /// </summary>
+        public static double UCB1_EXPLORATION_CONSTANT { get; set; }
+        public static int NUMBER_OF_ROLLOUTS { get; set; }
+        /// <summary>
+        /// Tells in the rollout whether the agents plays all their possible moves before ending turn or if end turn is an allowed move in any part of their turn
+        /// Idea is that setting this to true will first of all be closer to a realistic simulation and also it should end the game quicker, making the simulation
+        /// faster than if agents were allowed to spend moves ending turns without really doing anything in the game
+        /// </summary>
     public static bool FORCE_DELAY_TURN_END_IN_ROLLOUT { get; set; }
     public static bool INCLUDE_PLAY_MOVE_CHANCE_NODES { get; set; }
     public static bool INCLUDE_END_TURN_CHANCE_NODES { get; set; }
@@ -22,6 +36,10 @@ public static class MCTSHyperparameters
     {
         Settings.LoadEnvFile("environment");
         var config = Settings.GetConfiguration();
+
+        DYNAMIC_MOVE_TIME_DISTRIBUTION = config.GetRequiredSection("DYNAMIC_MOVE_TIME_DISTRIBUTON").Get<bool>();
+        ITERATION_COMPLETION_MILLISECONDS_BUFFER = config.GetRequiredSection("ITERATION_COMPLETION_MILLISECONDS_BUFFER").Get<double>();
+        ITERATIONS = config.GetRequiredSection("ITERATIONS").Get<int>();
 
         NUMBER_OF_ROLLOUTS = config.GetRequiredSection("NUMBER_OF_ROLLOUTS").Get<int>();
 
@@ -44,6 +62,9 @@ public static class MCTSHyperparameters
         Console.WriteLine($"INCLUDE_END_TURN_CHANCE_NODES: {INCLUDE_END_TURN_CHANCE_NODES}");
         Console.WriteLine($"CHOSEN_EVALUATION_FUNCTION: {CHOSEN_EVALUATION_FUNCTION}");
         Console.WriteLine($"CHOSEN_HASH_GENERATION_TYPE: {CHOSEN_HASH_GENERATION_TYPE}");
+        Console.WriteLine($"DYNAMIC_MOVE_TIME_DISTRIBUTION: {DYNAMIC_MOVE_TIME_DISTRIBUTION}");
+        Console.WriteLine($"ITERATIONS: {ITERATIONS}");
+        Console.WriteLine($"ITERATION_COMPLETION_MILLISECONDS_BUFFER: {ITERATION_COMPLETION_MILLISECONDS_BUFFER}");
     }
 }
 
