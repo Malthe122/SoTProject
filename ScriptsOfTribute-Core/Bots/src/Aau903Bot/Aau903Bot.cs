@@ -23,14 +23,6 @@ public class Aau903Bot : AI
             }
 
             if(possibleMoves.Count == 1){
-                Console.WriteLine("HIT SITUATION WHERE WE ONLY HAD ONE MOVE, SO WE SKIPPED MCTS---------------------------");
-                if(possibleMoves[0].Command == CommandEnum.END_TURN) {
-                    Console.WriteLine("----------TURN END----------");
-                    Console.WriteLine("Turn time: " + GetTimeSpentBeforeTurn(remainingTime));
-                }
-                // Console.WriteLine("Move was: " + possibleMoves[0].Command);
-                // TODO find out how MakeChoice sometimes comes as a single move. Logic would say you would always have atleast two choices to make
-                // (maybe its choosing like agent to destroy when there is only 1, but check)
                 return possibleMoves[0];
             }
 
@@ -65,22 +57,13 @@ public class Aau903Bot : AI
             }
 
             if (rootNode.ChildNodes.Count == 0) {
-                Console.WriteLine("NO TIME FOR CALCULATING MOVE@@@@@@@@@@@@@@@");
-                if (possibleMoves[0].Command == CommandEnum.END_TURN){
-                Console.WriteLine("----------TURN END----------");
-                Console.WriteLine("Turn time: " + GetTimeSpentBeforeTurn(remainingTime) + moveTimer.ElapsedMilliseconds);
-                }
+                // Console.WriteLine("NO TIME FOR CALCULATING MOVE@@@@@@@@@@@@@@@");
                 return possibleMoves[0];
             }
 
             var bestChildNode = rootNode.ChildNodes
                 .OrderByDescending(child => (child.TotalScore / child.VisitCount))
                 .FirstOrDefault();
-
-            if (bestChildNode.AppliedMove.Command == CommandEnum.END_TURN){
-                Console.WriteLine("----------TURN END----------");
-                Console.WriteLine("Turn time: " + GetTimeSpentBeforeTurn(remainingTime) + moveTimer.ElapsedMilliseconds);
-            }
 
             return bestChildNode.AppliedMove;
         }
