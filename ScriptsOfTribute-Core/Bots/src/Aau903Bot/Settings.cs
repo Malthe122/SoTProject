@@ -27,12 +27,14 @@ public static class MCTSHyperparameters
         /// Idea is that setting this to true will first of all be closer to a realistic simulation and also it should end the game quicker, making the simulation
         /// faster than if agents were allowed to spend moves ending turns without really doing anything in the game
         /// </summary>
-    public static bool FORCE_DELAY_TURN_END_IN_ROLLOUT { get; set; }
-    public static bool INCLUDE_PLAY_MOVE_CHANCE_NODES { get; set; }
-    public static bool INCLUDE_END_TURN_CHANCE_NODES { get; set; }
-    public static bool SET_MAX_EXPANSION_DEPTH { get; set; }
-    public static int CHOSEN_MAX_EXPANSION_DEPTH { get; set; }
-    public static HashGenerationType CHOSEN_HASH_GENERATION_TYPE { get; set; }
+        public static bool FORCE_DELAY_TURN_END_IN_ROLLOUT { get; set; }
+        public static bool INCLUDE_PLAY_MOVE_CHANCE_NODES { get; set; }
+        public static bool INCLUDE_END_TURN_CHANCE_NODES { get; set; }
+        public static HashGenerationType CHOSEN_HASH_GENERATION_TYPE { get; set; }
+        public static bool SET_MAX_EXPANSION_DEPTH { get; set; }
+        public static int CHOSEN_MAX_EXPANSION_DEPTH { get; set; }
+        public static ScoringMethod CHOSEN_SCORING_METHOD { get; set; }
+        public static int ROLLOUT_TURNS_BEFORE_HEURSISTIC { get; set; }
 
     static MCTSHyperparameters()
     {
@@ -42,20 +44,22 @@ public static class MCTSHyperparameters
         DYNAMIC_MOVE_TIME_DISTRIBUTION = config.GetRequiredSection("DYNAMIC_MOVE_TIME_DISTRIBUTION").Get<bool>();
         ITERATION_COMPLETION_MILLISECONDS_BUFFER = config.GetRequiredSection("ITERATION_COMPLETION_MILLISECONDS_BUFFER").Get<double>();
         ITERATIONS = config.GetRequiredSection("ITERATIONS").Get<int>();
-
         NUMBER_OF_ROLLOUTS = config.GetRequiredSection("NUMBER_OF_ROLLOUTS").Get<int>();
-
         UCB1_EXPLORATION_CONSTANT = config.GetRequiredSection("UCB1_EXPLORATION_CONSTANT").Get<float>();
         FORCE_DELAY_TURN_END_IN_ROLLOUT = config.GetRequiredSection("FORCE_DELAY_TURN_END_IN_ROLLOUT").Get<bool>();
         INCLUDE_PLAY_MOVE_CHANCE_NODES = config.GetRequiredSection("INCLUDE_PLAY_MOVE_CHANCE_NODES").Get<bool>();
         INCLUDE_END_TURN_CHANCE_NODES = config.GetRequiredSection("INCLUDE_END_TURN_CHANCE_NODES").Get<bool>();
 
         var chosen_evaluation_function = config.GetRequiredSection("CHOSEN_EVALUATION_FUNCTION").Get<string>();
-        CHOSEN_EVALUATION_FUNCTION = EnumHelper.ToEvaluationFnction(chosen_evaluation_function);
+        CHOSEN_EVALUATION_FUNCTION = Enum.Parse<EvaluationFunction>(chosen_evaluation_function);
 
         var chosen_hash_generation_type = config.GetRequiredSection("CHOSEN_HASH_GENERATION_TYPE").Get<string>();
-        CHOSEN_HASH_GENERATION_TYPE = EnumHelper.ToHashGenerationType(chosen_hash_generation_type);
+        CHOSEN_HASH_GENERATION_TYPE = Enum.Parse<HashGenerationType>(chosen_hash_generation_type);
 
+        var chosenScoringMethodString = config.GetRequiredSection("CHOSEN_SCORING_METHOD").Get<string>();
+        CHOSEN_SCORING_METHOD = Enum.Parse<ScoringMethod>(chosenScoringMethodString);
+
+        ROLLOUT_TURNS_BEFORE_HEURSISTIC = config.GetRequiredSection("ROLLOUT_TURNS_BEFORE_HEURSISTIC").Get<int>();
         SET_MAX_EXPANSION_DEPTH = config.GetRequiredSection("SET_MAX_EXPANSION_DEPTH").Get<bool>();
         CHOSEN_MAX_EXPANSION_DEPTH = config.GetRequiredSection("CHOSEN_MAX_EXPANSION_DEPTH").Get<int>();
 
@@ -70,6 +74,8 @@ public static class MCTSHyperparameters
         Console.WriteLine($"DYNAMIC_MOVE_TIME_DISTRIBUTION: {DYNAMIC_MOVE_TIME_DISTRIBUTION}");
         Console.WriteLine($"ITERATIONS: {ITERATIONS}");
         Console.WriteLine($"ITERATION_COMPLETION_MILLISECONDS_BUFFER: {ITERATION_COMPLETION_MILLISECONDS_BUFFER}");
+        Console.WriteLine($"CHOSEN_SCORING_METHOD: {CHOSEN_SCORING_METHOD}");
+        Console.WriteLine($"ROLLOUT_TURNS_BEFORE_HEURSISTIC: {ROLLOUT_TURNS_BEFORE_HEURSISTIC}");
         Console.WriteLine($"SET_MAX_EXPANSION_DEPTH: {SET_MAX_EXPANSION_DEPTH}");
         Console.WriteLine($"CHOSEN_EXPANSION_DEPTH: {CHOSEN_MAX_EXPANSION_DEPTH}");
     }
