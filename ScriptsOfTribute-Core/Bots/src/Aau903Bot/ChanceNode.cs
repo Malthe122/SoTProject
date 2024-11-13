@@ -3,11 +3,10 @@ using ScriptsOfTribute.Serializers;
 
 public class ChanceNode : Node
 {
-    public ChanceNode(SeededGameState gameState, Node parent, Move appliedMove) : base(gameState, parent, null, appliedMove) { }
+    public ChanceNode(SeededGameState gameState, Node parent, Move appliedMove, int depth ) : base(gameState, parent, null, appliedMove, depth) { }
 
     public override void Visit(out double score)
-    {
-
+    {      
         (var newState, var newMoves) = Parent.GameState.ApplyMove(AppliedMove, (ulong)Utility.Rng.Next());
         var newStateHash = newState.GenerateHash();
         if (ChildNodes.Any(n => n.GameStateHash == newStateHash))
@@ -30,7 +29,7 @@ public class ChanceNode : Node
         }
         else
         {
-            var newChild = new Node(newState, this, newMoves, AppliedMove);
+            var newChild = new Node(newState, this, newMoves, AppliedMove, Depth);
             ChildNodes.Add(newChild);
             newChild.Visit(out score);
         }

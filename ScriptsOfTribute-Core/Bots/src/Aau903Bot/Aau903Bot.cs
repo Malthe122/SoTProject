@@ -34,7 +34,7 @@ public class Aau903Bot : AI
 
             ulong randomSeed = (ulong)Utility.Rng.Next();
             var seededGameState = gameState.ToSeededGameState(randomSeed);
-            var rootNode = new Node(seededGameState, null, possibleMoves, null);
+            var rootNode = new Node(seededGameState, null, possibleMoves, null, 0);
 
             int iterationCounter = 0;
 
