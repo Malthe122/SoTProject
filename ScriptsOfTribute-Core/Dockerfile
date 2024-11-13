@@ -1,11 +1,19 @@
 FROM ubuntu:22.04
 
+# Set non-interactive mode for apt-get
 RUN export DEBIAN_FRONTEND=noninteractive
 
+# Update and install necessary packages
 RUN apt-get update && \
-    apt-get install -y rsync sudo wget
+    apt-get install -y \
+    git \
+    vim \
+    nano \
+    wget \
+    python3 \
+    python3-pip \
+    dotnet-sdk-7.0 \
+    aspnetcore-runtime-7.0
 
-RUN apt-get install -y dotnet-sdk-7.0 && \
-    apt-get install -y aspnetcore-runtime-7.0
-
-COPY . /tot
+# Copy project files
+COPY . /sot
