@@ -14,15 +14,17 @@ public class Node
     public double TotalScore = 0;
     public int GameStateHash;
     public SeededGameState GameState;
-    public Move? AppliedMove = null;
+    public Move? AppliedMove;
     public List<Move> PossibleMoves;
+    public int Depth;
 
-    public Node(SeededGameState gameState, Node parent, List<Move> possibleMoves, Move appliedMove)
+    public Node(SeededGameState gameState, Node parent, List<Move> possibleMoves, Move appliedMove, int depth)
     {
         GameState = gameState;
         Parent = parent;
         PossibleMoves = possibleMoves;
         AppliedMove = appliedMove;
+        Depth = depth;
         /// <summary>
         /// TODO if this takes too much performance, look into only calling this method on children of chance nodes
         /// </summary>
@@ -33,6 +35,17 @@ public class Node
     {
         Node visitedChild = null;
         var playerId = GameState.CurrentPlayer.PlayerID;
+
+        if (MCTSHyperparameters.SET_MAX_EXPANSION_DEPTH)
+        {
+            if(Depth >= MCTSHyperparameters.CHOSEN_MAX_EXPANSION_DEPTH)
+            {
+                score = Rollout();
+                TotalScore += score;
+                VisitCount++;
+                return;
+            }
+        }
 
         if (GameState.GameEndState == null)
         {
@@ -84,7 +97,7 @@ public class Node
                 if ((MCTSHyperparameters.INCLUDE_PLAY_MOVE_CHANCE_NODES && move.IsNonDeterministic())
                     || MCTSHyperparameters.INCLUDE_END_TURN_CHANCE_NODES && move.Command == CommandEnum.END_TURN)
                 {
-                    var newChild = new ChanceNode(GameState, this, move);
+                    var newChild = new ChanceNode(GameState, this, move, Depth+1);
                     ChildNodes.Add(newChild);
                     return newChild;
                 }
@@ -92,8 +105,9 @@ public class Node
                 {
                     ulong randomSeed = (ulong)Utility.Rng.Next();
                     var (newGameState, newPossibleMoves) = GameState.ApplyMove(move, randomSeed);
-                    var newChild = new Node(newGameState, this, newPossibleMoves, move);
+                    var newChild = new Node(newGameState, this, newPossibleMoves, move, Depth+1);
                     ChildNodes.Add(newChild);
+                    // Console.WriteLine($"New child added with Depth level: {newChild.Depth}");
                     return newChild;
                 }
             }

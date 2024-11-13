@@ -278,26 +278,3 @@ public static class Utility
         return strategy.Heuristic(gameState);
     }
 }
-
-public static class EnumHelper
-{
-    public static HashGenerationType ToHashGenerationType(string value, HashGenerationType defaultValue = HashGenerationType.Quick)
-    {
-        if (Enum.TryParse<HashGenerationType>(value, true, out var parsedEnum))
-        {
-            return parsedEnum;
-        }
-
-        return defaultValue;
-    }
-
-    public static EvaluationFunction ToEvaluationFnction(string value, EvaluationFunction defaultValue = EvaluationFunction.UCB1)
-    {
-        if (Enum.TryParse<EvaluationFunction>(value, true, out var parsedEnum))
-        {
-            return parsedEnum;
-        }
-
-        return defaultValue;
-    }
-}
