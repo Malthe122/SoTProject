@@ -1,3 +1,4 @@
+using ExternalHeuristic;
 using ScriptsOfTribute;
 using ScriptsOfTribute.Serializers;
 using System.Text;
@@ -292,27 +293,27 @@ public static class Utility
                 break;
         }
     }
-}
 
-public static class EnumHelper
-{
-    public static HashGenerationType ToHashGenerationType(string value, HashGenerationType defaultValue = HashGenerationType.Quick)
-    {
-        if (Enum.TryParse<HashGenerationType>(value, true, out var parsedEnum))
+    public static double UseBestMCTS3Heuristic(SeededGameState gameState) {
+        
+        GameStrategy strategy;
+
+        var currentPlayer = gameState.CurrentPlayer;
+        int cardCount = currentPlayer.Hand.Count + currentPlayer.CooldownPile.Count + currentPlayer.DrawPile.Count;
+        int points = gameState.CurrentPlayer.Prestige;
+        if (points >= 27 || gameState.EnemyPlayer.Prestige >= 30)
         {
-            return parsedEnum;
+            strategy = new GameStrategy(cardCount, GamePhase.LateGame);
+        }
+        else if (points <= 10 && gameState.EnemyPlayer.Prestige <= 13)
+        {
+            strategy = new GameStrategy(cardCount, GamePhase.EarlyGame);
+        }
+        else
+        {
+            strategy = new GameStrategy(cardCount, GamePhase.MidGame);
         }
 
-        return defaultValue;
-    }
-
-    public static EvaluationFunction ToEvaluationFnction(string value, EvaluationFunction defaultValue = EvaluationFunction.UCB1)
-    {
-        if (Enum.TryParse<EvaluationFunction>(value, true, out var parsedEnum))
-        {
-            return parsedEnum;
-        }
-
-        return defaultValue;
+        return strategy.Heuristic(gameState);
     }
 }

@@ -4,12 +4,8 @@ using ScriptsOfTribute.AI;
 using ScriptsOfTribute.Board;
 using ScriptsOfTribute.Serializers;
 
-namespace Aau903Bot;
-
 public class Aau903Bot : AI
 {
-    private TreeLogger treeLogger = new TreeLogger();
-
     public override void GameEnd(EndGameState state, FullGameState? finalBoardState)
     {
         Console.WriteLine("@@@ Game ended because of " + state.Reason + " @@@");
@@ -26,8 +22,7 @@ public class Aau903Bot : AI
                 return obviousMove;
             }
 
-            if (possibleMoves.Count == 1)
-            {
+            if(possibleMoves.Count == 1){
                 return possibleMoves[0];
             }
 
@@ -39,12 +34,11 @@ public class Aau903Bot : AI
 
             ulong randomSeed = (ulong)Utility.Rng.Next();
             var seededGameState = gameState.ToSeededGameState(randomSeed);
-            var rootNode = new Node(seededGameState, null, possibleMoves, null);
+            var rootNode = new Node(seededGameState, null, possibleMoves, null, 0);
 
             int iterationCounter = 0;
 
-            if (MCTSHyperparameters.DYNAMIC_MOVE_TIME_DISTRIBUTION)
-            {
+            if (MCTSHyperparameters.DYNAMIC_MOVE_TIME_DISTRIBUTION) {
                 while (moveTimer.ElapsedMilliseconds < millisecondsForMove)
                 {
                     // var iterationTimer = new Stopwatch();
@@ -53,21 +47,16 @@ public class Aau903Bot : AI
                     rootNode.Visit(out double score);
                     // iterationTimer.Stop();
                     // Console.WriteLine("Iteration took: " + iterationTimer.ElapsedMilliseconds + " milliseconds");
-
-                    treeLogger.LogTree(rootNode);
                 }
             }
-            else
-            {
-                while (iterationCounter <= MCTSHyperparameters.ITERATIONS)
-                {
+            else {
+                while(iterationCounter <= MCTSHyperparameters.ITERATIONS){
                     rootNode.Visit(out double score);
                     iterationCounter++;
                 }
             }
 
-            if (rootNode.ChildNodes.Count == 0)
-            {
+            if (rootNode.ChildNodes.Count == 0) {
                 // Console.WriteLine("NO TIME FOR CALCULATING MOVE@@@@@@@@@@@@@@@");
                 return possibleMoves[0];
             }
@@ -93,16 +82,14 @@ public class Aau903Bot : AI
         }
     }
 
-    private int EstimateRemainingMovesInTurn(GameState inputState, List<Move> inputPossibleMoves)
-    {
+    private int EstimateRemainingMovesInTurn(GameState inputState, List<Move> inputPossibleMoves){
         return EstimateRemainingMovesInTurn(inputState.ToSeededGameState((ulong)Utility.Rng.Next()), inputPossibleMoves);
     }
 
     private int EstimateRemainingMovesInTurn(SeededGameState inputState, List<Move> inputPossibleMoves)
     {
 
-        if (inputPossibleMoves.Count == 1 && inputPossibleMoves[0].Command == CommandEnum.END_TURN)
-        {
+        if (inputPossibleMoves.Count == 1 && inputPossibleMoves[0].Command == CommandEnum.END_TURN) {
             return 0;
         }
 
@@ -112,22 +99,18 @@ public class Aau903Bot : AI
         SeededGameState currentState = inputState;
         List<Move> currentPossibleMoves = inputPossibleMoves;
 
-        while (currentPossibleMoves.Count > 0)
-        {
+        while(currentPossibleMoves.Count > 0) {
 
             var obviousMove = FindObviousMove(currentPossibleMoves);
-            if (obviousMove != null)
-            {
+            if (obviousMove != null) {
                 (currentState, currentPossibleMoves) = currentState.ApplyMove(obviousMove);
             }
-            else if (currentPossibleMoves.Count == 1)
-            {
+            else if (currentPossibleMoves.Count == 1) {
                 // TODO add this to ovious moves instead
                 // we already checked that its not end turn, so this is make choice in cases where there is only one choice
                 (currentState, currentPossibleMoves) = currentState.ApplyMove(currentPossibleMoves[0]);
             }
-            else
-            {
+            else {
                 result++;
                 (currentState, currentPossibleMoves) = currentState.ApplyMove(currentPossibleMoves[0]);
             }
@@ -161,8 +144,10 @@ public class Aau903Bot : AI
         return null;
     }
 
-    private double GetTimeSpentBeforeTurn(TimeSpan remainingTime)
-    {
+    /// <summary>
+    /// Used for logging when debugging. Do not delete even though it has no references
+    /// </summary>
+    private double GetTimeSpentBeforeTurn(TimeSpan remainingTime){
         return 10_000d - remainingTime.TotalMilliseconds;
     }
     public override PatronId SelectPatron(List<PatronId> availablePatrons, int round)
