@@ -30,6 +30,8 @@ public static class MCTSHyperparameters
     public static bool FORCE_DELAY_TURN_END_IN_ROLLOUT { get; set; }
     public static bool INCLUDE_PLAY_MOVE_CHANCE_NODES { get; set; }
     public static bool INCLUDE_END_TURN_CHANCE_NODES { get; set; }
+    public static bool SET_MAX_EXPANSION_DEPTH { get; set; }
+    public static int CHOSEN_MAX_EXPANSION_DEPTH { get; set; }
     public static HashGenerationType CHOSEN_HASH_GENERATION_TYPE { get; set; }
 
     static MCTSHyperparameters()
@@ -37,7 +39,7 @@ public static class MCTSHyperparameters
         Settings.LoadEnvFile("environment");
         var config = Settings.GetConfiguration();
 
-        DYNAMIC_MOVE_TIME_DISTRIBUTION = config.GetRequiredSection("DYNAMIC_MOVE_TIME_DISTRIBUTON").Get<bool>();
+        DYNAMIC_MOVE_TIME_DISTRIBUTION = config.GetRequiredSection("DYNAMIC_MOVE_TIME_DISTRIBUTION").Get<bool>();
         ITERATION_COMPLETION_MILLISECONDS_BUFFER = config.GetRequiredSection("ITERATION_COMPLETION_MILLISECONDS_BUFFER").Get<double>();
         ITERATIONS = config.GetRequiredSection("ITERATIONS").Get<int>();
 
@@ -54,6 +56,9 @@ public static class MCTSHyperparameters
         var chosen_hash_generation_type = config.GetRequiredSection("CHOSEN_HASH_GENERATION_TYPE").Get<string>();
         CHOSEN_HASH_GENERATION_TYPE = EnumHelper.ToHashGenerationType(chosen_hash_generation_type);
 
+        SET_MAX_EXPANSION_DEPTH = config.GetRequiredSection("SET_MAX_EXPANSION_DEPTH").Get<bool>();
+        CHOSEN_MAX_EXPANSION_DEPTH = config.GetRequiredSection("CHOSEN_MAX_EXPANSION_DEPTH").Get<int>();
+
         Console.WriteLine("Loaded settings:");
         Console.WriteLine($"NUMBER_OF_ROLLOUTS: {NUMBER_OF_ROLLOUTS}");
         Console.WriteLine($"UCB1_EXPLORATION_CONSTANT: {UCB1_EXPLORATION_CONSTANT}");
@@ -65,6 +70,8 @@ public static class MCTSHyperparameters
         Console.WriteLine($"DYNAMIC_MOVE_TIME_DISTRIBUTION: {DYNAMIC_MOVE_TIME_DISTRIBUTION}");
         Console.WriteLine($"ITERATIONS: {ITERATIONS}");
         Console.WriteLine($"ITERATION_COMPLETION_MILLISECONDS_BUFFER: {ITERATION_COMPLETION_MILLISECONDS_BUFFER}");
+        Console.WriteLine($"SET_MAX_EXPANSION_DEPTH: {SET_MAX_EXPANSION_DEPTH}");
+        Console.WriteLine($"CHOSEN_EXPANSION_DEPTH: {CHOSEN_MAX_EXPANSION_DEPTH}");
     }
 }
 
