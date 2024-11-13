@@ -27,10 +27,12 @@ public static class MCTSHyperparameters
         /// Idea is that setting this to true will first of all be closer to a realistic simulation and also it should end the game quicker, making the simulation
         /// faster than if agents were allowed to spend moves ending turns without really doing anything in the game
         /// </summary>
-    public static bool FORCE_DELAY_TURN_END_IN_ROLLOUT { get; set; }
-    public static bool INCLUDE_PLAY_MOVE_CHANCE_NODES { get; set; }
-    public static bool INCLUDE_END_TURN_CHANCE_NODES { get; set; }
-    public static HashGenerationType CHOSEN_HASH_GENERATION_TYPE { get; set; }
+        public static bool FORCE_DELAY_TURN_END_IN_ROLLOUT { get; set; }
+        public static bool INCLUDE_PLAY_MOVE_CHANCE_NODES { get; set; }
+        public static bool INCLUDE_END_TURN_CHANCE_NODES { get; set; }
+        public static HashGenerationType CHOSEN_HASH_GENERATION_TYPE { get; set; }
+        public static ScoringMethod CHOSEN_SCORING_METHOD { get; set; }
+        public static int ROLLOUT_TURNS_BEFORE_HEURSISTIC { get; set; }
 
     static MCTSHyperparameters()
     {
@@ -54,6 +56,9 @@ public static class MCTSHyperparameters
         var chosen_hash_generation_type = config.GetRequiredSection("CHOSEN_HASH_GENERATION_TYPE").Get<string>();
         CHOSEN_HASH_GENERATION_TYPE = EnumHelper.ToHashGenerationType(chosen_hash_generation_type);
 
+        CHOSEN_SCORING_METHOD = ScoringMethod.RolloutTurnsCompletionsThenHeuristic; //TODO remove hardcoding and put as environment variables
+        ROLLOUT_TURNS_BEFORE_HEURSISTIC = 3; //TODO remove hardcoding and put as environment variables
+
         Console.WriteLine("Loaded settings:");
         Console.WriteLine($"NUMBER_OF_ROLLOUTS: {NUMBER_OF_ROLLOUTS}");
         Console.WriteLine($"UCB1_EXPLORATION_CONSTANT: {UCB1_EXPLORATION_CONSTANT}");
@@ -65,6 +70,8 @@ public static class MCTSHyperparameters
         Console.WriteLine($"DYNAMIC_MOVE_TIME_DISTRIBUTION: {DYNAMIC_MOVE_TIME_DISTRIBUTION}");
         Console.WriteLine($"ITERATIONS: {ITERATIONS}");
         Console.WriteLine($"ITERATION_COMPLETION_MILLISECONDS_BUFFER: {ITERATION_COMPLETION_MILLISECONDS_BUFFER}");
+        Console.WriteLine($"CHOSEN_SCORING_METHOD: {CHOSEN_SCORING_METHOD}");
+        Console.WriteLine($"ROLLOUT_TURNS_BEFORE_HEURSISTIC: {ROLLOUT_TURNS_BEFORE_HEURSISTIC}");
     }
 }
 

@@ -1,3 +1,4 @@
+using ExternalHeuristic;
 using ScriptsOfTribute;
 using ScriptsOfTribute.Serializers;
 
@@ -252,6 +253,29 @@ public static class Utility
                 Console.WriteLine("Ending turn");
                 break;
         }
+    }
+
+    public static double UseBestMCTS3Heuristic(SeededGameState gameState) {
+        
+        GameStrategy strategy;
+
+        var currentPlayer = gameState.CurrentPlayer;
+        int cardCount = currentPlayer.Hand.Count + currentPlayer.CooldownPile.Count + currentPlayer.DrawPile.Count;
+        int points = gameState.CurrentPlayer.Prestige;
+        if (points >= 27 || gameState.EnemyPlayer.Prestige >= 30)
+        {
+            strategy = new GameStrategy(cardCount, GamePhase.LateGame);
+        }
+        else if (points <= 10 && gameState.EnemyPlayer.Prestige <= 13)
+        {
+            strategy = new GameStrategy(cardCount, GamePhase.EarlyGame);
+        }
+        else
+        {
+            strategy = new GameStrategy(cardCount, GamePhase.MidGame);
+        }
+
+        return strategy.Heuristic(gameState);
     }
 }
 

@@ -144,6 +144,9 @@ public class Aau903Bot : AI
         return null;
     }
 
+    /// <summary>
+    /// Used for logging when debugging. Do not delete even though it has no references
+    /// </summary>
     private double GetTimeSpentBeforeTurn(TimeSpan remainingTime){
         return 10_000d - remainingTime.TotalMilliseconds;
     }
