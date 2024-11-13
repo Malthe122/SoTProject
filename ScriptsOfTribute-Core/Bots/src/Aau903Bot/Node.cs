@@ -143,19 +143,9 @@ public class Node
                     currentPossibleMoves.RemoveAll(move => move.Command == CommandEnum.END_TURN);
                 }
             }
-            int chosenIndex = -500;
-            Move moveToMake = null;
-
-            try{
-                chosenIndex = Utility.Rng.Next(currentPossibleMoves.Count);
-                moveToMake = currentPossibleMoves[chosenIndex];
-            }
-            catch(Exception e){
-                Console.WriteLine("Exception REEEEEEEEEEEEEEE");
-                Console.WriteLine("Current possible moves size: " + currentPossibleMoves.Count);
-                Console.WriteLine("Chosen index: " + chosenIndex);
-                Console.WriteLine("Move to make: " + moveToMake);
-            }
+           
+            var chosenIndex = Utility.Rng.Next(currentPossibleMoves.Count);
+            var moveToMake = currentPossibleMoves[chosenIndex];
 
             var (newGameState, newPossibleMoves) = currentGameState.ApplyMove(moveToMake);
 
