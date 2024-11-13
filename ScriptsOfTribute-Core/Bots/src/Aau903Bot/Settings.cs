@@ -1,5 +1,7 @@
 using Microsoft.Extensions.Configuration;
 
+namespace Aau903Bot;
+
 public static class MCTSHyperparameters
 {
     // Here we split up, which parameters will only be changed for benchmarking purposes to proof their viability. These will have the default value
@@ -37,7 +39,7 @@ public static class MCTSHyperparameters
         Settings.LoadEnvFile("environment");
         var config = Settings.GetConfiguration();
 
-        DYNAMIC_MOVE_TIME_DISTRIBUTION = config.GetRequiredSection("DYNAMIC_MOVE_TIME_DISTRIBUTON").Get<bool>();
+        DYNAMIC_MOVE_TIME_DISTRIBUTION = config.GetRequiredSection("DYNAMIC_MOVE_TIME_DISTRIBUTION").Get<bool>();
         ITERATION_COMPLETION_MILLISECONDS_BUFFER = config.GetRequiredSection("ITERATION_COMPLETION_MILLISECONDS_BUFFER").Get<double>();
         ITERATIONS = config.GetRequiredSection("ITERATIONS").Get<int>();
 

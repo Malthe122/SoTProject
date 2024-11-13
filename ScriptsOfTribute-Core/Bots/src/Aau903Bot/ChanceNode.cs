@@ -1,6 +1,8 @@
 using ScriptsOfTribute;
 using ScriptsOfTribute.Serializers;
 
+namespace Aau903Bot;
+
 public class ChanceNode : Node
 {
     public ChanceNode(SeededGameState gameState, Node parent, Move appliedMove) : base(gameState, parent, null, appliedMove) { }

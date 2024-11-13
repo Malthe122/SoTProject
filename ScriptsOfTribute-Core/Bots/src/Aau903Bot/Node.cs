@@ -1,6 +1,8 @@
 using ScriptsOfTribute;
 using ScriptsOfTribute.Serializers;
 
+namespace Aau903Bot;
+
 public class Node
 {
     /// <summary>
