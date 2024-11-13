@@ -14,9 +14,9 @@ public class Node
     public double TotalScore = 0;
     public int GameStateHash;
     public SeededGameState GameState;
-    public Move? AppliedMove = null;
+    public Move? AppliedMove;
     public List<Move> PossibleMoves;
-    public int Depth = 0;
+    public int Depth;
 
     public Node(SeededGameState gameState, Node parent, List<Move> possibleMoves, Move appliedMove, int depth)
     {
@@ -148,8 +148,7 @@ public class Node
                 {
                     if (rolloutPossibleMoves.Count > 1)
                     {
-                        var endExists = rolloutPossibleMoves.Any(move => move.Command == CommandEnum.END_TURN);
-                        int count = rolloutPossibleMoves.RemoveAll(move => move.Command == CommandEnum.END_TURN);
+                        rolloutPossibleMoves.RemoveAll(move => move.Command == CommandEnum.END_TURN);
                     }
                 }
                 var chosenIndex = Utility.Rng.Next(rolloutPossibleMoves.Count);
