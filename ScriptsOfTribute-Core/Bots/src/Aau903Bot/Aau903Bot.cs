@@ -4,6 +4,8 @@ using ScriptsOfTribute.AI;
 using ScriptsOfTribute.Board;
 using ScriptsOfTribute.Serializers;
 
+namespace Aau903Bot;
+
 public class Aau903Bot : AI
 {
     public override void GameEnd(EndGameState state, FullGameState? finalBoardState)
