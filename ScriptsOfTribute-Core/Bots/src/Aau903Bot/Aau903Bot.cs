@@ -8,6 +8,9 @@ namespace Aau903Bot;
 
 public class Aau903Bot : AI
 {
+    private Node? lastVisitedNode = null;
+    private TreeLogger treeLogger = new TreeLogger();
+
     public override void GameEnd(EndGameState state, FullGameState? finalBoardState)
     {
         Console.WriteLine("@@@ Game ended because of " + state.Reason + " @@@");
@@ -18,13 +21,16 @@ public class Aau903Bot : AI
     {
         try
         {
+            var timer = new Stopwatch();
+            timer.Start();
             var obviousMove = FindObviousMove(possibleMoves);
             if (obviousMove != null)
             {
                 return obviousMove;
             }
 
-            if(possibleMoves.Count == 1){
+            if (possibleMoves.Count == 1)
+            {
                 return possibleMoves[0];
             }
 
@@ -34,39 +40,72 @@ public class Aau903Bot : AI
             int estimatedRemainingMovesInTurn = EstimateRemainingMovesInTurn(gameState, possibleMoves);
             double millisecondsForMove = (remainingTime.TotalMilliseconds / estimatedRemainingMovesInTurn) - MCTSHyperparameters.ITERATION_COMPLETION_MILLISECONDS_BUFFER;
 
-            ulong randomSeed = (ulong)Utility.Rng.Next();
-            var seededGameState = gameState.ToSeededGameState(randomSeed);
-            var rootNode = new Node(seededGameState, null, possibleMoves, null, 0);
+            if (this.lastVisitedNode == null)
+            {
+                ulong randomSeed = (ulong)Utility.Rng.Next();
+                var seededGameState = gameState.ToSeededGameState(randomSeed);
+                var rootNode = new Node(seededGameState, null, possibleMoves, null, 0);
+                this.lastVisitedNode = rootNode;
+            }
 
             int iterationCounter = 0;
 
-            if (MCTSHyperparameters.DYNAMIC_MOVE_TIME_DISTRIBUTION) {
+            if (MCTSHyperparameters.DYNAMIC_MOVE_TIME_DISTRIBUTION)
+            {
                 while (moveTimer.ElapsedMilliseconds < millisecondsForMove)
                 {
-                    // var iterationTimer = new Stopwatch();
-                    // iterationTimer.Start();
-                    // iterationCounter++;
-                    rootNode.Visit(out double score);
-                    // iterationTimer.Stop();
-                    // Console.WriteLine("Iteration took: " + iterationTimer.ElapsedMilliseconds + " milliseconds");
+                    iterationCounter++;
+                    this.lastVisitedNode.Visit(out double score);
+                    // this.treeLogger.LogTree(this.lastVisitedNode);
                 }
             }
-            else {
-                while(iterationCounter <= MCTSHyperparameters.ITERATIONS){
-                    rootNode.Visit(out double score);
+            else
+            {
+                while (iterationCounter <= MCTSHyperparameters.ITERATIONS)
+                {
+                    this.lastVisitedNode.Visit(out double score);
                     iterationCounter++;
                 }
             }
 
-            if (rootNode.ChildNodes.Count == 0) {
-                // Console.WriteLine("NO TIME FOR CALCULATING MOVE@@@@@@@@@@@@@@@");
+            Node bestChildNode;
+
+            if (this.lastVisitedNode.ChildNodes.Count == 0)
+            {
+                Console.WriteLine("NO TIME FOR CALCULATING MOVE!");
                 return possibleMoves[0];
+                // var firstPossibleMove = possibleMoves[0];
+
+                // ulong randomSeed = (ulong)Utility.Rng.Next();
+                // var seededGameState = gameState.ToSeededGameState(randomSeed);
+                // var firstPossibleMoveNode = new Node(seededGameState, this.lastVisitedNode, , firstPossibleMove, 0);
+                // this.lastVisitedNode = firstPossibleMoveNode;
+                // bestChildNode = firstPossibleMoveNode;
+            }
+            else
+            {
+                bestChildNode = this.lastVisitedNode.ChildNodes
+                    .OrderByDescending(child => (child.TotalScore / child.VisitCount))
+                    .FirstOrDefault();
             }
 
-            var bestChildNode = rootNode.ChildNodes
-                .OrderByDescending(child => (child.TotalScore / child.VisitCount))
-                .FirstOrDefault();
 
+            if (MCTSHyperparameters.SHARED_MCTS_TREE)
+            {
+                // The child node we chose becomes the new root node
+                // for next move
+                this.lastVisitedNode = bestChildNode;
+            }
+            else
+            {
+                // Otherwise we always reset the whole tree for every
+                // move
+                this.lastVisitedNode = null;
+            }
+
+            timer.Stop();
+            Console.WriteLine("Thinking about making a move took: " + timer.ElapsedMilliseconds + " milliseconds");
+            Console.WriteLine($"Make move {bestChildNode.AppliedMove}");
             return bestChildNode.AppliedMove;
         }
         catch (Exception e)
@@ -84,14 +123,16 @@ public class Aau903Bot : AI
         }
     }
 
-    private int EstimateRemainingMovesInTurn(GameState inputState, List<Move> inputPossibleMoves){
+    private int EstimateRemainingMovesInTurn(GameState inputState, List<Move> inputPossibleMoves)
+    {
         return EstimateRemainingMovesInTurn(inputState.ToSeededGameState((ulong)Utility.Rng.Next()), inputPossibleMoves);
     }
 
     private int EstimateRemainingMovesInTurn(SeededGameState inputState, List<Move> inputPossibleMoves)
     {
 
-        if (inputPossibleMoves.Count == 1 && inputPossibleMoves[0].Command == CommandEnum.END_TURN) {
+        if (inputPossibleMoves.Count == 1 && inputPossibleMoves[0].Command == CommandEnum.END_TURN)
+        {
             return 0;
         }
 
@@ -101,18 +142,22 @@ public class Aau903Bot : AI
         SeededGameState currentState = inputState;
         List<Move> currentPossibleMoves = inputPossibleMoves;
 
-        while(currentPossibleMoves.Count > 0) {
+        while (currentPossibleMoves.Count > 0)
+        {
 
             var obviousMove = FindObviousMove(currentPossibleMoves);
-            if (obviousMove != null) {
+            if (obviousMove != null)
+            {
                 (currentState, currentPossibleMoves) = currentState.ApplyMove(obviousMove);
             }
-            else if (currentPossibleMoves.Count == 1) {
+            else if (currentPossibleMoves.Count == 1)
+            {
                 // TODO add this to ovious moves instead
                 // we already checked that its not end turn, so this is make choice in cases where there is only one choice
                 (currentState, currentPossibleMoves) = currentState.ApplyMove(currentPossibleMoves[0]);
             }
-            else {
+            else
+            {
                 result++;
                 (currentState, currentPossibleMoves) = currentState.ApplyMove(currentPossibleMoves[0]);
             }
@@ -149,7 +194,8 @@ public class Aau903Bot : AI
     /// <summary>
     /// Used for logging when debugging. Do not delete even though it has no references
     /// </summary>
-    private double GetTimeSpentBeforeTurn(TimeSpan remainingTime){
+    private double GetTimeSpentBeforeTurn(TimeSpan remainingTime)
+    {
         return 10_000d - remainingTime.TotalMilliseconds;
     }
     public override PatronId SelectPatron(List<PatronId> availablePatrons, int round)

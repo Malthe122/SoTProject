@@ -37,6 +37,7 @@ public static class MCTSHyperparameters
         public static int CHOSEN_MAX_EXPANSION_DEPTH { get; set; }
         public static ScoringMethod CHOSEN_SCORING_METHOD { get; set; }
         public static int ROLLOUT_TURNS_BEFORE_HEURSISTIC { get; set; }
+        public static bool SHARED_MCTS_TREE { get; set; }
 
     static MCTSHyperparameters()
     {
@@ -64,6 +65,7 @@ public static class MCTSHyperparameters
         ROLLOUT_TURNS_BEFORE_HEURSISTIC = config.GetRequiredSection("ROLLOUT_TURNS_BEFORE_HEURSISTIC").Get<int>();
         SET_MAX_EXPANSION_DEPTH = config.GetRequiredSection("SET_MAX_EXPANSION_DEPTH").Get<bool>();
         CHOSEN_MAX_EXPANSION_DEPTH = config.GetRequiredSection("CHOSEN_MAX_EXPANSION_DEPTH").Get<int>();
+        SHARED_MCTS_TREE = config.GetRequiredSection("SHARED_MCTS_TREE").Get<bool>();
 
         Console.WriteLine("Loaded settings:");
         Console.WriteLine($"NUMBER_OF_ROLLOUTS: {NUMBER_OF_ROLLOUTS}");
@@ -80,6 +82,7 @@ public static class MCTSHyperparameters
         Console.WriteLine($"ROLLOUT_TURNS_BEFORE_HEURSISTIC: {ROLLOUT_TURNS_BEFORE_HEURSISTIC}");
         Console.WriteLine($"SET_MAX_EXPANSION_DEPTH: {SET_MAX_EXPANSION_DEPTH}");
         Console.WriteLine($"CHOSEN_EXPANSION_DEPTH: {CHOSEN_MAX_EXPANSION_DEPTH}");
+        Console.WriteLine($"SHARED_MCTS_TREE: {SHARED_MCTS_TREE}");
     }
 }
 
