@@ -40,7 +40,7 @@ public class Node
         {
             if(Depth >= MCTSHyperparameters.CHOSEN_MAX_EXPANSION_DEPTH)
             {
-                score = Rollout();
+                score = Score();
                 TotalScore += score;
                 VisitCount++;
                 return;
@@ -70,17 +70,8 @@ public class Node
                 }
             }
         }
-        else if (GameState.GameEndState.Winner == PlayerEnum.NO_PLAYER_SELECTED)
-        {
-            score = 0;
-        }
-        else if (GameState.GameEndState.Winner == GameState.CurrentPlayer.PlayerID)
-        {
-            score = 1;
-        }
-        else
-        {
-            score = -1;
+        else {
+            score = Score();
         }
 
         TotalScore += score;
@@ -132,33 +123,39 @@ public class Node
 
     private double RolloutTillTurnsEndThenHeuristic(int turnsToComplete)
     {
-        int turnsCompleted = 0;
-        var currentPlayer = GameState.CurrentPlayer;
-        var currentGameState = GameState;
-        var currentPossibleMoves = PossibleMoves;
+        int rolloutTurnsCompleted = 0;
+        var rolloutPlayer = GameState.CurrentPlayer;
+        var rolloutGameState = GameState;
+        var rolloutPossibleMoves = PossibleMoves;
 
-        while(turnsCompleted < turnsToComplete && currentGameState.GameEndState == null) {
+        while(rolloutTurnsCompleted < turnsToComplete && rolloutGameState.GameEndState == null) {
             if (MCTSHyperparameters.FORCE_DELAY_TURN_END_IN_ROLLOUT){
-                if (currentPossibleMoves.Count > 1) {
-                    currentPossibleMoves.RemoveAll(move => move.Command == CommandEnum.END_TURN);
+                if (rolloutPossibleMoves.Count > 1) {
+                    rolloutPossibleMoves.RemoveAll(move => move.Command == CommandEnum.END_TURN);
                 }
             }
            
-            var chosenIndex = Utility.Rng.Next(currentPossibleMoves.Count);
-            var moveToMake = currentPossibleMoves[chosenIndex];
+            var chosenIndex = Utility.Rng.Next(rolloutPossibleMoves.Count);
+            var moveToMake = rolloutPossibleMoves[chosenIndex];
 
-            var (newGameState, newPossibleMoves) = currentGameState.ApplyMove(moveToMake);
+            var (newGameState, newPossibleMoves) = rolloutGameState.ApplyMove(moveToMake);
 
-                if (newGameState.CurrentPlayer != currentPlayer) {
-                    turnsCompleted++;
-                    currentPlayer = newGameState.CurrentPlayer;
+                if (newGameState.CurrentPlayer != rolloutPlayer) {
+                    rolloutTurnsCompleted++;
+                    rolloutPlayer = newGameState.CurrentPlayer;
                 }
 
-                currentGameState = newGameState;
-                currentPossibleMoves = newPossibleMoves;
+                rolloutGameState = newGameState;
+                rolloutPossibleMoves = newPossibleMoves;
         }
 
-        return Utility.UseBestMCTS3Heuristic(GameState);
+        var stateScore = Utility.UseBestMCTS3Heuristic(rolloutGameState);
+
+        if (GameState.CurrentPlayer != rolloutGameState.CurrentPlayer) {
+            stateScore *= -1;
+        }
+
+        return stateScore; 
     }
 
     internal double Rollout()
