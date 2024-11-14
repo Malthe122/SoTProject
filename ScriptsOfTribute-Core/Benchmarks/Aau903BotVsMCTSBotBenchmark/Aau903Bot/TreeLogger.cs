@@ -16,9 +16,12 @@ public class CsvLogger
         // Check if file exists and contains any content
         if (File.Exists(_filePath) && new FileInfo(_filePath).Length > 0)
         {
-            File.Delete(_filePath);
+            _headersWritten = true; // Assume headers are already written
         }
-        File.Create(_filePath).Dispose();
+        else
+        {
+            File.Create(_filePath).Dispose();
+        }
     }
 
     public void Log(Dictionary<string, object> benchmarkData)

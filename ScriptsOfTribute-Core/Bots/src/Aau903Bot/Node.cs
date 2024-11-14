@@ -35,16 +35,25 @@ public class Node
 
     public virtual void Visit(out double score)
     {
-        Node visitedChild = null;
+        // Node Metrics
         var playerId = GameState.CurrentPlayer.PlayerID;
+        var coins = GameState.CurrentPlayer.Coins;
+        var power = GameState.CurrentPlayer.Power;
+        var prestige = GameState.CurrentPlayer.Prestige;
+        var handCount = GameState.CurrentPlayer.Hand.Count;
+        var cooldownCount = GameState.CurrentPlayer.CooldownPile.Count;
+        var drawCount = GameState.CurrentPlayer.DrawPile.Count;
+        Console.WriteLine($"VISIT {playerId} == {GameStateHash} == {coins} {power} {prestige} == {handCount} {cooldownCount} {drawCount} == {AppliedMove} == {TotalScore} == {VisitCount}");
+        // Node Metrics
 
         if (MCTSHyperparameters.SET_MAX_EXPANSION_DEPTH)
         {
-            if(Depth >= MCTSHyperparameters.CHOSEN_MAX_EXPANSION_DEPTH)
+            if (Depth >= MCTSHyperparameters.CHOSEN_MAX_EXPANSION_DEPTH)
             {
-                score = Rollout();
+                score = Score();
                 TotalScore += score;
                 VisitCount++;
+                Console.WriteLine($"\tMAX DEPTH {GameStateHash}");
                 return;
             }
         }
@@ -99,7 +108,7 @@ public class Node
                 if ((MCTSHyperparameters.INCLUDE_PLAY_MOVE_CHANCE_NODES && move.IsNonDeterministic())
                     || MCTSHyperparameters.INCLUDE_END_TURN_CHANCE_NODES && move.Command == CommandEnum.END_TURN)
                 {
-                    var newChild = new ChanceNode(GameState, this, move, Depth+1);
+                    var newChild = new ChanceNode(GameState, this, move, Depth + 1);
                     ChildNodes.Add(newChild);
                     return newChild;
                 }
@@ -107,9 +116,10 @@ public class Node
                 {
                     ulong randomSeed = (ulong)Utility.Rng.Next();
                     var (newGameState, newPossibleMoves) = GameState.ApplyMove(move, randomSeed);
-                    var newChild = new Node(newGameState, this, newPossibleMoves, move, Depth+1);
+                    var newChild = new Node(newGameState, this, newPossibleMoves, move, Depth + 1);
                     ChildNodes.Add(newChild);
                     // Console.WriteLine($"New child added with Depth level: {newChild.Depth}");
+                    Console.WriteLine($"\tEXPAND {newChild.GameStateHash}");
                     return newChild;
                 }
             }
@@ -120,7 +130,9 @@ public class Node
 
     private double Score()
     {
-        switch(MCTSHyperparameters.CHOSEN_SCORING_METHOD){
+        Console.WriteLine($"\tSCORE {GameStateHash}");
+        switch (MCTSHyperparameters.CHOSEN_SCORING_METHOD)
+        {
             case ScoringMethod.Rollout:
                 return Rollout();
             case ScoringMethod.Heuristic:
@@ -139,25 +151,29 @@ public class Node
         var currentGameState = GameState;
         var currentPossibleMoves = PossibleMoves;
 
-        while(turnsCompleted < turnsToComplete && currentGameState.GameEndState == null) {
-            if (MCTSHyperparameters.FORCE_DELAY_TURN_END_IN_ROLLOUT){
-                if (currentPossibleMoves.Count > 1) {
+        while (turnsCompleted < turnsToComplete && currentGameState.GameEndState == null)
+        {
+            if (MCTSHyperparameters.FORCE_DELAY_TURN_END_IN_ROLLOUT)
+            {
+                if (currentPossibleMoves.Count > 1)
+                {
                     currentPossibleMoves.RemoveAll(move => move.Command == CommandEnum.END_TURN);
                 }
             }
-           
+
             var chosenIndex = Utility.Rng.Next(currentPossibleMoves.Count);
             var moveToMake = currentPossibleMoves[chosenIndex];
 
             var (newGameState, newPossibleMoves) = currentGameState.ApplyMove(moveToMake);
 
-                if (newGameState.CurrentPlayer != currentPlayer) {
-                    turnsCompleted++;
-                    currentPlayer = newGameState.CurrentPlayer;
-                }
+            if (newGameState.CurrentPlayer != currentPlayer)
+            {
+                turnsCompleted++;
+                currentPlayer = newGameState.CurrentPlayer;
+            }
 
-                currentGameState = newGameState;
-                currentPossibleMoves = newPossibleMoves;
+            currentGameState = newGameState;
+            currentPossibleMoves = newPossibleMoves;
         }
 
         return Utility.UseBestMCTS3Heuristic(GameState);
@@ -195,15 +211,15 @@ public class Node
             { //TODO here i assume that winner = NO_PLAYER_SELECTED is how they show a draw. Need to confirm this
                 if (rolloutGameState.GameEndState.Winner == rolloutPlayerId)
                 {
-                    result+= 1;
+                    result += 1;
                 }
                 else
                 {
-                    result-= 1;
+                    result -= 1;
                 }
             }
         }
-        
+
         return result;
     }
 
@@ -221,6 +237,7 @@ public class Node
                 highestConfidenceChild = childNode;
             }
         }
+        Console.WriteLine($"\tSELECT {highestConfidenceChild.GameStateHash}");
 
         return highestConfidenceChild;
     }
@@ -269,5 +286,6 @@ public class Node
                 }
             }
         }
+        Console.WriteLine($"\tOBVIOUS {GameStateHash}");
     }
 }

@@ -31,6 +31,6 @@ done
 tar --exclude="bin" --exclude="obj" -czvf "$tar_file" "${dir_to_copy[@]}" || { echo "Failed to create tar archive"; exit 1; }
 
 scp -r "$tar_file" "$server":"$remote_path" || { echo "SCP failed"; exit 1; }
-ssh -t "$server" "cd $remote_path; tar -xzf $tar_file; rm $tar_file; cp Engine/cards.json .; srun singularity exec sot.sif bash -c 'for benchmark in ${benchmarks[@]}; do dotnet run --project \$benchmark; done'" || { echo "Remote execution failed"; exit 1; }
+ssh -t "$server" "cd $remote_path; tar -xzf $tar_file; rm $tar_file; cp Engine/cards.json .; srun singularity exec sot.sif bash -c 'for benchmark in ${benchmarks[@]}; do dotnet clean \$benchmark; dotnet build \$benchmark; dotnet dotnet run --project \$benchmark; done'" || { echo "Remote execution failed"; exit 1; }
 
 rm "$tar_file"

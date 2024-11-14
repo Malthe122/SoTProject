@@ -1,6 +1,7 @@
 import matplotlib.pyplot as plt
 import networkx as nx
 import pandas as pd
+import os
 
 
 class GraphVisualizer:
@@ -96,6 +97,7 @@ class GraphVisualizer:
                 # Position tooltip directly over the node
                 tooltip.xy = self.pos[node]
                 tooltip.set_text(
+                    f"Player: {node_data.get('Player', 'Unknown')}\n"
                     f"Hash: {node_data.get('original_id', 'Unknown')}\n"
                     f"Type: {node_data.get('Type', 'Unknown')}\n"
                     f"Move: {node_data.get('Applied Move', 'Unknown')}\n"
@@ -177,7 +179,8 @@ def generate_graphs(data):
 
 def main():
     # Read the CSV data
-    data = pd.read_csv("tree.csv")
+
+    data = pd.read_csv(os.path.join("..", "..", "GameRunner", "results", "tree.csv"))
 
     # Generate graphs from the data
     graphs = generate_graphs(data)

@@ -8,7 +8,7 @@ class Program
     static void Main(string[] args)
     {
         // GLOBAL CONFIG
-        var logger = new CsvBenchmarkLogger("some_results.csv");
+        var logger = new CsvBenchmarkLogger("results.csv");
         var timeout = 30;
         ulong seed = 42;
 

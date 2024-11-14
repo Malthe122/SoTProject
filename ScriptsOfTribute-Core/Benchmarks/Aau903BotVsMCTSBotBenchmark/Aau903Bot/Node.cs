@@ -14,18 +14,19 @@ public class Node
     public List<Node> ChildNodes = new List<Node>();
     public int VisitCount = 0;
     public double TotalScore = 0;
-
     public int GameStateHash;
     public SeededGameState GameState;
-    public Move? AppliedMove = null;
+    public Move? AppliedMove;
     public List<Move> PossibleMoves;
+    public int Depth;
 
-    public Node(SeededGameState gameState, Node parent, List<Move> possibleMoves, Move appliedMove)
+    public Node(SeededGameState gameState, Node parent, List<Move> possibleMoves, Move appliedMove, int depth)
     {
         GameState = gameState;
         Parent = parent;
         PossibleMoves = possibleMoves;
         AppliedMove = appliedMove;
+        Depth = depth;
         /// <summary>
         /// TODO if this takes too much performance, look into only calling this method on children of chance nodes
         /// </summary>
@@ -34,15 +35,25 @@ public class Node
 
     public virtual void Visit(out double score)
     {
-        Node visitedChild = null;
         var playerId = GameState.CurrentPlayer.PlayerID;
+
+        if (MCTSHyperparameters.SET_MAX_EXPANSION_DEPTH)
+        {
+            if(Depth >= MCTSHyperparameters.CHOSEN_MAX_EXPANSION_DEPTH)
+            {
+                score = Score();
+                TotalScore += score;
+                VisitCount++;
+                return;
+            }
+        }
 
         if (GameState.GameEndState == null)
         {
             if (VisitCount == 0)
             {
                 ApplyAllDeterministicAndObviousMoves();
-                score = Rollout();
+                score = Score();
             }
             else if (PossibleMoves.Count > ChildNodes.Count)
             {
@@ -75,8 +86,8 @@ public class Node
 
         TotalScore += score;
         VisitCount++;
-        // return visitedChild;
     }
+
 
     internal Node Expand()
     {
@@ -84,9 +95,10 @@ public class Node
         {
             if (!ChildNodes.Any(child => child.AppliedMove == move))
             {
-                if (MCTSHyperparameters.INCLUDE_CHANCE_NODES && move.IsNonDeterministic())
+                if ((MCTSHyperparameters.INCLUDE_PLAY_MOVE_CHANCE_NODES && move.IsNonDeterministic())
+                    || MCTSHyperparameters.INCLUDE_END_TURN_CHANCE_NODES && move.Command == CommandEnum.END_TURN)
                 {
-                    var newChild = new ChanceNode(GameState, this, move);
+                    var newChild = new ChanceNode(GameState, this, move, Depth+1);
                     ChildNodes.Add(newChild);
                     return newChild;
                 }
@@ -94,8 +106,9 @@ public class Node
                 {
                     ulong randomSeed = (ulong)Utility.Rng.Next();
                     var (newGameState, newPossibleMoves) = GameState.ApplyMove(move, randomSeed);
-                    var newChild = new Node(newGameState, this, newPossibleMoves, move);
+                    var newChild = new Node(newGameState, this, newPossibleMoves, move, Depth+1);
                     ChildNodes.Add(newChild);
+                    // Console.WriteLine($"New child added with Depth level: {newChild.Depth}");
                     return newChild;
                 }
             }
@@ -104,20 +117,49 @@ public class Node
         throw new Exception("Expand was unexpectedly called on a node that was fully expanded");
     }
 
-    internal double Evaluate(SeededGameState gameState, PlayerEnum playerId)
+    private double Score()
     {
-        if (gameState.GameEndState.Winner != PlayerEnum.NO_PLAYER_SELECTED)
-        { //TODO here i assume that winner = NO_PLAYER_SELECTED is how they show a draw. Need to confirm this
-            if (gameState.GameEndState.Winner == playerId)
-            {
-                return +1;
-            }
-            else
-            {
-                return -1;
-            }
+        switch(MCTSHyperparameters.CHOSEN_SCORING_METHOD){
+            case ScoringMethod.Rollout:
+                return Rollout();
+            case ScoringMethod.Heuristic:
+                return Utility.UseBestMCTS3Heuristic(GameState);
+            case ScoringMethod.RolloutTurnsCompletionsThenHeuristic:
+                return RolloutTillTurnsEndThenHeuristic(MCTSHyperparameters.ROLLOUT_TURNS_BEFORE_HEURSISTIC);
+            default:
+                throw new NotImplementedException("Tried to applied non-implemented scoring method: " + MCTSHyperparameters.CHOSEN_SCORING_METHOD);
         }
-        return 0;
+    }
+
+    private double RolloutTillTurnsEndThenHeuristic(int turnsToComplete)
+    {
+        int turnsCompleted = 0;
+        var currentPlayer = GameState.CurrentPlayer;
+        var currentGameState = GameState;
+        var currentPossibleMoves = PossibleMoves;
+
+        while(turnsCompleted < turnsToComplete && currentGameState.GameEndState == null) {
+            if (MCTSHyperparameters.FORCE_DELAY_TURN_END_IN_ROLLOUT){
+                if (currentPossibleMoves.Count > 1) {
+                    currentPossibleMoves.RemoveAll(move => move.Command == CommandEnum.END_TURN);
+                }
+            }
+           
+            var chosenIndex = Utility.Rng.Next(currentPossibleMoves.Count);
+            var moveToMake = currentPossibleMoves[chosenIndex];
+
+            var (newGameState, newPossibleMoves) = currentGameState.ApplyMove(moveToMake);
+
+                if (newGameState.CurrentPlayer != currentPlayer) {
+                    turnsCompleted++;
+                    currentPlayer = newGameState.CurrentPlayer;
+                }
+
+                currentGameState = newGameState;
+                currentPossibleMoves = newPossibleMoves;
+        }
+
+        return Utility.UseBestMCTS3Heuristic(GameState);
     }
 
     internal double Rollout()
@@ -127,7 +169,7 @@ public class Node
         var rolloutPlayerId = rolloutGameState.CurrentPlayer.PlayerID;
         var rolloutPossibleMoves = new List<Move>(PossibleMoves);
 
-        for (int i = 0; i <= MCTSHyperparameters.NUMBER_OF_ROLLOUTS; i++)
+        for (int i = 0; i < MCTSHyperparameters.NUMBER_OF_ROLLOUTS; i++)
         {
             // TODO also apply the playing obvious moves in here
             while (rolloutGameState.GameEndState == null)
@@ -148,8 +190,19 @@ public class Node
                 rolloutPossibleMoves = newPossibleMoves;
             }
 
-            result += Evaluate(rolloutGameState, rolloutPlayerId);
+            if (rolloutGameState.GameEndState.Winner != PlayerEnum.NO_PLAYER_SELECTED)
+            { //TODO here i assume that winner = NO_PLAYER_SELECTED is how they show a draw. Need to confirm this
+                if (rolloutGameState.GameEndState.Winner == rolloutPlayerId)
+                {
+                    result+= 1;
+                }
+                else
+                {
+                    result-= 1;
+                }
+            }
         }
+        
         return result;
     }
 

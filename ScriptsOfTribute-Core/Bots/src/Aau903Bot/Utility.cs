@@ -98,76 +98,85 @@ public static class Utility
 
     public static int QuickHash(SeededGameState state)
     {
-        int handHash = 0;
+        int handHash = 1;
         foreach (var currCard in state.CurrentPlayer.Hand)
         {
-            handHash *= 1 * (int)currCard.CommonId;
+            handHash *= 3 * (int)currCard.CommonId;
         }
 
-        int tavernHash = 0;
+        int tavernHash = 1;
         foreach (var currCard in state.TavernAvailableCards)
         {
-            tavernHash *= 2 * ((int)currCard.CommonId);
+            tavernHash *= 5 * ((int)currCard.CommonId);
         }
         foreach (var currCard in state.TavernCards)
         {
-            tavernHash *= 3 * ((int)currCard.CommonId);
+            tavernHash *= 7 * ((int)currCard.CommonId);
         }
 
-        int cooldownHash = 0;
+        int cooldownHash = 1;
         foreach (var currCard in state.CurrentPlayer.CooldownPile)
         {
-            cooldownHash *= 4 * ((int)currCard.CommonId);
+            cooldownHash *= 9 * ((int)currCard.CommonId);
         }
         foreach (var currCard in state.EnemyPlayer.CooldownPile)
         {
-            cooldownHash *= 5 * ((int)currCard.CommonId);
+            cooldownHash *= 3 * ((int)currCard.CommonId);
         }
 
-        int upcomingDrawsHash = 0;
+        int upcomingDrawsHash = 1;
         foreach (var currCard in state.CurrentPlayer.KnownUpcomingDraws)
         {
-            upcomingDrawsHash *= 6 * ((int)currCard.CommonId);
+            upcomingDrawsHash *= 5 * ((int)currCard.CommonId);
         }
         foreach (var currCard in state.EnemyPlayer.KnownUpcomingDraws)
         {
             cooldownHash *= 7 * ((int)currCard.CommonId);
         }
 
-        int drawPileHash = 0;
+        int drawPileHash = 1;
         foreach (var currCard in state.CurrentPlayer.DrawPile)
-        {
-            drawPileHash *= 8 * ((int)currCard.CommonId);
-        }
-        foreach (var currCard in state.EnemyPlayer.DrawPile)
         {
             drawPileHash *= 9 * ((int)currCard.CommonId);
         }
+        foreach (var currCard in state.EnemyPlayer.DrawPile)
+        {
+            drawPileHash *= 3 * ((int)currCard.CommonId);
+        }
 
-        int commingEffectsHash = 0; //TODO
+        int commingEffectsHash = 1; //TODO
 
-        int resourceHash = state.CurrentPlayer.Coins * 10 + state.CurrentPlayer.Prestige * 11 + state.CurrentPlayer.Power * 12 + state.EnemyPlayer.Prestige * 13;
+        int resourceHash = state.CurrentPlayer.Coins * 5 + state.CurrentPlayer.Prestige * 7 + state.CurrentPlayer.Power * 9 + state.EnemyPlayer.Prestige * 3;
 
-        int agentHash = 0;
+        int agentHash = 1;
 
         foreach (var currAgent in state.CurrentPlayer.Agents)
         {
-            agentHash *= 14 * (currAgent.Activated ? 2 : 3);
-            agentHash *= 15 * currAgent.CurrentHp;
+            agentHash *= 5 * (currAgent.Activated ? 2 : 3);
+            agentHash *= 7 * currAgent.CurrentHp;
         }
 
         foreach (var currAgent in state.EnemyPlayer.Agents)
         {
-            agentHash *= 16 * (currAgent.Activated ? 2 : 3);
-            agentHash *= 17 * currAgent.CurrentHp;
+            agentHash *= 9 * (currAgent.Activated ? 2 : 3);
+            agentHash *= 3 * currAgent.CurrentHp;
         }
 
-        // TODO patron hash
-        int patronHash = 0;
+        int patronHash = 1;
+        // foreach (var patronPair in state.PatronStates.All)
+        // {
+        //     var (patronId, patronState) = patronPair;
+        //     patronHash *= 5 * (int)patronId * (int)patronState;
+        // }
         // TODO pending choice hash
-        int pendingChoiceHash = 0;
+        int pendingChoiceHash = 1;
+        // if (state.PendingChoice != null)
+        // {
+        //     pendingChoiceHash *= 7 * state.PendingChoice.MaxChoices + state.PendingChoice.MinChoices;
+        //     pendingChoiceHash *= 9 * (int)state.PendingChoice.ChoiceFollowUp;
+        // }
 
-        return handHash + tavernHash + cooldownHash + upcomingDrawsHash + drawPileHash + commingEffectsHash + resourceHash + agentHash + patronHash + pendingChoiceHash;
+        return (handHash + tavernHash + cooldownHash + upcomingDrawsHash + drawPileHash + commingEffectsHash + resourceHash + agentHash + patronHash + pendingChoiceHash) & 0x7FFFFFFF;
     }
 
     public static int PreciseHash(SeededGameState state)
@@ -203,6 +212,12 @@ public static class Utility
         var xxHash = xxHashFactory.Instance.Create();
         byte[] hashBytes = xxHash.ComputeHash(Encoding.UTF8.GetBytes(hashString)).Hash;
         return BitConverter.ToInt32(hashBytes, 0) & 0x7FFFFFFF; // ensures positive int
+    }
+
+    public static int GenerateHash(this GameState state)
+    {
+        var seededGameState = state.ToSeededGameState((ulong)Rng.Next());
+        return GenerateHash(seededGameState);
     }
 
     public static int GenerateHash(this SeededGameState state)

@@ -8,7 +8,8 @@ namespace Aau903Bot;
 
 public class Aau903Bot : AI
 {
-    private Node? lastVisitedNode = null;
+    private Node? rootNode = null;
+    private Move? previouselyPlayedMove = null;
     private TreeLogger treeLogger = new TreeLogger();
 
     public override void GameEnd(EndGameState state, FullGameState? finalBoardState)
@@ -21,8 +22,6 @@ public class Aau903Bot : AI
     {
         try
         {
-            var timer = new Stopwatch();
-            timer.Start();
             var obviousMove = FindObviousMove(possibleMoves);
             if (obviousMove != null)
             {
@@ -40,12 +39,61 @@ public class Aau903Bot : AI
             int estimatedRemainingMovesInTurn = EstimateRemainingMovesInTurn(gameState, possibleMoves);
             double millisecondsForMove = (remainingTime.TotalMilliseconds / estimatedRemainingMovesInTurn) - MCTSHyperparameters.ITERATION_COMPLETION_MILLISECONDS_BUFFER;
 
-            if (this.lastVisitedNode == null)
+            ulong randomSeed = (ulong)Utility.Rng.Next();
+            var seededGameState = gameState.ToSeededGameState(randomSeed);
+            var seededGameStateHash = seededGameState.GenerateHash();
+            if (MCTSHyperparameters.SHARED_MCTS_TREE)
             {
-                ulong randomSeed = (ulong)Utility.Rng.Next();
-                var seededGameState = gameState.ToSeededGameState(randomSeed);
-                var rootNode = new Node(seededGameState, null, possibleMoves, null, 0);
-                this.lastVisitedNode = rootNode;
+                if (rootNode is ChanceNode)
+                {
+                    // foreach (var childNode in rootNode.ChildNodes)
+                    // {
+                    //     if (childNode.GameStateHash == gameStateHash)
+                    //     {
+                    //         rootNode = childNode;
+                    //         break;
+                    //     }
+                    // }
+                }
+                else
+                {
+                    var playerId = rootNode?.GameState.CurrentPlayer.PlayerID;
+                    var coins = rootNode?.GameState.CurrentPlayer.Coins;
+                    var power = rootNode?.GameState.CurrentPlayer.Power;
+                    var prestige = rootNode?.GameState.CurrentPlayer.Prestige;
+                    var handCount = rootNode?.GameState.CurrentPlayer.Hand.Count;
+                    var cooldownCount = rootNode?.GameState.CurrentPlayer.CooldownPile.Count;
+                    var drawCount = rootNode?.GameState.CurrentPlayer.DrawPile.Count;
+                    var appliedMove = rootNode?.AppliedMove;
+                    var totalScore = rootNode?.TotalScore;
+                    var visitCount = rootNode?.VisitCount;
+                    var tavernCards = rootNode?.GameState.TavernCards.Count;
+                    var tavernAvailableCards = rootNode?.GameState.TavernAvailableCards.Count;
+                    var patronStates = string.Join(",", gameState.PatronStates.All.Select((patron, player) => patron));
+                    Console.WriteLine($"EXPECTING {playerId} == {rootNode?.GameStateHash} == {coins} {power} {prestige} == {handCount} {cooldownCount} {drawCount} == {tavernCards} {tavernAvailableCards} {patronStates} == {appliedMove}");
+                    playerId = gameState.CurrentPlayer.PlayerID;
+                    coins = gameState.CurrentPlayer.Coins;
+                    power = gameState.CurrentPlayer.Power;
+                    prestige = gameState.CurrentPlayer.Prestige;
+                    handCount = gameState.CurrentPlayer.Hand.Count;
+                    cooldownCount = gameState.CurrentPlayer.CooldownPile.Count;
+                    drawCount = gameState.CurrentPlayer.DrawPile.Count;
+                    tavernCards = gameState.TavernCards.Count;
+                    tavernAvailableCards = gameState.TavernAvailableCards.Count;
+                    patronStates = string.Join(",", gameState.PatronStates.All.Select((patron, player) => patron));
+                    Console.WriteLine($"GOT       {playerId} == {seededGameStateHash} == {coins} {power} {prestige} == {handCount} {cooldownCount} {drawCount} == {tavernCards} {tavernAvailableCards} {patronStates}");
+
+                    if (seededGameStateHash != rootNode?.GameStateHash)
+                    {
+                        rootNode = null;
+                    }
+                }
+            }
+
+            if (rootNode == null)
+            {
+                Console.WriteLine($"RESETTED ROOT     == {seededGameStateHash}");
+                rootNode = new Node(seededGameState, null, possibleMoves, null, 0);
             }
 
             int iterationCounter = 0;
@@ -54,59 +102,46 @@ public class Aau903Bot : AI
             {
                 while (moveTimer.ElapsedMilliseconds < millisecondsForMove)
                 {
+                    Console.WriteLine($"==============={iterationCounter}===============");
                     iterationCounter++;
-                    this.lastVisitedNode.Visit(out double score);
-                    // this.treeLogger.LogTree(this.lastVisitedNode);
+                    rootNode.Visit(out double score);
+                    // this.treeLogger.LogTree(rootNode);
                 }
             }
             else
             {
                 while (iterationCounter <= MCTSHyperparameters.ITERATIONS)
                 {
-                    this.lastVisitedNode.Visit(out double score);
+                    rootNode.Visit(out double score);
                     iterationCounter++;
                 }
             }
 
-            Node bestChildNode;
 
-            if (this.lastVisitedNode.ChildNodes.Count == 0)
+            Move bestMoveToPlay;
+            if (rootNode.ChildNodes.Count == 0)
             {
-                Console.WriteLine("NO TIME FOR CALCULATING MOVE!");
-                return possibleMoves[0];
-                // var firstPossibleMove = possibleMoves[0];
-
-                // ulong randomSeed = (ulong)Utility.Rng.Next();
-                // var seededGameState = gameState.ToSeededGameState(randomSeed);
-                // var firstPossibleMoveNode = new Node(seededGameState, this.lastVisitedNode, , firstPossibleMove, 0);
-                // this.lastVisitedNode = firstPossibleMoveNode;
-                // bestChildNode = firstPossibleMoveNode;
+                bestMoveToPlay = possibleMoves[0];
+                rootNode = null;
             }
             else
             {
-                bestChildNode = this.lastVisitedNode.ChildNodes
+                var bestChildNode = rootNode.ChildNodes
                     .OrderByDescending(child => (child.TotalScore / child.VisitCount))
                     .FirstOrDefault();
+                bestMoveToPlay = bestChildNode.AppliedMove!;
+
+                if (MCTSHyperparameters.SHARED_MCTS_TREE)
+                {
+                    rootNode = bestChildNode;
+                }
+                else
+                {
+                    rootNode = null;
+                }
             }
 
-
-            if (MCTSHyperparameters.SHARED_MCTS_TREE)
-            {
-                // The child node we chose becomes the new root node
-                // for next move
-                this.lastVisitedNode = bestChildNode;
-            }
-            else
-            {
-                // Otherwise we always reset the whole tree for every
-                // move
-                this.lastVisitedNode = null;
-            }
-
-            timer.Stop();
-            Console.WriteLine("Thinking about making a move took: " + timer.ElapsedMilliseconds + " milliseconds");
-            Console.WriteLine($"Make move {bestChildNode.AppliedMove}");
-            return bestChildNode.AppliedMove;
+            return bestMoveToPlay;
         }
         catch (Exception e)
         {
