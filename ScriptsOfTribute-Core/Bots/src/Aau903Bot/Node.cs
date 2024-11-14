@@ -123,35 +123,35 @@ public class Node
 
     private double RolloutTillTurnsEndThenHeuristic(int turnsToComplete)
     {
-        int turnsCompleted = 0;
-        var currentPlayer = GameState.CurrentPlayer;
-        var currentGameState = GameState;
-        var currentPossibleMoves = PossibleMoves;
+        int rolloutTurnsCompleted = 0;
+        var rolloutPlayer = GameState.CurrentPlayer;
+        var rolloutGameState = GameState;
+        var rolloutPossibleMoves = PossibleMoves;
 
-        while(turnsCompleted < turnsToComplete && currentGameState.GameEndState == null) {
+        while(rolloutTurnsCompleted < turnsToComplete && rolloutGameState.GameEndState == null) {
             if (MCTSHyperparameters.FORCE_DELAY_TURN_END_IN_ROLLOUT){
-                if (currentPossibleMoves.Count > 1) {
-                    currentPossibleMoves.RemoveAll(move => move.Command == CommandEnum.END_TURN);
+                if (rolloutPossibleMoves.Count > 1) {
+                    rolloutPossibleMoves.RemoveAll(move => move.Command == CommandEnum.END_TURN);
                 }
             }
            
-            var chosenIndex = Utility.Rng.Next(currentPossibleMoves.Count);
-            var moveToMake = currentPossibleMoves[chosenIndex];
+            var chosenIndex = Utility.Rng.Next(rolloutPossibleMoves.Count);
+            var moveToMake = rolloutPossibleMoves[chosenIndex];
 
-            var (newGameState, newPossibleMoves) = currentGameState.ApplyMove(moveToMake);
+            var (newGameState, newPossibleMoves) = rolloutGameState.ApplyMove(moveToMake);
 
-                if (newGameState.CurrentPlayer != currentPlayer) {
-                    turnsCompleted++;
-                    currentPlayer = newGameState.CurrentPlayer;
+                if (newGameState.CurrentPlayer != rolloutPlayer) {
+                    rolloutTurnsCompleted++;
+                    rolloutPlayer = newGameState.CurrentPlayer;
                 }
 
-                currentGameState = newGameState;
-                currentPossibleMoves = newPossibleMoves;
+                rolloutGameState = newGameState;
+                rolloutPossibleMoves = newPossibleMoves;
         }
 
-        var stateScore = Utility.UseBestMCTS3Heuristic(currentGameState);
+        var stateScore = Utility.UseBestMCTS3Heuristic(rolloutGameState);
 
-        if (GameState.CurrentPlayer != currentGameState.CurrentPlayer) {
+        if (GameState.CurrentPlayer != rolloutGameState.CurrentPlayer) {
             stateScore *= -1;
         }
 
