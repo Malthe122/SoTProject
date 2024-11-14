@@ -40,7 +40,7 @@ public class Node
         {
             if(Depth >= MCTSHyperparameters.CHOSEN_MAX_EXPANSION_DEPTH)
             {
-                score = Rollout();
+                score = Score();
                 TotalScore += score;
                 VisitCount++;
                 return;
@@ -70,17 +70,8 @@ public class Node
                 }
             }
         }
-        else if (GameState.GameEndState.Winner == PlayerEnum.NO_PLAYER_SELECTED)
-        {
-            score = 0;
-        }
-        else if (GameState.GameEndState.Winner == GameState.CurrentPlayer.PlayerID)
-        {
-            score = 1;
-        }
-        else
-        {
-            score = -1;
+        else {
+            score = Score();
         }
 
         TotalScore += score;
@@ -158,7 +149,13 @@ public class Node
                 currentPossibleMoves = newPossibleMoves;
         }
 
-        return Utility.UseBestMCTS3Heuristic(GameState);
+        var stateScore = Utility.UseBestMCTS3Heuristic(currentGameState);
+
+        if (GameState.CurrentPlayer != currentGameState.CurrentPlayer) {
+            stateScore *= -1;
+        }
+
+        return stateScore; 
     }
 
     internal double Rollout()
