@@ -52,15 +52,12 @@ public class Node
                 score = Score();
                 TotalScore += score;
                 VisitCount++;
-                Console.WriteLine($"\tMAX DEPTH {GameStateHash}");
                 return;
             }
         }
 
         if (GameState.GameEndState == null)
         {
-            Console.WriteLine($"VISIT {playerId} == {GameStateHash} == {coins} {power} {prestige} == {handCount} {cooldownCount} {drawCount} == {AppliedMove} == {TotalScore} == {VisitCount}");
-            Console.WriteLine($"AVAILABLE {string.Join(",", PossibleMoves)}");
             if (VisitCount == 0)
             {
                 ApplyAllDeterministicAndObviousMoves();
@@ -84,17 +81,14 @@ public class Node
         }
         else if (GameState.GameEndState.Winner == PlayerEnum.NO_PLAYER_SELECTED)
         {
-            Console.WriteLine($"\tGAME ENDED {PlayerEnum.NO_PLAYER_SELECTED}");
             score = 0;
         }
         else if (GameState.GameEndState.Winner == GameState.CurrentPlayer.PlayerID)
         {
-            Console.WriteLine($"\tGAME ENDED {GameState.CurrentPlayer.PlayerID}");
             score = 1;
         }
         else
         {
-            Console.WriteLine($"\tGAME ENDED {GameState.EnemyPlayer.PlayerID}");
             score = -1;
         }
 
@@ -122,8 +116,6 @@ public class Node
                     var (newGameState, newPossibleMoves) = GameState.ApplyMove(move, randomSeed);
                     var newChild = new Node(newGameState, this, newPossibleMoves, move, Depth + 1);
                     ChildNodes.Add(newChild);
-                    // Console.WriteLine($"New child added with Depth level: {newChild.Depth}");
-                    Console.WriteLine($"\tEXPAND {newChild.GameStateHash}");
                     return newChild;
                 }
             }
@@ -134,7 +126,6 @@ public class Node
 
     private double Score()
     {
-        Console.WriteLine($"\tSCORE {GameStateHash}");
         switch (MCTSHyperparameters.CHOSEN_SCORING_METHOD)
         {
             case ScoringMethod.Rollout:
@@ -241,7 +232,6 @@ public class Node
                 highestConfidenceChild = childNode;
             }
         }
-        Console.WriteLine($"\tSELECT {highestConfidenceChild.GameStateHash}");
 
         return highestConfidenceChild;
     }
@@ -290,6 +280,5 @@ public class Node
                 }
             }
         }
-        Console.WriteLine($"\tOBVIOUS {GameStateHash}");
     }
 }

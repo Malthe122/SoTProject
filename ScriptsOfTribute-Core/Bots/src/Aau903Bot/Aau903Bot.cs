@@ -9,16 +9,12 @@ namespace Aau903Bot;
 public class Aau903Bot : AI
 {
     private Node? rootNode = null;
-    private int numOfReusedNodes = 0;
-    private int numOfResetNodes = 0;
     private TreeLogger treeLogger = new TreeLogger();
 
     public override void GameEnd(EndGameState state, FullGameState? finalBoardState)
     {
         Console.WriteLine("@@@ Game ended because of " + state.Reason + " @@@");
         Console.WriteLine("@@@ Winner was " + state.Winner + " @@@");
-        Console.WriteLine("Reseted: " + numOfResetNodes);
-        Console.WriteLine("Reused: " + numOfReusedNodes);
     }
 
     public override Move Play(GameState gameState, List<Move> possibleMoves, TimeSpan remainingTime)
@@ -61,31 +57,9 @@ public class Aau903Bot : AI
                             break;
                         }
                     }
-                    Console.WriteLine(
-                        $"EXPECTING {rootNode?.GameState.CurrentPlayer.PlayerID} == " +
-                        $"{rootNode?.GameStateHash} == {rootNode?.GameState.CurrentPlayer.Coins} {rootNode?.GameState.CurrentPlayer.Power} {rootNode?.GameState.CurrentPlayer.Prestige} == " +
-                        $"{rootNode?.GameState.CurrentPlayer.Hand.Count} {rootNode?.GameState.CurrentPlayer.CooldownPile.Count} {rootNode?.GameState.CurrentPlayer.DrawPile.Count} == " +
-                        $"{rootNode?.GameState.TavernCards.Count} {rootNode?.GameState.TavernAvailableCards.Count} == " +
-                        $"{rootNode?.AppliedMove}");
-                    Console.WriteLine(
-                        $"GOT       {seededGameState.CurrentPlayer.PlayerID} == " +
-                        $"{seededGameStateHash} == {seededGameState.CurrentPlayer.Coins} {seededGameState.CurrentPlayer.Power} {seededGameState.CurrentPlayer.Prestige} == " +
-                        $"{seededGameState.CurrentPlayer.Hand.Count} {seededGameState.CurrentPlayer.CooldownPile.Count} {seededGameState.CurrentPlayer.DrawPile.Count} == " +
-                        $"{seededGameState.TavernCards.Count} {seededGameState.TavernAvailableCards.Count}");
                 }
                 else
                 {
-                    Console.WriteLine(
-                        $"EXPECTING {rootNode?.GameState.CurrentPlayer.PlayerID} == " +
-                        $"{rootNode?.GameStateHash} == {rootNode?.GameState.CurrentPlayer.Coins} {rootNode?.GameState.CurrentPlayer.Power} {rootNode?.GameState.CurrentPlayer.Prestige} == " +
-                        $"{rootNode?.GameState.CurrentPlayer.Hand.Count} {rootNode?.GameState.CurrentPlayer.CooldownPile.Count} {rootNode?.GameState.CurrentPlayer.DrawPile.Count} == " +
-                        $"{rootNode?.GameState.TavernCards.Count} {rootNode?.GameState.TavernAvailableCards.Count} == " +
-                        $"{rootNode?.AppliedMove}");
-                    Console.WriteLine(
-                        $"GOT       {seededGameState.CurrentPlayer.PlayerID} == " +
-                        $"{seededGameStateHash} == {seededGameState.CurrentPlayer.Coins} {seededGameState.CurrentPlayer.Power} {seededGameState.CurrentPlayer.Prestige} == " +
-                        $"{seededGameState.CurrentPlayer.Hand.Count} {seededGameState.CurrentPlayer.CooldownPile.Count} {seededGameState.CurrentPlayer.DrawPile.Count} == " +
-                        $"{seededGameState.TavernCards.Count} {seededGameState.TavernAvailableCards.Count}");
                     if (seededGameStateHash != rootNode?.GameStateHash)
                     {
                         rootNode = null;
@@ -95,7 +69,6 @@ public class Aau903Bot : AI
 
             if (rootNode == null)
             {
-                Console.WriteLine($"RESETTED ROOT     == {seededGameStateHash}");
                 rootNode = new Node(seededGameState, null, possibleMoves, null, 0);
             }
 
@@ -105,10 +78,8 @@ public class Aau903Bot : AI
             {
                 while (moveTimer.ElapsedMilliseconds < millisecondsForMove)
                 {
-                    Console.WriteLine($"==============={iterationCounter}===============");
                     iterationCounter++;
                     rootNode.Visit(out double score);
-                    // this.treeLogger.LogTree(rootNode);
                 }
             }
             else
@@ -145,20 +116,6 @@ public class Aau903Bot : AI
                     rootNode = null;
                 }
             }
-
-            Console.WriteLine($"AVAILABLE         == {string.Join(",", possibleMoves)}");
-            Console.WriteLine($"PLAYED            == {bestMoveToPlay}");
-            Console.WriteLine($"HASH              == {seededGameStateHash}");
-
-            if (rootNode == null)
-            {
-                numOfResetNodes++;
-            }
-            else
-            {
-                numOfReusedNodes++;
-            }
-
 
             return bestMoveToPlay;
         }
