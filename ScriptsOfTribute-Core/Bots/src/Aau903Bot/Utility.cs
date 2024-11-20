@@ -104,74 +104,73 @@ public static class Utility
             handHash *= 3 * (int)currCard.CommonId;
         }
 
-        int tavernHash = 1;
+        int tavernAvailableCardsHash = 1;
         foreach (var currCard in state.TavernAvailableCards)
         {
-            tavernHash *= 5 * ((int)currCard.CommonId);
+            tavernAvailableCardsHash *= 5 * ((int)currCard.CommonId);
         }
+        int tavernCardsHash = 1;
         foreach (var currCard in state.TavernCards)
         {
-            tavernHash *= 7 * ((int)currCard.CommonId);
+            tavernCardsHash *= 7 * ((int)currCard.CommonId);
         }
 
-        int cooldownHash = 1;
+        int cooldownPlayerHash = 1;
         foreach (var currCard in state.CurrentPlayer.CooldownPile)
         {
-            cooldownHash *= 9 * ((int)currCard.CommonId);
+            cooldownPlayerHash *= 9 * ((int)currCard.CommonId);
         }
+        int cooldownEnemyHash = 1;
         foreach (var currCard in state.EnemyPlayer.CooldownPile)
         {
-            cooldownHash *= 3 * ((int)currCard.CommonId);
+            cooldownEnemyHash *= 9 * ((int)currCard.CommonId);
         }
 
-        int upcomingDrawsHash = 1;
-        for (int i = 0; i < state.CurrentPlayer.KnownUpcomingDraws.Count; i++)
+        int upcomingPlayerDrawsHash = 1;
+        foreach (var currCard in state.CurrentPlayer.KnownUpcomingDraws)
         {
-            var currCard = state.CurrentPlayer.KnownUpcomingDraws[i];
-            upcomingDrawsHash *= 5 * ((int)currCard.CommonId) + i;
+            upcomingPlayerDrawsHash *= 5 * ((int)currCard.CommonId);
         }
-        for (int i = 0; i < state.EnemyPlayer.KnownUpcomingDraws.Count; i++)
+        int upcomingEnemyDrawsHash = 1;
+        foreach (var currCard in state.EnemyPlayer.KnownUpcomingDraws)
         {
-            var currCard = state.EnemyPlayer.KnownUpcomingDraws[i];
-            upcomingDrawsHash *= 7 * ((int)currCard.CommonId) + i;
-        }
-
-        int drawPileHash = 1;
-        for (int i = 0; i < state.CurrentPlayer.DrawPile.Count; i++)
-        {
-            var currCard = state.CurrentPlayer.DrawPile[i];
-            drawPileHash *= 9 * ((int)currCard.CommonId) + i;
-        }
-        for (int i = 0; i < state.EnemyPlayer.DrawPile.Count; i++)
-        {
-            var currCard = state.EnemyPlayer.DrawPile[i];
-            drawPileHash *= 3 * ((int)currCard.CommonId) + i;
+            upcomingEnemyDrawsHash *= 7 * ((int)currCard.CommonId);
         }
 
-        int commingEffectsHash = 1; //TODO
+        int drawPilePlayerHash = 1;
+        foreach (var currCard in state.CurrentPlayer.DrawPile)
+        {
+            drawPilePlayerHash *= 9 * ((int)currCard.CommonId);
+        }
+        int drawPileEnemyHash = 1;
+        foreach (var currCard in state.EnemyPlayer.DrawPile)
+        {
+            drawPileEnemyHash *= 3 * ((int)currCard.CommonId);
+        }
+
+        int comboEffectsHash = 1; //TODO
 
         int resourceHash = state.CurrentPlayer.Coins * 5 + state.CurrentPlayer.Prestige * 7 + state.CurrentPlayer.Power * 9 + state.EnemyPlayer.Prestige * 3;
 
-        int agentHash = 1;
+        int agentPlayerHash = 1;
         foreach (var currAgent in state.CurrentPlayer.Agents)
         {
-            agentHash *= 5 * (currAgent.Activated ? 2 : 3);
-            agentHash *= 7 * currAgent.CurrentHp;
+            agentPlayerHash *= 5 * (currAgent.Activated ? 2 : 3);
+            agentPlayerHash *= 7 * currAgent.CurrentHp;
         }
-
+        int agentEnemyHash = 1;
         foreach (var currAgent in state.EnemyPlayer.Agents)
         {
-            agentHash *= 9 * (currAgent.Activated ? 2 : 3);
-            agentHash *= 3 * currAgent.CurrentHp;
+            agentEnemyHash *= 9 * (currAgent.Activated ? 2 : 3);
+            agentEnemyHash *= 3 * currAgent.CurrentHp;
         }
 
         int patronHash = 1;
-        // foreach (var patronPair in state.PatronStates.All)
-        // {
-        //     var (patronId, patronState) = patronPair;
-        //     patronHash *= 5 * (int)patronId * (int)patronState;
-        // }
-        // TODO pending choice hash
+        foreach (var patronPair in state.PatronStates.All)
+        {
+            var (patronId, patronState) = patronPair;
+            patronHash *= 5 * (int)patronId * (int)patronState;
+        }
         int pendingChoiceHash = 1;
         if (state.PendingChoice != null)
         {
@@ -179,7 +178,14 @@ public static class Utility
             pendingChoiceHash *= 9 * (int)state.PendingChoice.ChoiceFollowUp;
         }
 
-        return (handHash + tavernHash + cooldownHash + upcomingDrawsHash + drawPileHash + commingEffectsHash + resourceHash + agentHash + patronHash + pendingChoiceHash) & 0x7FFFFFFF;
+        return (
+            handHash +
+            tavernCardsHash + tavernAvailableCardsHash +
+            cooldownPlayerHash + cooldownEnemyHash +
+            upcomingPlayerDrawsHash + upcomingEnemyDrawsHash +
+            drawPilePlayerHash + drawPileEnemyHash +
+            resourceHash + agentPlayerHash + patronHash + pendingChoiceHash
+        ) & 0x7FFFFFFF;
     }
 
     public static int PreciseHash(SeededGameState state)
@@ -312,8 +318,9 @@ public static class Utility
         }
     }
 
-    public static double UseBestMCTS3Heuristic(SeededGameState gameState) {
-        
+    public static double UseBestMCTS3Heuristic(SeededGameState gameState)
+    {
+
         GameStrategy strategy;
 
         var currentPlayer = gameState.CurrentPlayer;

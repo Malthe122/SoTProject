@@ -54,16 +54,14 @@ public class Aau903Bot : AI
                         if (seededGameStateHash == childNode.GameStateHash)
                         {
                             rootNode = childNode;
+                            rootNode.Depth = 0;
                             break;
                         }
                     }
                 }
-                else
+                if (seededGameStateHash != rootNode?.GameStateHash)
                 {
-                    if (seededGameStateHash != rootNode?.GameStateHash)
-                    {
-                        rootNode = null;
-                    }
+                    rootNode = null;
                 }
             }
 
@@ -80,6 +78,7 @@ public class Aau903Bot : AI
                 {
                     iterationCounter++;
                     rootNode.Visit(out double score);
+                    // this.treeLogger.LogTree(rootNode);
                 }
             }
             else
@@ -108,8 +107,7 @@ public class Aau903Bot : AI
                 if (MCTSHyperparameters.SHARED_MCTS_TREE)
                 {
                     rootNode = bestChildNode;
-
-
+                    rootNode.Depth = 0;
                 }
                 else
                 {
