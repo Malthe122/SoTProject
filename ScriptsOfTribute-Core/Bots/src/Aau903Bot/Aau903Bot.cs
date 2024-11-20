@@ -9,27 +9,35 @@ namespace Aau903Bot;
 public class Aau903Bot : AI
 {
     private Node? rootNode = null;
-    private Move? previouselyPlayedMove = null;
+    private int numOfReusedNodes = 0;
+    private int numOfResetNodes = 0;
     private TreeLogger treeLogger = new TreeLogger();
 
     public override void GameEnd(EndGameState state, FullGameState? finalBoardState)
     {
         Console.WriteLine("@@@ Game ended because of " + state.Reason + " @@@");
         Console.WriteLine("@@@ Winner was " + state.Winner + " @@@");
+        Console.WriteLine("Reseted: " + numOfResetNodes);
+        Console.WriteLine("Reused: " + numOfReusedNodes);
     }
 
     public override Move Play(GameState gameState, List<Move> possibleMoves, TimeSpan remainingTime)
     {
         try
         {
+            ulong randomSeed = (ulong)Utility.Rng.Next();
+
             var obviousMove = FindObviousMove(possibleMoves);
             if (obviousMove != null)
             {
+                var (newGameState, newPossibleMoves) = gameState.ApplyMove(obviousMove, randomSeed);
+                rootNode = new Node(newGameState, rootNode, newPossibleMoves, obviousMove, 0);
                 return obviousMove;
             }
-
             if (possibleMoves.Count == 1)
             {
+                var (newGameState, newPossibleMoves) = gameState.ApplyMove(possibleMoves[0], randomSeed);
+                rootNode = new Node(newGameState, rootNode, newPossibleMoves, possibleMoves[0], 0);
                 return possibleMoves[0];
             }
 
@@ -39,50 +47,45 @@ public class Aau903Bot : AI
             int estimatedRemainingMovesInTurn = EstimateRemainingMovesInTurn(gameState, possibleMoves);
             double millisecondsForMove = (remainingTime.TotalMilliseconds / estimatedRemainingMovesInTurn) - MCTSHyperparameters.ITERATION_COMPLETION_MILLISECONDS_BUFFER;
 
-            ulong randomSeed = (ulong)Utility.Rng.Next();
             var seededGameState = gameState.ToSeededGameState(randomSeed);
             var seededGameStateHash = seededGameState.GenerateHash();
             if (MCTSHyperparameters.SHARED_MCTS_TREE)
             {
                 if (rootNode is ChanceNode)
                 {
-                    // foreach (var childNode in rootNode.ChildNodes)
-                    // {
-                    //     if (childNode.GameStateHash == gameStateHash)
-                    //     {
-                    //         rootNode = childNode;
-                    //         break;
-                    //     }
-                    // }
+                    foreach (var childNode in rootNode.ChildNodes)
+                    {
+                        if (seededGameStateHash == childNode.GameStateHash)
+                        {
+                            rootNode = childNode;
+                            break;
+                        }
+                    }
+                    Console.WriteLine(
+                        $"EXPECTING {rootNode?.GameState.CurrentPlayer.PlayerID} == " +
+                        $"{rootNode?.GameStateHash} == {rootNode?.GameState.CurrentPlayer.Coins} {rootNode?.GameState.CurrentPlayer.Power} {rootNode?.GameState.CurrentPlayer.Prestige} == " +
+                        $"{rootNode?.GameState.CurrentPlayer.Hand.Count} {rootNode?.GameState.CurrentPlayer.CooldownPile.Count} {rootNode?.GameState.CurrentPlayer.DrawPile.Count} == " +
+                        $"{rootNode?.GameState.TavernCards.Count} {rootNode?.GameState.TavernAvailableCards.Count} == " +
+                        $"{rootNode?.AppliedMove}");
+                    Console.WriteLine(
+                        $"GOT       {seededGameState.CurrentPlayer.PlayerID} == " +
+                        $"{seededGameStateHash} == {seededGameState.CurrentPlayer.Coins} {seededGameState.CurrentPlayer.Power} {seededGameState.CurrentPlayer.Prestige} == " +
+                        $"{seededGameState.CurrentPlayer.Hand.Count} {seededGameState.CurrentPlayer.CooldownPile.Count} {seededGameState.CurrentPlayer.DrawPile.Count} == " +
+                        $"{seededGameState.TavernCards.Count} {seededGameState.TavernAvailableCards.Count}");
                 }
                 else
                 {
-                    var playerId = rootNode?.GameState.CurrentPlayer.PlayerID;
-                    var coins = rootNode?.GameState.CurrentPlayer.Coins;
-                    var power = rootNode?.GameState.CurrentPlayer.Power;
-                    var prestige = rootNode?.GameState.CurrentPlayer.Prestige;
-                    var handCount = rootNode?.GameState.CurrentPlayer.Hand.Count;
-                    var cooldownCount = rootNode?.GameState.CurrentPlayer.CooldownPile.Count;
-                    var drawCount = rootNode?.GameState.CurrentPlayer.DrawPile.Count;
-                    var appliedMove = rootNode?.AppliedMove;
-                    var totalScore = rootNode?.TotalScore;
-                    var visitCount = rootNode?.VisitCount;
-                    var tavernCards = rootNode?.GameState.TavernCards.Count;
-                    var tavernAvailableCards = rootNode?.GameState.TavernAvailableCards.Count;
-                    var patronStates = string.Join(",", gameState.PatronStates.All.Select((patron, player) => patron));
-                    Console.WriteLine($"EXPECTING {playerId} == {rootNode?.GameStateHash} == {coins} {power} {prestige} == {handCount} {cooldownCount} {drawCount} == {tavernCards} {tavernAvailableCards} {patronStates} == {appliedMove}");
-                    playerId = gameState.CurrentPlayer.PlayerID;
-                    coins = gameState.CurrentPlayer.Coins;
-                    power = gameState.CurrentPlayer.Power;
-                    prestige = gameState.CurrentPlayer.Prestige;
-                    handCount = gameState.CurrentPlayer.Hand.Count;
-                    cooldownCount = gameState.CurrentPlayer.CooldownPile.Count;
-                    drawCount = gameState.CurrentPlayer.DrawPile.Count;
-                    tavernCards = gameState.TavernCards.Count;
-                    tavernAvailableCards = gameState.TavernAvailableCards.Count;
-                    patronStates = string.Join(",", gameState.PatronStates.All.Select((patron, player) => patron));
-                    Console.WriteLine($"GOT       {playerId} == {seededGameStateHash} == {coins} {power} {prestige} == {handCount} {cooldownCount} {drawCount} == {tavernCards} {tavernAvailableCards} {patronStates}");
-
+                    Console.WriteLine(
+                        $"EXPECTING {rootNode?.GameState.CurrentPlayer.PlayerID} == " +
+                        $"{rootNode?.GameStateHash} == {rootNode?.GameState.CurrentPlayer.Coins} {rootNode?.GameState.CurrentPlayer.Power} {rootNode?.GameState.CurrentPlayer.Prestige} == " +
+                        $"{rootNode?.GameState.CurrentPlayer.Hand.Count} {rootNode?.GameState.CurrentPlayer.CooldownPile.Count} {rootNode?.GameState.CurrentPlayer.DrawPile.Count} == " +
+                        $"{rootNode?.GameState.TavernCards.Count} {rootNode?.GameState.TavernAvailableCards.Count} == " +
+                        $"{rootNode?.AppliedMove}");
+                    Console.WriteLine(
+                        $"GOT       {seededGameState.CurrentPlayer.PlayerID} == " +
+                        $"{seededGameStateHash} == {seededGameState.CurrentPlayer.Coins} {seededGameState.CurrentPlayer.Power} {seededGameState.CurrentPlayer.Prestige} == " +
+                        $"{seededGameState.CurrentPlayer.Hand.Count} {seededGameState.CurrentPlayer.CooldownPile.Count} {seededGameState.CurrentPlayer.DrawPile.Count} == " +
+                        $"{seededGameState.TavernCards.Count} {seededGameState.TavernAvailableCards.Count}");
                     if (seededGameStateHash != rootNode?.GameStateHash)
                     {
                         rootNode = null;
@@ -134,12 +137,28 @@ public class Aau903Bot : AI
                 if (MCTSHyperparameters.SHARED_MCTS_TREE)
                 {
                     rootNode = bestChildNode;
+
+
                 }
                 else
                 {
                     rootNode = null;
                 }
             }
+
+            Console.WriteLine($"AVAILABLE         == {string.Join(",", possibleMoves)}");
+            Console.WriteLine($"PLAYED            == {bestMoveToPlay}");
+            Console.WriteLine($"HASH              == {seededGameStateHash}");
+
+            if (rootNode == null)
+            {
+                numOfResetNodes++;
+            }
+            else
+            {
+                numOfReusedNodes++;
+            }
+
 
             return bestMoveToPlay;
         }

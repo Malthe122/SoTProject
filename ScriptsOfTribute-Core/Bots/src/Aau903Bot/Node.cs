@@ -43,7 +43,6 @@ public class Node
         var handCount = GameState.CurrentPlayer.Hand.Count;
         var cooldownCount = GameState.CurrentPlayer.CooldownPile.Count;
         var drawCount = GameState.CurrentPlayer.DrawPile.Count;
-        Console.WriteLine($"VISIT {playerId} == {GameStateHash} == {coins} {power} {prestige} == {handCount} {cooldownCount} {drawCount} == {AppliedMove} == {TotalScore} == {VisitCount}");
         // Node Metrics
 
         if (MCTSHyperparameters.SET_MAX_EXPANSION_DEPTH)
@@ -60,6 +59,8 @@ public class Node
 
         if (GameState.GameEndState == null)
         {
+            Console.WriteLine($"VISIT {playerId} == {GameStateHash} == {coins} {power} {prestige} == {handCount} {cooldownCount} {drawCount} == {AppliedMove} == {TotalScore} == {VisitCount}");
+            Console.WriteLine($"AVAILABLE {string.Join(",", PossibleMoves)}");
             if (VisitCount == 0)
             {
                 ApplyAllDeterministicAndObviousMoves();
@@ -83,14 +84,17 @@ public class Node
         }
         else if (GameState.GameEndState.Winner == PlayerEnum.NO_PLAYER_SELECTED)
         {
+            Console.WriteLine($"\tGAME ENDED {PlayerEnum.NO_PLAYER_SELECTED}");
             score = 0;
         }
         else if (GameState.GameEndState.Winner == GameState.CurrentPlayer.PlayerID)
         {
+            Console.WriteLine($"\tGAME ENDED {GameState.CurrentPlayer.PlayerID}");
             score = 1;
         }
         else
         {
+            Console.WriteLine($"\tGAME ENDED {GameState.EnemyPlayer.PlayerID}");
             score = -1;
         }
 

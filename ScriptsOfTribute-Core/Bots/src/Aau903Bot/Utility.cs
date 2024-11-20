@@ -125,23 +125,27 @@ public static class Utility
         }
 
         int upcomingDrawsHash = 1;
-        foreach (var currCard in state.CurrentPlayer.KnownUpcomingDraws)
+        for (int i = 0; i < state.CurrentPlayer.KnownUpcomingDraws.Count; i++)
         {
-            upcomingDrawsHash *= 5 * ((int)currCard.CommonId);
+            var currCard = state.CurrentPlayer.KnownUpcomingDraws[i];
+            upcomingDrawsHash *= 5 * ((int)currCard.CommonId) + i;
         }
-        foreach (var currCard in state.EnemyPlayer.KnownUpcomingDraws)
+        for (int i = 0; i < state.EnemyPlayer.KnownUpcomingDraws.Count; i++)
         {
-            cooldownHash *= 7 * ((int)currCard.CommonId);
+            var currCard = state.EnemyPlayer.KnownUpcomingDraws[i];
+            upcomingDrawsHash *= 7 * ((int)currCard.CommonId) + i;
         }
 
         int drawPileHash = 1;
-        foreach (var currCard in state.CurrentPlayer.DrawPile)
+        for (int i = 0; i < state.CurrentPlayer.DrawPile.Count; i++)
         {
-            drawPileHash *= 9 * ((int)currCard.CommonId);
+            var currCard = state.CurrentPlayer.DrawPile[i];
+            drawPileHash *= 9 * ((int)currCard.CommonId) + i;
         }
-        foreach (var currCard in state.EnemyPlayer.DrawPile)
+        for (int i = 0; i < state.EnemyPlayer.DrawPile.Count; i++)
         {
-            drawPileHash *= 3 * ((int)currCard.CommonId);
+            var currCard = state.EnemyPlayer.DrawPile[i];
+            drawPileHash *= 3 * ((int)currCard.CommonId) + i;
         }
 
         int commingEffectsHash = 1; //TODO
@@ -149,7 +153,6 @@ public static class Utility
         int resourceHash = state.CurrentPlayer.Coins * 5 + state.CurrentPlayer.Prestige * 7 + state.CurrentPlayer.Power * 9 + state.EnemyPlayer.Prestige * 3;
 
         int agentHash = 1;
-
         foreach (var currAgent in state.CurrentPlayer.Agents)
         {
             agentHash *= 5 * (currAgent.Activated ? 2 : 3);
@@ -170,11 +173,11 @@ public static class Utility
         // }
         // TODO pending choice hash
         int pendingChoiceHash = 1;
-        // if (state.PendingChoice != null)
-        // {
-        //     pendingChoiceHash *= 7 * state.PendingChoice.MaxChoices + state.PendingChoice.MinChoices;
-        //     pendingChoiceHash *= 9 * (int)state.PendingChoice.ChoiceFollowUp;
-        // }
+        if (state.PendingChoice != null)
+        {
+            pendingChoiceHash *= 7 * state.PendingChoice.MaxChoices + state.PendingChoice.MinChoices;
+            pendingChoiceHash *= 9 * (int)state.PendingChoice.ChoiceFollowUp;
+        }
 
         return (handHash + tavernHash + cooldownHash + upcomingDrawsHash + drawPileHash + commingEffectsHash + resourceHash + agentHash + patronHash + pendingChoiceHash) & 0x7FFFFFFF;
     }
