@@ -22,6 +22,7 @@ public class Aau903Bot : AI
         try
         {
             ulong randomSeed = (ulong)Utility.Rng.Next();
+            var seededGameState = gameState.ToSeededGameState(randomSeed);
 
             var obviousMove = FindObviousMove(possibleMoves);
             if (obviousMove != null)
@@ -43,10 +44,9 @@ public class Aau903Bot : AI
             int estimatedRemainingMovesInTurn = EstimateRemainingMovesInTurn(gameState, possibleMoves);
             double millisecondsForMove = (remainingTime.TotalMilliseconds / estimatedRemainingMovesInTurn) - MCTSHyperparameters.ITERATION_COMPLETION_MILLISECONDS_BUFFER;
 
-            var seededGameState = gameState.ToSeededGameState(randomSeed);
-            var seededGameStateHash = seededGameState.GenerateHash();
             if (MCTSHyperparameters.SHARED_MCTS_TREE)
             {
+                var seededGameStateHash = seededGameState.GenerateHash();
                 if (rootNode is ChanceNode)
                 {
                     foreach (var childNode in rootNode.ChildNodes)
