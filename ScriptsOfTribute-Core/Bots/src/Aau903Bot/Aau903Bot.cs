@@ -10,17 +10,11 @@ public class Aau903Bot : AI
 {
     private Node? rootNode = null;
     private TreeLogger treeLogger = new TreeLogger();
-    private int reused = 0;
-    private int reset = 0;
 
     public override void GameEnd(EndGameState state, FullGameState? finalBoardState)
     {
         Console.WriteLine("@@@ Game ended because of " + state.Reason + " @@@");
         Console.WriteLine("@@@ Winner was " + state.Winner + " @@@");
-        Console.WriteLine($"REUSED: {reused}");
-        Console.WriteLine($"RESET: {reset}");
-        reused = 0;
-        reset = 0;
     }
 
     public override Move Play(GameState gameState, List<Move> possibleMoves, TimeSpan remainingTime)
@@ -74,12 +68,7 @@ public class Aau903Bot : AI
 
             if (rootNode == null)
             {
-                reset++;
                 rootNode = new Node(seededGameState, null, possibleMoves, null, 0);
-            }
-            else
-            {
-                reused++;
             }
 
             int iterationCounter = 0;
