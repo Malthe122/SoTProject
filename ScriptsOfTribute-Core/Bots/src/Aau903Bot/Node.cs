@@ -17,10 +17,10 @@ public class Node
     public int GameStateHash;
     public SeededGameState GameState;
     public Move? AppliedMove;
-    public List<Move> PossibleMoves;
+    public List<Move>? PossibleMoves;
     public int Depth;
 
-    public Node(SeededGameState gameState, Node parent, List<Move> possibleMoves, Move appliedMove, int depth)
+    public Node(SeededGameState gameState, Node? parent, List<Move>? possibleMoves, Move? appliedMove, int depth)
     {
         GameState = gameState;
         Parent = parent;

@@ -10,11 +10,17 @@ public class Aau903Bot : AI
 {
     private Node? rootNode = null;
     private TreeLogger treeLogger = new TreeLogger();
+    private int reused = 0;
+    private int reset = 0;
 
     public override void GameEnd(EndGameState state, FullGameState? finalBoardState)
     {
         Console.WriteLine("@@@ Game ended because of " + state.Reason + " @@@");
         Console.WriteLine("@@@ Winner was " + state.Winner + " @@@");
+        Console.WriteLine($"REUSED: {reused}");
+        Console.WriteLine($"RESET: {reset}");
+        reused = 0;
+        reset = 0;
     }
 
     public override Move Play(GameState gameState, List<Move> possibleMoves, TimeSpan remainingTime)
@@ -27,39 +33,40 @@ public class Aau903Bot : AI
             var obviousMove = FindObviousMove(possibleMoves);
             if (obviousMove != null)
             {
-                var (newGameState, newPossibleMoves) = gameState.ApplyMove(obviousMove, randomSeed);
-                rootNode = new Node(newGameState, rootNode, newPossibleMoves, obviousMove, 0);
                 return obviousMove;
             }
             if (possibleMoves.Count == 1)
             {
-                var (newGameState, newPossibleMoves) = gameState.ApplyMove(possibleMoves[0], randomSeed);
-                rootNode = new Node(newGameState, rootNode, newPossibleMoves, possibleMoves[0], 0);
                 return possibleMoves[0];
             }
 
             var moveTimer = new Stopwatch();
             moveTimer.Start();
-
             int estimatedRemainingMovesInTurn = EstimateRemainingMovesInTurn(gameState, possibleMoves);
             double millisecondsForMove = (remainingTime.TotalMilliseconds / estimatedRemainingMovesInTurn) - MCTSHyperparameters.ITERATION_COMPLETION_MILLISECONDS_BUFFER;
 
-            if (MCTSHyperparameters.SHARED_MCTS_TREE)
+            if (rootNode != null && MCTSHyperparameters.SHARED_MCTS_TREE)
             {
                 var seededGameStateHash = seededGameState.GenerateHash();
                 if (rootNode is ChanceNode)
                 {
+                    bool found = false;
                     foreach (var childNode in rootNode.ChildNodes)
                     {
                         if (seededGameStateHash == childNode.GameStateHash)
                         {
                             rootNode = childNode;
                             rootNode.Depth = 0;
+                            found = true;
                             break;
                         }
                     }
+                    if (found == false)
+                    {
+                        rootNode = null;
+                    }
                 }
-                if (seededGameStateHash != rootNode?.GameStateHash)
+                else if (seededGameStateHash != rootNode.GameStateHash)
                 {
                     rootNode = null;
                 }
@@ -67,16 +74,20 @@ public class Aau903Bot : AI
 
             if (rootNode == null)
             {
+                reset++;
                 rootNode = new Node(seededGameState, null, possibleMoves, null, 0);
+            }
+            else
+            {
+                reused++;
             }
 
             int iterationCounter = 0;
-
             if (MCTSHyperparameters.DYNAMIC_MOVE_TIME_DISTRIBUTION)
             {
                 while (moveTimer.ElapsedMilliseconds < millisecondsForMove)
                 {
-                    iterationCounter++;
+                    // iterationCounter++;
                     rootNode.Visit(out double score);
                     // this.treeLogger.LogTree(rootNode);
                 }

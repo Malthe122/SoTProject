@@ -3,7 +3,6 @@
 # List benchmarks to include
 benchmarks=(
     "Aau903BotVsMCTSBotBenchmark"
-    "ExampleBenchmark"
 )
 
 server="$1"

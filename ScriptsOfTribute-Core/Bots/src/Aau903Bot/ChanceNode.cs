@@ -9,7 +9,7 @@ public class ChanceNode : Node
 
     public override void Visit(out double score)
     {      
-        (var newState, var newMoves) = Parent.GameState.ApplyMove(AppliedMove, (ulong)Utility.Rng.Next());
+        var (newState, newMoves) = Parent!.GameState.ApplyMove(AppliedMove!, (ulong)Utility.Rng.Next());
         var newStateHash = newState.GenerateHash();
         if (ChildNodes.Any(n => n.GameStateHash == newStateHash))
         {
@@ -31,7 +31,7 @@ public class ChanceNode : Node
         }
         else
         {
-            var newChild = new Node(newState, this, newMoves, AppliedMove, Depth);
+            var newChild = new Node(newState, this, newMoves, AppliedMove!, Depth);
             ChildNodes.Add(newChild);
             newChild.Visit(out score);
         }

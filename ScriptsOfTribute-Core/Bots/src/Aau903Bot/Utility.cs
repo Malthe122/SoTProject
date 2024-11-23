@@ -96,127 +96,276 @@ public static class Utility
         PatronId.RED_EAGLE
     };
 
+    public static bool Equals(SeededGameState state1, SeededGameState state2)
+    {
+        var player1 = state1.CurrentPlayer;
+        var player2 = state2.CurrentPlayer;
+        var enemy1 = state1.EnemyPlayer;
+        var enemy2 = state2.EnemyPlayer;
+
+        var hand1 = player1.Hand.OrderBy(card => card.CommonId).ToList();
+        var hand2 = player2.Hand.OrderBy(card => card.CommonId).ToList();
+        if (hand1.Count != hand2.Count) return false;
+        for (int i = 0; i < hand1.Count; i++)
+        {
+            if (hand1[i].CommonId != hand2[i].CommonId) return false;
+        }
+
+        var tavernCards1 = state1.TavernAvailableCards.OrderBy(card => card.CommonId).ToList();
+        var tavernCards2 = state2.TavernAvailableCards.OrderBy(card => card.CommonId).ToList();
+        if (tavernCards1.Count != tavernCards2.Count) return false;
+        for (int i = 0; i < tavernCards1.Count; i++)
+        {
+            if (tavernCards1[i].CommonId != tavernCards2[i].CommonId) return false;
+        }
+
+        var tavernDeck1 = state1.TavernCards.OrderBy(card => card.CommonId).ToList();
+        var tavernDeck2 = state2.TavernCards.OrderBy(card => card.CommonId).ToList();
+        if (tavernDeck1.Count != tavernDeck2.Count) return false;
+        for (int i = 0; i < tavernDeck1.Count; i++)
+        {
+            if (tavernDeck1[i].CommonId != tavernDeck2[i].CommonId) return false;
+        }
+
+        var cooldownPlayer1 = player1.CooldownPile.OrderBy(card => card.CommonId).ToList();
+        var cooldownPlayer2 = player2.CooldownPile.OrderBy(card => card.CommonId).ToList();
+        if (cooldownPlayer1.Count != cooldownPlayer2.Count) return false;
+        for (int i = 0; i < cooldownPlayer1.Count; i++)
+        {
+            if (cooldownPlayer1[i].CommonId != cooldownPlayer2[i].CommonId) return false;
+        }
+
+        var cooldownEnemy1 = enemy1.CooldownPile.OrderBy(card => card.CommonId).ToList();
+        var cooldownEnemy2 = enemy2.CooldownPile.OrderBy(card => card.CommonId).ToList();
+        if (cooldownEnemy1.Count != cooldownEnemy2.Count) return false;
+        for (int i = 0; i < cooldownEnemy1.Count; i++)
+        {
+            if (cooldownEnemy1[i].CommonId != cooldownEnemy2[i].CommonId) return false;
+        }
+
+        var upcomingPlayerDraws1 = player1.KnownUpcomingDraws.OrderBy(card => card.CommonId).ToList();
+        var upcomingPlayerDraws2 = player2.KnownUpcomingDraws.OrderBy(card => card.CommonId).ToList();
+        if (upcomingPlayerDraws1.Count != upcomingPlayerDraws2.Count) return false;
+        for (int i = 0; i < upcomingPlayerDraws1.Count; i++)
+        {
+            if (upcomingPlayerDraws1[i].CommonId != upcomingPlayerDraws2[i].CommonId) return false;
+        }
+
+        var upcomingEnemyDraws1 = enemy1.KnownUpcomingDraws.OrderBy(card => card.CommonId).ToList();
+        var upcomingEnemyDraws2 = enemy2.KnownUpcomingDraws.OrderBy(card => card.CommonId).ToList();
+        if (upcomingEnemyDraws1.Count != upcomingEnemyDraws2.Count) return false;
+        for (int i = 0; i < upcomingEnemyDraws1.Count; i++)
+        {
+            if (upcomingEnemyDraws1[i].CommonId != upcomingEnemyDraws2[i].CommonId) return false;
+        }
+
+        var drawPlayer1 = player1.DrawPile.OrderBy(card => card.CommonId).ToList();
+        var drawPlayer2 = player2.DrawPile.OrderBy(card => card.CommonId).ToList();
+        if (drawPlayer1.Count != drawPlayer2.Count) return false;
+        for (int i = 0; i < drawPlayer1.Count; i++)
+        {
+            if (drawPlayer1[i].CommonId != drawPlayer2[i].CommonId) return false;
+        }
+
+        var drawEnemy1 = enemy1.DrawPile.OrderBy(card => card.CommonId).ToList();
+        var drawEnemy2 = enemy2.DrawPile.OrderBy(card => card.CommonId).ToList();
+        if (drawEnemy1.Count != drawEnemy2.Count) return false;
+        for (int i = 0; i < drawEnemy1.Count; i++)
+        {
+            if (drawEnemy1[i].CommonId != drawEnemy2[i].CommonId) return false;
+        }
+
+        if (player1.Coins != player2.Coins || player1.Prestige != player2.Prestige || player1.Power != player2.Power) return false;
+        if (enemy1.Coins != enemy2.Coins || enemy1.Prestige != enemy2.Prestige || enemy1.Power != enemy2.Power) return false;
+
+        var agentPlayer1 = player1.Agents.OrderBy(agent => agent.RepresentingCard.CommonId).ToList();
+        var agentPlayer2 = player2.Agents.OrderBy(agent => agent.RepresentingCard.CommonId).ToList();
+        if (agentPlayer1.Count != agentPlayer2.Count) return false;
+        for (int i = 0; i < agentPlayer1.Count; i++)
+        {
+            if (agentPlayer1[i].RepresentingCard.CommonId != agentPlayer2[i].RepresentingCard.CommonId ||
+                agentPlayer1[i].Activated != agentPlayer2[i].Activated ||
+                agentPlayer1[i].CurrentHp != agentPlayer2[i].CurrentHp) return false;
+        }
+
+        var agentEnemy1 = player1.Agents.OrderBy(agent => agent.RepresentingCard.CommonId).ToList();
+        var agentEnemy2 = player2.Agents.OrderBy(agent => agent.RepresentingCard.CommonId).ToList();
+        if (agentEnemy1.Count != agentEnemy2.Count) return false;
+        for (int i = 0; i < agentEnemy1.Count; i++)
+        {
+            if (agentEnemy1[i].RepresentingCard.CommonId != agentEnemy2[i].RepresentingCard.CommonId ||
+                agentEnemy1[i].Activated != agentEnemy2[i].Activated ||
+                agentEnemy1[i].CurrentHp != agentEnemy2[i].CurrentHp) return false;
+        }
+
+        foreach (var (patronId, patronState) in state1.PatronStates.All)
+        {
+            if (state2.PatronStates.All.Any(
+                p => p.Key != patronId || p.Value != patronState)
+            ) return false;
+        }
+
+        if (state1.PendingChoice != null && state1.PendingChoice == state2.PendingChoice)
+        {
+            if (state1.PendingChoice.MaxChoices != state2.PendingChoice.MaxChoices) return false;
+            if (state1.PendingChoice.MinChoices != state2.PendingChoice.MinChoices) return false;
+            if (state1.PendingChoice.ChoiceFollowUp != state2.PendingChoice.ChoiceFollowUp) return false;
+        }
+
+        return true;
+    }
+
     public static int QuickHash(SeededGameState state)
     {
-        int handHash = 1;
-        foreach (var currCard in state.CurrentPlayer.Hand)
+        const int MODULO = 2147483647; // 2^31 - 1, a large prime
+        var player = state.CurrentPlayer;
+        var enemy = state.EnemyPlayer;
+
+        int playerHand = 0;
+        foreach (var currCard in player.Hand)
         {
-            handHash *= 3 * (int)currCard.CommonId;
+            playerHand = (playerHand + 31 * (int)currCard.CommonId) % MODULO;
         }
 
-        int tavernAvailableCardsHash = 1;
+        int tavernCards = 0;
         foreach (var currCard in state.TavernAvailableCards)
         {
-            tavernAvailableCardsHash *= 5 * ((int)currCard.CommonId);
+            tavernCards = (tavernCards + 37 * ((int)currCard.CommonId)) % MODULO;
         }
-        int tavernCardsHash = 1;
+        int tavernDeck = 0;
         foreach (var currCard in state.TavernCards)
         {
-            tavernCardsHash *= 7 * ((int)currCard.CommonId);
+            tavernDeck = (tavernDeck + 41 * ((int)currCard.CommonId)) % MODULO;
         }
 
-        int cooldownPlayerHash = 1;
-        foreach (var currCard in state.CurrentPlayer.CooldownPile)
+        int playerCooldown = 0;
+        foreach (var currCard in player.CooldownPile)
         {
-            cooldownPlayerHash *= 9 * ((int)currCard.CommonId);
+            playerCooldown = (playerCooldown + 43 * ((int)currCard.CommonId)) % MODULO;
         }
-        int cooldownEnemyHash = 1;
-        foreach (var currCard in state.EnemyPlayer.CooldownPile)
+        int enemyCooldown = 0;
+        foreach (var currCard in enemy.CooldownPile)
         {
-            cooldownEnemyHash *= 9 * ((int)currCard.CommonId);
-        }
-
-        int upcomingPlayerDrawsHash = 1;
-        foreach (var currCard in state.CurrentPlayer.KnownUpcomingDraws)
-        {
-            upcomingPlayerDrawsHash *= 5 * ((int)currCard.CommonId);
-        }
-        int upcomingEnemyDrawsHash = 1;
-        foreach (var currCard in state.EnemyPlayer.KnownUpcomingDraws)
-        {
-            upcomingEnemyDrawsHash *= 7 * ((int)currCard.CommonId);
+            enemyCooldown = (enemyCooldown + 47 * ((int)currCard.CommonId)) % MODULO;
         }
 
-        int drawPilePlayerHash = 1;
-        foreach (var currCard in state.CurrentPlayer.DrawPile)
+        int playerUpcomingDraws = 0;
+        foreach (var currCard in player.KnownUpcomingDraws)
         {
-            drawPilePlayerHash *= 9 * ((int)currCard.CommonId);
+            playerUpcomingDraws = (playerUpcomingDraws + 53 * ((int)currCard.CommonId)) % MODULO;
         }
-        int drawPileEnemyHash = 1;
-        foreach (var currCard in state.EnemyPlayer.DrawPile)
+        int enemyUpcomingDraws = 0;
+        foreach (var currCard in enemy.KnownUpcomingDraws)
         {
-            drawPileEnemyHash *= 3 * ((int)currCard.CommonId);
-        }
-
-        int comboEffectsHash = 1; //TODO
-
-        int resourceHash = state.CurrentPlayer.Coins * 5 + state.CurrentPlayer.Prestige * 7 + state.CurrentPlayer.Power * 9 + state.EnemyPlayer.Prestige * 3;
-
-        int agentPlayerHash = 1;
-        foreach (var currAgent in state.CurrentPlayer.Agents)
-        {
-            agentPlayerHash *= 5 * (currAgent.Activated ? 2 : 3);
-            agentPlayerHash *= 7 * currAgent.CurrentHp;
-        }
-        int agentEnemyHash = 1;
-        foreach (var currAgent in state.EnemyPlayer.Agents)
-        {
-            agentEnemyHash *= 9 * (currAgent.Activated ? 2 : 3);
-            agentEnemyHash *= 3 * currAgent.CurrentHp;
+            enemyUpcomingDraws = (enemyUpcomingDraws + 59 * ((int)currCard.CommonId)) % MODULO;
         }
 
-        int patronHash = 1;
-        foreach (var patronPair in state.PatronStates.All)
+        int playerDraw = 0;
+        foreach (var currCard in player.DrawPile)
         {
-            var (patronId, patronState) = patronPair;
-            patronHash *= 5 * (int)patronId * (int)patronState;
+            playerDraw = (playerDraw + 61 * ((int)currCard.CommonId)) % MODULO;
         }
-        int pendingChoiceHash = 1;
+        int enemyDraw = 0;
+        foreach (var currCard in enemy.DrawPile)
+        {
+            enemyDraw = (enemyDraw + 67 * ((int)currCard.CommonId)) % MODULO;
+        }
+
+        int playerPlayed = 0;
+        foreach (var currCard in player.Played)
+        {
+            playerPlayed = (playerPlayed + 71 * ((int)currCard.CommonId)) % MODULO;
+        }
+        int enemyPlayed = 0;
+        foreach (var currCard in enemy.Played)
+        {
+            enemyPlayed = (enemyPlayed + 73 * ((int)currCard.CommonId)) % MODULO;
+        }
+
+        int playerResources = ((player.Coins * 79) + (player.Prestige * 83) + (player.Power * 89)) % MODULO;
+        int enemyResources = ((enemy.Coins * 97) + (enemy.Prestige * 101) + (enemy.Power * 103)) % MODULO;
+
+        int playerAgents = 0;
+        foreach (var currAgent in player.Agents)
+        {
+            playerAgents = (playerAgents + 109 * (currAgent.Activated ? 1 : 2) + 113 * currAgent.CurrentHp) % MODULO;
+        }
+        int enemyAgents = 0;
+        foreach (var currAgent in enemy.Agents)
+        {
+            enemyAgents = (enemyAgents + 127 * (currAgent.Activated ? 1 : 2) + 131 * currAgent.CurrentHp) % MODULO;
+        }
+
+        int patrons = 0;
+        foreach (var (patronId, patronState) in state.PatronStates.All)
+        {
+            patrons = (patrons + 137 * (int)patronId * (int)patronState) % MODULO;
+        }
+
+        var playerPatronCalls = (int)player.PatronCalls % MODULO;
+        var enemyPatronCalls = (int)enemy.PatronCalls % MODULO;
+
+        var playerId = (int)player.PlayerID % MODULO;
+        var enemyId = (int)enemy.PlayerID % MODULO;
+
+        int pendingChoice = 0;
         if (state.PendingChoice != null)
         {
-            pendingChoiceHash *= 7 * state.PendingChoice.MaxChoices + state.PendingChoice.MinChoices;
-            pendingChoiceHash *= 9 * (int)state.PendingChoice.ChoiceFollowUp;
+            pendingChoice = (pendingChoice + 149 * (state.PendingChoice.MaxChoices + state.PendingChoice.MinChoices) +
+                             151 * (int)state.PendingChoice.ChoiceFollowUp) % MODULO;
         }
 
         return (
-            handHash +
-            tavernCardsHash + tavernAvailableCardsHash +
-            cooldownPlayerHash + cooldownEnemyHash +
-            upcomingPlayerDrawsHash + upcomingEnemyDrawsHash +
-            drawPilePlayerHash + drawPileEnemyHash +
-            resourceHash + agentPlayerHash + patronHash + pendingChoiceHash
-        ) & 0x7FFFFFFF;
+            playerHand +
+            tavernDeck + tavernCards +
+            playerCooldown + enemyCooldown +
+            playerUpcomingDraws + enemyUpcomingDraws +
+            playerDraw + enemyDraw +
+            playerResources + enemyResources +
+            playerPatronCalls + enemyPatronCalls +
+            playerId + enemyId +
+            playerAgents + patrons + pendingChoice
+        ) % MODULO;
     }
+
 
     public static int PreciseHash(SeededGameState state)
     {
-        string hashString = "";
-        // Decks
-        var hand = string.Join("", state.CurrentPlayer.Hand.Select(card => (int)card.CommonId));
-        var tavern = string.Join("", state.TavernAvailableCards.Select(card => (int)card.CommonId));
-        var tavernCards = string.Join("", state.TavernCards.Select(card => (int)card.CommonId));
-        var draw = string.Join("", state.TavernCards.Select(card => (int)card.CommonId));
-        var player1Cooldown = string.Join("", state.CurrentPlayer.CooldownPile.Select(card => (int)card.CommonId));
-        var player2Cooldown = string.Join("", state.EnemyPlayer.CooldownPile.Select(card => (int)card.CommonId));
-        var player1UpcomingDraws = string.Join("", state.CurrentPlayer.KnownUpcomingDraws.Select(card => (int)card.CommonId));
-        var player2UpcomingDraws = string.Join("", state.EnemyPlayer.KnownUpcomingDraws.Select(card => (int)card.CommonId));
-        // Agents
-        var player1Agents = string.Join("", state.TavernCards.Select(card => (int)card.CommonId));
-        var player2Agents = string.Join("", state.TavernCards.Select(card => (int)card.CommonId));
-        // Resources
-        var player1Coins = string.Join("", state.CurrentPlayer.Coins);
-        var player2Coins = string.Join("", state.EnemyPlayer.Coins);
-        var player1Prestige = string.Join("", state.CurrentPlayer.Prestige);
-        var player2Prestige = string.Join("", state.EnemyPlayer.Prestige);
-        var player1Power = string.Join("", state.CurrentPlayer.Power);
-        var player2Power = string.Join("", state.EnemyPlayer.Power);
-        // Patrons
-        var patronStates = string.Join("", state.Patrons.Select((patron, state) => (int)patron + (int)state));
-        hashString =
-            hand + tavern + tavernCards + draw + player1Cooldown + player2Cooldown +
-            player1UpcomingDraws + player2UpcomingDraws + player1Agents + player2Agents +
-            player1Coins + player2Coins + player1Prestige + player2Prestige + player1Power + player2Power +
-            patronStates;
+        var player = state.CurrentPlayer;
+        var enemy = state.EnemyPlayer;
+
+        var playerHand = string.Join("", player.Hand.OrderBy(card => card.CommonId).Select(card => (int)card.CommonId));
+        var enemyHand = string.Join("", player.Hand.OrderBy(card => card.CommonId).Select(card => (int)card.CommonId));
+
+        var tavernCards = string.Join("", state.TavernAvailableCards.OrderBy(card => card.CommonId).Select(card => (int)card.CommonId));
+        var tavernDeck = string.Join("", state.TavernCards.OrderBy(card => card.CommonId).Select(card => (int)card.CommonId));
+
+        var playerCooldown = string.Join("", player.CooldownPile.OrderBy(card => card.CommonId).Select(card => (int)card.CommonId));
+        var enemyCooldown = string.Join("", enemy.CooldownPile.OrderBy(card => card.CommonId).Select(card => (int)card.CommonId));
+
+        var playerUpcomingDraws = string.Join("", player.KnownUpcomingDraws.OrderBy(card => card.CommonId).Select(card => (int)card.CommonId));
+        var enemyUpcomingDraws = string.Join("", enemy.KnownUpcomingDraws.OrderBy(card => card.CommonId).Select(card => (int)card.CommonId));
+
+        var playerDraw = string.Join("", player.DrawPile.OrderBy(card => card.CommonId).Select(card => (int)card.CommonId));
+        var enemyDraw = string.Join("", enemy.DrawPile.OrderBy(card => card.CommonId).Select(card => (int)card.CommonId));
+
+        var playerResources = string.Join("", new List<int>() { player.Coins, player.Power, player.Prestige });
+        var enemyResources = string.Join("", new List<int>() { enemy.Coins, enemy.Power, enemy.Prestige });
+
+        var playerAgents = string.Join("", player.Agents.OrderBy(agent => agent.RepresentingCard.CommonId)
+            .Select(agent => $"{(int)agent.RepresentingCard.CommonId}{agent.Activated}{agent.CurrentHp}"));
+        var enemyAgents = string.Join("", enemy.Agents.OrderBy(agent => agent.RepresentingCard.CommonId)
+            .Select(agent => $"{(int)agent.RepresentingCard.CommonId}{agent.Activated}{agent.CurrentHp}"));
+
+        var patrons = string.Join("", state.PatronStates.All.Select((patronId, patronState) => $"{patronId}{patronState}"));
+
+        var pendingChoice = "";
+        if (state.PendingChoice != null)
+        {
+            pendingChoice = $"{state.PendingChoice.MaxChoices}{state.PendingChoice.MinChoices}{state.PendingChoice.ChoiceFollowUp}";
+        }
+
+        string hashString = playerHand + enemyHand + tavernCards + tavernDeck + playerCooldown + enemyCooldown + playerUpcomingDraws + enemyUpcomingDraws + playerDraw + enemyDraw + playerResources + enemyResources + playerAgents + enemyAgents + patrons + pendingChoice;
 
         var xxHash = xxHashFactory.Instance.Create();
         byte[] hashBytes = xxHash.ComputeHash(Encoding.UTF8.GetBytes(hashString)).Hash;
