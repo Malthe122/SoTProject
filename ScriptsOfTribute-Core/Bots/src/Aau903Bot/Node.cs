@@ -17,10 +17,10 @@ public class Node
     public int GameStateHash;
     public SeededGameState GameState;
     public Move? AppliedMove;
-    public List<Move>? PossibleMoves;
+    public List<Move> PossibleMoves;
     public int Depth;
 
-    public Node(SeededGameState gameState, Node? parent, List<Move>? possibleMoves, Move? appliedMove, int depth)
+    public Node(SeededGameState gameState, Node parent, List<Move> possibleMoves, Move appliedMove, int depth)
     {
         GameState = gameState;
         Parent = parent;
@@ -35,15 +35,8 @@ public class Node
 
     public virtual void Visit(out double score)
     {
-        // Node Metrics
+        Node visitedChild = null;
         var playerId = GameState.CurrentPlayer.PlayerID;
-        var coins = GameState.CurrentPlayer.Coins;
-        var power = GameState.CurrentPlayer.Power;
-        var prestige = GameState.CurrentPlayer.Prestige;
-        var handCount = GameState.CurrentPlayer.Hand.Count;
-        var cooldownCount = GameState.CurrentPlayer.CooldownPile.Count;
-        var drawCount = GameState.CurrentPlayer.DrawPile.Count;
-        // Node Metrics
 
         if (MCTSHyperparameters.SET_MAX_EXPANSION_DEPTH)
         {
@@ -79,17 +72,9 @@ public class Node
                 }
             }
         }
-        else if (GameState.GameEndState.Winner == PlayerEnum.NO_PLAYER_SELECTED)
-        {
-            score = 0;
-        }
-        else if (GameState.GameEndState.Winner == GameState.CurrentPlayer.PlayerID)
-        {
-            score = 1;
-        }
         else
         {
-            score = -1;
+            score = Score();
         }
 
         TotalScore += score;
@@ -116,6 +101,7 @@ public class Node
                     var (newGameState, newPossibleMoves) = GameState.ApplyMove(move, randomSeed);
                     var newChild = new Node(newGameState, this, newPossibleMoves, move, Depth + 1);
                     ChildNodes.Add(newChild);
+                    // Console.WriteLine($"New child added with Depth level: {newChild.Depth}");
                     return newChild;
                 }
             }
@@ -141,37 +127,44 @@ public class Node
 
     private double RolloutTillTurnsEndThenHeuristic(int turnsToComplete)
     {
-        int turnsCompleted = 0;
-        var currentPlayer = GameState.CurrentPlayer;
-        var currentGameState = GameState;
-        var currentPossibleMoves = PossibleMoves;
+        int rolloutTurnsCompleted = 0;
+        var rolloutPlayer = GameState.CurrentPlayer;
+        var rolloutGameState = GameState;
+        var rolloutPossibleMoves = PossibleMoves;
 
-        while (turnsCompleted < turnsToComplete && currentGameState.GameEndState == null)
+        while (rolloutTurnsCompleted < turnsToComplete && rolloutGameState.GameEndState == null)
         {
             if (MCTSHyperparameters.FORCE_DELAY_TURN_END_IN_ROLLOUT)
             {
-                if (currentPossibleMoves.Count > 1)
+                if (rolloutPossibleMoves.Count > 1)
                 {
-                    currentPossibleMoves.RemoveAll(move => move.Command == CommandEnum.END_TURN);
+                    rolloutPossibleMoves.RemoveAll(move => move.Command == CommandEnum.END_TURN);
                 }
             }
 
-            var chosenIndex = Utility.Rng.Next(currentPossibleMoves.Count);
-            var moveToMake = currentPossibleMoves[chosenIndex];
+            var chosenIndex = Utility.Rng.Next(rolloutPossibleMoves.Count);
+            var moveToMake = rolloutPossibleMoves[chosenIndex];
 
-            var (newGameState, newPossibleMoves) = currentGameState.ApplyMove(moveToMake);
+            var (newGameState, newPossibleMoves) = rolloutGameState.ApplyMove(moveToMake);
 
-            if (newGameState.CurrentPlayer != currentPlayer)
+            if (newGameState.CurrentPlayer != rolloutPlayer)
             {
-                turnsCompleted++;
-                currentPlayer = newGameState.CurrentPlayer;
+                rolloutTurnsCompleted++;
+                rolloutPlayer = newGameState.CurrentPlayer;
             }
 
-            currentGameState = newGameState;
-            currentPossibleMoves = newPossibleMoves;
+            rolloutGameState = newGameState;
+            rolloutPossibleMoves = newPossibleMoves;
         }
 
-        return Utility.UseBestMCTS3Heuristic(GameState);
+        var stateScore = Utility.UseBestMCTS3Heuristic(rolloutGameState);
+
+        if (GameState.CurrentPlayer != rolloutGameState.CurrentPlayer)
+        {
+            stateScore *= -1;
+        }
+
+        return stateScore;
     }
 
     internal double Rollout()
