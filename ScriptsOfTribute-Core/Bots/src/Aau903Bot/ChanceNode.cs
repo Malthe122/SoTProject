@@ -9,6 +9,10 @@ public class ChanceNode : Node
     {      
         (var newState, var newMoves) = Parent.GameState.ApplyMove(AppliedMove, (ulong)Utility.Rng.Next());
         var newStateHash = newState.GenerateHash();
+        // TODO add flag
+        var childWithSameHash = Utility.FindOrBuildNode(newState, this, newMoves, AppliedMove, Depth);
+        // TODO wip with the chance node. I will check if it works in default first
+
         if (ChildNodes.Any(n => n.GameStateHash == newStateHash))
         {
             // TODO consider if we should visit the child we hit instead of equal distribution. With equal distribution
@@ -29,7 +33,10 @@ public class ChanceNode : Node
         }
         else
         {
-            var newChild = new Node(newState, this, newMoves, AppliedMove, Depth);
+            // TODO add check
+            var newChild = Utility.FindOrBuildNode(newState, this, newMoves, AppliedMove, Depth);
+            // else:
+            // var newChild = new Node(newState, this, newMoves, AppliedMove, Depth);
             ChildNodes.Add(newChild);
             newChild.Visit(out score);
         }

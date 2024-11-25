@@ -1,10 +1,13 @@
 using ExternalHeuristic;
 using ScriptsOfTribute;
+using ScriptsOfTribute.Board.Cards;
 using ScriptsOfTribute.Serializers;
 
 public static class Utility
 {
     public static Random Rng = new Random();
+
+    public static Dictionary<int,List<Node>> NodeGameStateHashMap = new Dictionary<int, List<Node>>();
 
     // TODO consider making an evaluation function at start of the game, that populates these lists
     // based on their effects, rather than relying on manually categorising them correctly
@@ -101,13 +104,13 @@ public static class Utility
         switch (MCTSHyperparameters.CHOSEN_HASH_GENERATION_TYPE)
         {
             case HashGenerationType.Quick:
-                int handHash = 0;
+                int handHash = 1;
                 foreach (var currCard in state.CurrentPlayer.Hand)
                 {
                     handHash *= 1 * (int)currCard.CommonId;
                 }
 
-                int tavernHash = 0;
+                int tavernHash = 1;
                 foreach (var currCard in state.TavernAvailableCards)
                 {
                     tavernHash *= 2 * ((int)currCard.CommonId);
@@ -117,7 +120,7 @@ public static class Utility
                     tavernHash *= 3 * ((int)currCard.CommonId);
                 }
 
-                int cooldownHash = 0;
+                int cooldownHash = 1;
                 foreach (var currCard in state.CurrentPlayer.CooldownPile)
                 {
                     cooldownHash *= 4 * ((int)currCard.CommonId);
@@ -127,7 +130,7 @@ public static class Utility
                     cooldownHash *= 5 * ((int)currCard.CommonId);
                 }
 
-                int upcomingDrawsHash = 0;
+                int upcomingDrawsHash = 1;
                 foreach (var currCard in state.CurrentPlayer.KnownUpcomingDraws)
                 {
                     upcomingDrawsHash *= 6 * ((int)currCard.CommonId);
@@ -137,7 +140,7 @@ public static class Utility
                     cooldownHash *= 7 * ((int)currCard.CommonId);
                 }
 
-                int drawPileHash = 0;
+                int drawPileHash = 1;
                 foreach (var currCard in state.CurrentPlayer.DrawPile)
                 {
                     drawPileHash *= 8 * ((int)currCard.CommonId);
@@ -147,11 +150,11 @@ public static class Utility
                     drawPileHash *= 9 * ((int)currCard.CommonId);
                 }
 
-                int commingEffectsHash = 0; //TODO
+                int commingEffectsHash = 1; //TODO
 
                 int resourceHash = state.CurrentPlayer.Coins * 10 + state.CurrentPlayer.Prestige * 11 + state.CurrentPlayer.Power * 12 + state.EnemyPlayer.Prestige * 13;
 
-                int agentHash = 0;
+                int agentHash = 1;
 
                 foreach (var currAgent in state.CurrentPlayer.Agents)
                 {
@@ -166,9 +169,9 @@ public static class Utility
                 }
 
                 // TODO patron hash
-                int patronHash = 0;
+                int patronHash = 1;
                 // TODO pending choice hash
-                int pendingChoiceHash = 0;
+                int pendingChoiceHash = 1;
 
                 return handHash + tavernHash + cooldownHash + upcomingDrawsHash + drawPileHash + commingEffectsHash + resourceHash + agentHash + patronHash + pendingChoiceHash;
             case HashGenerationType.Precise:
@@ -177,6 +180,242 @@ public static class Utility
             default:
                 throw new NotImplementedException();
         }
+    }
+
+    public static bool IsIdentical(this SeededGameState instance, SeededGameState other) {
+        
+        return ( 
+                instance.ComboStates.IsIdentical(other.ComboStates)
+                // Current player
+            &&  instance.CurrentPlayer.Agents.IsIdentical(other.CurrentPlayer.Agents)
+            &&  instance.CurrentPlayer.Coins == other.CurrentPlayer.Coins
+            &&  instance.CurrentPlayer.CooldownPile.IsIdentical(other.CurrentPlayer.CooldownPile)
+            &&  instance.CurrentPlayer.DrawPile.IsIdentical(other.CurrentPlayer.DrawPile)
+            &&  instance.CurrentPlayer.Hand.IsIdentical(other.CurrentPlayer.Hand)
+            &&  instance.CurrentPlayer.KnownUpcomingDraws.IsIdentical(other.CurrentPlayer.KnownUpcomingDraws)
+            &&  instance.CurrentPlayer.PatronCalls == other.CurrentPlayer.PatronCalls
+            &&  instance.CurrentPlayer.Played.IsIdentical(other.CurrentPlayer.Played)
+            &&  instance.CurrentPlayer.Power == other.CurrentPlayer.Power
+            &&  instance.CurrentPlayer.Prestige == other.CurrentPlayer.Prestige
+                // Enemy player
+            &&  instance.EnemyPlayer.Agents.IsIdentical(other.EnemyPlayer.Agents)
+            &&  instance.EnemyPlayer.Coins == other.EnemyPlayer.Coins
+            &&  instance.EnemyPlayer.CooldownPile.IsIdentical(other.EnemyPlayer.CooldownPile)
+            &&  instance.EnemyPlayer.DrawPile.IsIdentical(other.EnemyPlayer.DrawPile)
+            &&  instance.EnemyPlayer.Hand.IsIdentical(other.EnemyPlayer.Hand)
+            &&  instance.EnemyPlayer.KnownUpcomingDraws.IsIdentical(other.EnemyPlayer.KnownUpcomingDraws)
+            &&  instance.EnemyPlayer.PatronCalls == instance.EnemyPlayer.PatronCalls
+            &&  instance.EnemyPlayer.Played.IsIdentical(other.EnemyPlayer.Played)
+            &&  instance.EnemyPlayer.Power == instance.EnemyPlayer.Power
+            &&  instance.EnemyPlayer.Prestige == instance.EnemyPlayer.Prestige
+
+            &&  instance.Patrons.IsIdentical(other.Patrons)
+            &&  instance.PatronStates.IsIdentical(other.PatronStates)
+            &&  instance.PendingChoice.IsIdentical(other.PendingChoice)
+            &&  instance.StartOfNextTurnEffects.IsIdentical(other.StartOfNextTurnEffects)
+            &&  instance.TavernAvailableCards.IsIdentical(other.TavernAvailableCards)
+            &&  instance.TavernCards.IsIdentical(other.TavernCards)
+            &&  instance.UpcomingEffects.IsIdentical(other.UpcomingEffects)
+            );
+    }
+    // TODO check if this will throw a nullpointer or not when instance is null
+    public static bool IsIdentical(this SerializedChoice? instance, SerializedChoice? other) {
+        if (instance == null) {
+            if (other == null) {
+                return true;
+            }
+            else {
+                return false;
+            }
+        }
+        else if (other == null) {
+            return false;
+        }
+        else{
+            return (
+                    instance.ChoiceFollowUp == other.ChoiceFollowUp
+                // &&  instance.Context == other.Context // content should not matter if you have the same options
+                &&  instance.MaxChoices == other.MaxChoices
+                &&  instance.MinChoices == other.MinChoices
+                &&  instance.PossibleCards.IsIdentical(other.PossibleCards)
+                &&  instance.PossibleEffects.IsIdentical(other.PossibleEffects)
+                &&  instance.Type == other.Type
+            );
+        }
+    }
+
+    public static bool IsIdentical(this List<UniqueBaseEffect> instance, List<UniqueBaseEffect> other) {
+        List<UniqueEffect> instanceUniqueEffects = new List<UniqueEffect>();
+        List<UniqueEffectOr> instanceUniqueEffectOrs = new List<UniqueEffectOr>();
+        List<UniqueEffectComposite> instanceUniqueEffectComposites = new List<UniqueEffectComposite>();
+
+        List<UniqueEffect> otherUniqueEffects = new List<UniqueEffect>();
+        List<UniqueEffectOr> otherUniqueEffectOrs = new List<UniqueEffectOr>();
+        List<UniqueEffectComposite> otherUniqueEffectComposites = new List<UniqueEffectComposite>();
+
+        foreach(var currEffect in instance){
+            var uniqueEffect = currEffect as UniqueEffect;
+            var uniqueEffectOr = currEffect as UniqueEffectOr;
+            var uniqueEffectComposite = currEffect as UniqueEffectComposite;
+
+            if (uniqueEffect != null) {
+                instanceUniqueEffects.Add(uniqueEffect);
+            }
+            else if (uniqueEffectOr != null) {
+                instanceUniqueEffectOrs.Add(uniqueEffectOr);
+            }
+            else if (uniqueEffectComposite != null) {
+                instanceUniqueEffectComposites.Add(uniqueEffectComposite);
+            }
+            else {
+                throw new Exception("TROUBLE HANDLING EFFECT COMPARISON");
+            }
+        }
+
+        foreach(var currEffect in other){
+            var uniqueEffect = currEffect as UniqueEffect;
+            var uniqueEffectOr = currEffect as UniqueEffectOr;
+            var uniqueEffectComposite = currEffect as UniqueEffectComposite;
+
+            if (uniqueEffect != null) {
+                otherUniqueEffects.Add(uniqueEffect);
+            }
+            else if (uniqueEffectOr != null) {
+                otherUniqueEffectOrs.Add(uniqueEffectOr);
+            }
+            else if (uniqueEffectComposite != null) {
+                otherUniqueEffectComposites.Add(uniqueEffectComposite);
+            }
+            else {
+                throw new Exception("TROUBLE HANDLING EFFECT COMPARISON");
+            }
+        }
+
+        return (
+                instanceUniqueEffects.IsIdentical(otherUniqueEffects)
+            &&  instanceUniqueEffectOrs.IsIdentical(otherUniqueEffectOrs)
+            &&  instanceUniqueEffectComposites.IsIdentical(otherUniqueEffectComposites)
+        );
+    }
+
+    public static bool IsIdentical(this List<UniqueEffect> instance, List<UniqueEffect> other) {
+        instance.OrderBy(effect => effect.Amount).ThenBy(effect => effect.Combo).ThenBy(effect => effect.ParentCard.CommonId).ThenBy(effect => effect.Type);
+        other.OrderBy(effect => effect.Amount).ThenBy(effect => effect.Combo).ThenBy(effect => effect.ParentCard.CommonId).ThenBy(effect => effect.Type);
+
+        if (instance.Count != other.Count) {
+            return false;
+        }
+
+        for(int i = 0; i < instance.Count; i++) {
+            if (
+                    instance[i].Amount != other[i].Amount
+                ||  instance[i].Combo != other[i].Combo
+                ||  instance[i].ParentCard.CommonId != other[i].ParentCard.CommonId
+                ||  instance[i].Type != other[i].Type
+            ) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    public static bool IsIdentical(this List<UniqueEffectOr> instance, List<UniqueEffectOr> other) {
+        instance.OrderBy(effect => effect.Combo).ThenBy(effect => effect.ParentCard.CommonId);
+        other.OrderBy(effect => effect.Combo).ThenBy(effect => effect.ParentCard.CommonId);
+
+        if (instance.Count != other.Count) {
+            return false;
+        }
+
+        for(int i = 0; i < instance.Count; i++) {
+            if (
+                    instance[i].Combo != other[i].Combo
+                ||  instance[i].ParentCard.CommonId != other[i].ParentCard.CommonId
+            ) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    public static bool IsIdentical(this List<UniqueEffectComposite> instance, List<UniqueEffectComposite> other) {
+        instance.OrderBy(effect => effect.ParentCard.CommonId);
+        other.OrderBy(effect => effect.ParentCard.CommonId);
+
+        if (instance.Count != other.Count) {
+            return false;
+        }
+
+        for(int i = 0; i < instance.Count; i++) {
+            if (instance[i].ParentCard.CommonId != other[i].ParentCard.CommonId) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+    public static bool IsIdentical(this List<SerializedAgent> instance, List<SerializedAgent> other) {
+        var orderedInstanceAgents = instance.OrderBy(agent => agent.RepresentingCard.CommonId).ThenBy(agent => agent.Activated).ThenBy(agent => agent.CurrentHp).ToList();
+        var orderedOtherAgents = other.OrderBy(agent => agent.RepresentingCard.CommonId).ThenBy(agent => agent.Activated).ThenBy(agent => agent.CurrentHp).ToList();
+
+        for(int i = 0; i < instance.Count; i++) {
+            if (
+                    orderedInstanceAgents[i].Activated != orderedOtherAgents[i].Activated
+                ||  orderedInstanceAgents[i].CurrentHp != orderedOtherAgents[i].CurrentHp
+                ||  orderedInstanceAgents[i].RepresentingCard.CommonId != orderedOtherAgents[i].RepresentingCard.CommonId
+            ) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    public static bool IsIdentical(this ComboStates instance, ComboStates other) {
+        if (instance.All.Count != other.All.Count) {
+            return false;
+        } 
+        var instanceComboKeys = instance.All.OrderBy(state => state.Key).Select(state => state.Key);
+        var otherComboKeys = other.All.OrderBy(state => state.Key).Select(state => state.Key);
+        if (!instanceComboKeys.SequenceEqual(otherComboKeys)) {
+            return false;
+        }
+        
+        foreach(var currKey in instanceComboKeys) {
+            // Since we also check which cards a played (which we need cause cards in played can be destroyed), we do not need to check which combo effects are ready for each patron
+            // Since these will be equal if the cards played are equal
+            if (instance.All[currKey].CurrentCombo != other.All[currKey].CurrentCombo) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    public static bool IsIdentical(this List<UniqueCard> instance, List<UniqueCard> other) {
+        List<CardId> orderedInstanceCardIds = instance.OrderBy(card => card.CommonId).Select(card => card.CommonId).ToList();
+        List<CardId> orderedOtherCardIds = other.OrderBy(card => card.CommonId).Select(card => card.CommonId).ToList();
+        return orderedInstanceCardIds.SequenceEqual(orderedOtherCardIds);
+    }
+
+    public static bool IsIdentical(this List<PatronId> instance, List<PatronId> other) {
+        var orderedInstancePatronIds = instance.OrderBy(id => id);
+        var orderedOtherPatronIds = other.OrderBy(id => id);
+
+        return orderedInstancePatronIds.SequenceEqual(orderedOtherPatronIds);
+    }
+
+    public static bool IsIdentical(this PatronStates instance, PatronStates other) {
+
+        foreach(var patron in other.All.Keys) {
+            if (instance.All[patron] != other.All[patron]) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     /// <summary>
@@ -276,5 +515,27 @@ public static class Utility
         }
 
         return strategy.Heuristic(gameState);
+    }
+
+    public static Node FindOrBuildNode(SeededGameState seededGameState, Node parent, List<Move> possibleMoves, Move appliedMove, int depth)
+    {
+        var result = new Node(seededGameState, parent, possibleMoves, appliedMove, depth);
+
+        if (NodeGameStateHashMap.ContainsKey(result.GameStateHash)){
+            var equalNode = Utility.NodeGameStateHashMap[result.GameStateHash].SingleOrDefault(node => node.GameState.IsIdentical(result.GameState));
+            if (equalNode != null){
+                Console.WriteLine("-------- Hash collison for equal states -------- ");
+                result = equalNode;
+            }
+            else {
+                Console.WriteLine("-------- Hash collison without states being equal -------- ");
+                NodeGameStateHashMap[result.GameStateHash].Add(result);
+            }
+        }
+        else{
+            NodeGameStateHashMap.Add(result.GameStateHash, new List<Node>(){result});
+        }
+
+        return result;
     }
 }

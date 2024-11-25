@@ -6,6 +6,8 @@ using ScriptsOfTribute.Serializers;
 
 public class Aau903Bot : AI
 {
+
+    private Node? rootNode;
     public override void GameEnd(EndGameState state, FullGameState? finalBoardState)
     {
         Console.WriteLine("@@@ Game ended because of " + state.Reason + " @@@");
@@ -34,7 +36,12 @@ public class Aau903Bot : AI
 
             ulong randomSeed = (ulong)Utility.Rng.Next();
             var seededGameState = gameState.ToSeededGameState(randomSeed);
-            var rootNode = new Node(seededGameState, null, possibleMoves, null, 0);
+            
+
+            //TODO add HP check
+            var rootNode = Utility.FindOrBuildNode(seededGameState, null, possibleMoves, null, 0);
+            // else
+            // var rootNode = new Node(seededGameState, null, possibleMoves, null, 0);
 
             int iterationCounter = 0;
 
