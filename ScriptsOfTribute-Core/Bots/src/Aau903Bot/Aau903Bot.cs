@@ -8,10 +8,24 @@ public class Aau903Bot : AI
 {
 
     private Node? rootNode;
+    private static int totalIllegalMoveCount = 0;
+
+    public override void PregamePrepare()
+    {
+        base.PregamePrepare();
+        rootNode = null;
+        Utility.NodeGameStateHashMap = new Dictionary<int, List<Node>>(); //TODO move this to here
+    }
     public override void GameEnd(EndGameState state, FullGameState? finalBoardState)
     {
         Console.WriteLine("@@@ Game ended because of " + state.Reason + " @@@");
         Console.WriteLine("@@@ Winner was " + state.Winner + " @@@");
+
+        if (state.Reason == GameEndReason.INCORRECT_MOVE) {
+            totalIllegalMoveCount++;
+        }
+
+        Console.WriteLine("total illegal move count: " + totalIllegalMoveCount);
     }
 
     public override Move Play(GameState gameState, List<Move> possibleMoves, TimeSpan remainingTime)

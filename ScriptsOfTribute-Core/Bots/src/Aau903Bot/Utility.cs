@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using ExternalHeuristic;
 using ScriptsOfTribute;
 using ScriptsOfTribute.Board.Cards;
@@ -95,96 +96,228 @@ public static class Utility
         PatronId.RED_EAGLE
     };
 
-    public static int GenerateHash(this SeededGameState state)
-    {
+    // public static int GenerateHash(this SeededGameState state)
+    // {
 
-        // Here i chose to do a quick "hash" code to save performance, meaning we can run more iterations. I view the likelyhood of 2 unequal states counting as equal being extremely low
-        // even with this basic method is extremely low and should it happen the loss in evaluation precision also being minor compared to how much we can gain by running 
-        // more iterations. I added it as an option though in case we change our minds
-        switch (MCTSHyperparameters.CHOSEN_HASH_GENERATION_TYPE)
-        {
-            case HashGenerationType.Quick:
-                int handHash = 1;
-                foreach (var currCard in state.CurrentPlayer.Hand)
-                {
-                    handHash *= 1 * (int)currCard.CommonId;
-                }
+    //     // Here i chose to do a quick "hash" code to save performance, meaning we can run more iterations. I view the likelyhood of 2 unequal states counting as equal being extremely low
+    //     // even with this basic method is extremely low and should it happen the loss in evaluation precision also being minor compared to how much we can gain by running 
+    //     // more iterations. I added it as an option though in case we change our minds
+    //     switch (MCTSHyperparameters.CHOSEN_HASH_GENERATION_TYPE)
+    //     {
+    //         case HashGenerationType.Quick:
+    //             int handHash = 1;
+    //             foreach (var currCard in state.CurrentPlayer.Hand)
+    //             {
+    //                 handHash *= 2 * (int)currCard.CommonId;
+    //             }
 
-                int tavernHash = 1;
-                foreach (var currCard in state.TavernAvailableCards)
-                {
-                    tavernHash *= 2 * ((int)currCard.CommonId);
-                }
-                foreach (var currCard in state.TavernCards)
-                {
-                    tavernHash *= 3 * ((int)currCard.CommonId);
-                }
+    //             int tavernHash = 1;
+    //             foreach (var currCard in state.TavernAvailableCards)
+    //             {
+    //                 tavernHash *= 2 * ((int)currCard.CommonId);
+    //             }
+    //             foreach (var currCard in state.TavernCards)
+    //             {
+    //                 tavernHash *= 3 * ((int)currCard.CommonId);
+    //             }
 
-                int cooldownHash = 1;
-                foreach (var currCard in state.CurrentPlayer.CooldownPile)
-                {
-                    cooldownHash *= 4 * ((int)currCard.CommonId);
-                }
-                foreach (var currCard in state.EnemyPlayer.CooldownPile)
-                {
-                    cooldownHash *= 5 * ((int)currCard.CommonId);
-                }
+    //             int cooldownHash = 1;
+    //             foreach (var currCard in state.CurrentPlayer.CooldownPile)
+    //             {
+    //                 cooldownHash *= 4 * ((int)currCard.CommonId);
+    //             }
+    //             foreach (var currCard in state.EnemyPlayer.CooldownPile)
+    //             {
+    //                 cooldownHash *= 5 * ((int)currCard.CommonId);
+    //             }
 
-                int upcomingDrawsHash = 1;
-                foreach (var currCard in state.CurrentPlayer.KnownUpcomingDraws)
-                {
-                    upcomingDrawsHash *= 6 * ((int)currCard.CommonId);
-                }
-                foreach (var currCard in state.EnemyPlayer.KnownUpcomingDraws)
-                {
-                    cooldownHash *= 7 * ((int)currCard.CommonId);
-                }
+    //             int upcomingDrawsHash = 1;
+    //             foreach (var currCard in state.CurrentPlayer.KnownUpcomingDraws)
+    //             {
+    //                 upcomingDrawsHash *= 6 * ((int)currCard.CommonId);
+    //             }
+    //             foreach (var currCard in state.EnemyPlayer.KnownUpcomingDraws)
+    //             {
+    //                 cooldownHash *= 7 * ((int)currCard.CommonId);
+    //             }
 
-                int drawPileHash = 1;
-                foreach (var currCard in state.CurrentPlayer.DrawPile)
-                {
-                    drawPileHash *= 8 * ((int)currCard.CommonId);
-                }
-                foreach (var currCard in state.EnemyPlayer.DrawPile)
-                {
-                    drawPileHash *= 9 * ((int)currCard.CommonId);
-                }
+    //             int drawPileHash = 1;
+    //             foreach (var currCard in state.CurrentPlayer.DrawPile)
+    //             {
+    //                 drawPileHash *= 8 * ((int)currCard.CommonId);
+    //             }
+    //             foreach (var currCard in state.EnemyPlayer.DrawPile)
+    //             {
+    //                 drawPileHash *= 9 * ((int)currCard.CommonId);
+    //             }
 
-                int commingEffectsHash = 1; //TODO
+    //             int commingEffectsHash = 1; //TODO
 
-                int resourceHash = state.CurrentPlayer.Coins * 10 + state.CurrentPlayer.Prestige * 11 + state.CurrentPlayer.Power * 12 + state.EnemyPlayer.Prestige * 13;
+    //             int resourceHash = state.CurrentPlayer.Coins * 10 + state.CurrentPlayer.Prestige * 11 + state.CurrentPlayer.Power * 12 + state.EnemyPlayer.Prestige * 13;
 
-                int agentHash = 1;
+    //             int agentHash = 1;
 
-                foreach (var currAgent in state.CurrentPlayer.Agents)
-                {
-                    agentHash *= 14 * (currAgent.Activated ? 2 : 3);
-                    agentHash *= 15 * currAgent.CurrentHp;
-                }
+    //             foreach (var currAgent in state.CurrentPlayer.Agents)
+    //             {
+    //                 agentHash *= 14 * (currAgent.Activated ? 2 : 3);
+    //                 agentHash *= 15 * currAgent.CurrentHp;
+    //             }
 
-                foreach (var currAgent in state.EnemyPlayer.Agents)
-                {
-                    agentHash *= 16 * (currAgent.Activated ? 2 : 3);
-                    agentHash *= 17 * currAgent.CurrentHp;
-                }
+    //             foreach (var currAgent in state.EnemyPlayer.Agents)
+    //             {
+    //                 agentHash *= 16 * (currAgent.Activated ? 2 : 3);
+    //                 agentHash *= 17 * currAgent.CurrentHp;
+    //             }
 
-                // TODO patron hash
-                int patronHash = 1;
-                // TODO pending choice hash
-                int pendingChoiceHash = 1;
+    //             // TODO patron hash
+    //             int patronHash = 1;
+    //             // TODO pending choice hash
+    //             int pendingChoiceHash = 1;
 
-                return handHash + tavernHash + cooldownHash + upcomingDrawsHash + drawPileHash + commingEffectsHash + resourceHash + agentHash + patronHash + pendingChoiceHash;
-            case HashGenerationType.Precise:
-                //TODO implement
-                throw new NotImplementedException();
-            default:
-                throw new NotImplementedException();
+    //             return handHash + tavernHash + cooldownHash + upcomingDrawsHash + drawPileHash + commingEffectsHash + resourceHash + agentHash + patronHash + pendingChoiceHash;
+    //         case HashGenerationType.Precise:
+    //             //TODO implement
+    //             throw new NotImplementedException();
+    //         default:
+    //             throw new NotImplementedException();
+    //     }
+    // }
+
+    public static int GenerateHash(this SeededGameState state) {
+        var timer = new Stopwatch();
+        timer.Start();
+
+        var hashCode = new HashCode();
+
+        foreach(var comboState in state.ComboStates.All) {
+            hashCode.Add(((int)comboState.Key) * 10);
+            hashCode.Add(comboState.Value.CurrentCombo * 2);
         }
+
+        hashCode.Add(state.CurrentPlayer.GenerateHash());
+        hashCode.Add(state.EnemyPlayer.GenerateHash());
+
+        foreach(var currPatron in state.Patrons) {
+            hashCode.Add(((int)currPatron) * 10);
+        }
+
+        foreach(var patronState in state.PatronStates.All) {
+            hashCode.Add(((int)patronState.Key) * 200);
+            hashCode.Add(patronState.Value);
+        }
+
+        if (state.PendingChoice != null) {
+            hashCode.Add((int)state.PendingChoice.ChoiceFollowUp * 100);
+            hashCode.Add(state.PendingChoice.MaxChoices);
+            hashCode.Add(state.PendingChoice.MinChoices);
+            hashCode.Add(state.PendingChoice.Type);
+
+            switch(state.PendingChoice.Type) {
+                case Choice.DataType.CARD:
+                    foreach(var currCard in state.PendingChoice.PossibleCards) {
+                        hashCode.Add((int)currCard.UniqueId * 100);
+                    }
+                    break;
+                case Choice.DataType.EFFECT:
+                    foreach(var currEffect in state.PendingChoice.PossibleEffects) {
+                        hashCode.Add(currEffect.Amount);
+                        hashCode.Add(currEffect.Combo);
+                        hashCode.Add(currEffect.Type);
+                        hashCode.Add(currEffect.ParentCard.CommonId);
+                    }
+                    break;
+            }
+        }
+
+        foreach(var currEffect in state.StartOfNextTurnEffects){
+            hashCode.Add(currEffect.GenerateHash());
+        }
+
+        foreach(var currCard in state.TavernAvailableCards) {
+            hashCode.Add((int)currCard.CommonId);
+        }
+
+        foreach(var currCard in state.TavernCards) {
+            hashCode.Add((int)currCard.CommonId * 100);
+        }
+
+        foreach(var currEffect in state.UpcomingEffects){
+            hashCode.Add(currEffect.GenerateHash());
+        }
+
+        int result = hashCode.ToHashCode();
+
+        timer.Stop();
+        // Console.WriteLine("Hash generation took: " + timer.ElapsedMilliseconds + " seconds");
+
+        return result;
     }
 
-    public static bool IsIdentical(this SeededGameState instance, SeededGameState other) {
+    public static int GenerateHash(this UniqueBaseEffect effect) {
         
-        return ( 
+        var hashCode = new HashCode();
+
+        var uniqueEffect = effect as UniqueEffect;
+        var uniqueEffectOr = effect as UniqueEffectOr;
+        var uniqueEffectComposite = effect as UniqueEffectComposite;
+
+        if (uniqueEffect != null) {
+            hashCode.Add(uniqueEffect.Amount);
+            hashCode.Add(uniqueEffect.Combo);
+            hashCode.Add(uniqueEffect.ParentCard.UniqueId);
+        }
+        else if (uniqueEffectOr != null) {
+            hashCode.Add(uniqueEffectOr.Combo * 100);
+            hashCode.Add(((int)uniqueEffectOr.ParentCard.CommonId) * 100);
+        }
+        else if (uniqueEffectComposite != null) {
+            hashCode.Add(((int)uniqueEffectComposite.ParentCard.CommonId) * 1000);
+        }
+        
+        return hashCode.ToHashCode();
+    }
+
+    public static int GenerateHash(this SerializedPlayer player) {
+        
+        var hashCode = new HashCode();
+
+        foreach(var currAgent in player.Agents) {
+            hashCode.Add(currAgent.Activated);
+            hashCode.Add(currAgent.CurrentHp);
+            hashCode.Add(currAgent.RepresentingCard.CommonId);
+        }
+
+        hashCode.Add(player.Coins);
+
+        foreach(var currCard in player.CooldownPile) {
+            hashCode.Add(currCard.CommonId);
+        }
+
+        foreach(var currCard in player.DrawPile) {
+            hashCode.Add(((int)currCard.CommonId) * 1000);
+        }
+
+        foreach(var currCard in player.KnownUpcomingDraws) {
+            hashCode.Add(((int)currCard.CommonId) * 1_000_000);
+        }
+
+        hashCode.Add(player.PatronCalls);
+
+        foreach(var currCard in player.Played) {
+            hashCode.Add(currCard.CommonId);
+        }
+
+        hashCode.Add(player.Power);
+        hashCode.Add(player.Prestige);
+
+        return hashCode.ToHashCode();
+    }
+
+    public static bool IsIdentical(this SeededGameState instance, SeededGameState other, string info) {
+        
+        var timer = new Stopwatch();
+        timer.Start();
+        var result = ( 
                 instance.ComboStates.IsIdentical(other.ComboStates)
                 // Current player
             &&  instance.CurrentPlayer.Agents.IsIdentical(other.CurrentPlayer.Agents)
@@ -217,6 +350,55 @@ public static class Utility
             &&  instance.TavernCards.IsIdentical(other.TavernCards)
             &&  instance.UpcomingEffects.IsIdentical(other.UpcomingEffects)
             );
+
+        timer.Stop();
+        if (!result) {
+            Console.WriteLine("hash collison for unequal states: ");
+            Console.WriteLine(info);
+            Console.WriteLine("instance hash: " + instance.GenerateHash());
+            Console.WriteLine("other hash: " + other.GenerateHash());
+            Console.WriteLine();
+            Console.WriteLine("INSTANCE:");
+            instance.Log();
+            Console.WriteLine("OTHER:");
+            other.Log();
+        }
+
+        return result;
+        // real code:
+        // return ( 
+        //         instance.ComboStates.IsIdentical(other.ComboStates)
+        //         // Current player
+        //     &&  instance.CurrentPlayer.Agents.IsIdentical(other.CurrentPlayer.Agents)
+        //     &&  instance.CurrentPlayer.Coins == other.CurrentPlayer.Coins
+        //     &&  instance.CurrentPlayer.CooldownPile.IsIdentical(other.CurrentPlayer.CooldownPile)
+        //     &&  instance.CurrentPlayer.DrawPile.IsIdentical(other.CurrentPlayer.DrawPile)
+        //     &&  instance.CurrentPlayer.Hand.IsIdentical(other.CurrentPlayer.Hand)
+        //     &&  instance.CurrentPlayer.KnownUpcomingDraws.IsIdentical(other.CurrentPlayer.KnownUpcomingDraws)
+        //     &&  instance.CurrentPlayer.PatronCalls == other.CurrentPlayer.PatronCalls
+        //     &&  instance.CurrentPlayer.Played.IsIdentical(other.CurrentPlayer.Played)
+        //     &&  instance.CurrentPlayer.Power == other.CurrentPlayer.Power
+        //     &&  instance.CurrentPlayer.Prestige == other.CurrentPlayer.Prestige
+        //         // Enemy player
+        //     &&  instance.EnemyPlayer.Agents.IsIdentical(other.EnemyPlayer.Agents)
+        //     &&  instance.EnemyPlayer.Coins == other.EnemyPlayer.Coins
+        //     &&  instance.EnemyPlayer.CooldownPile.IsIdentical(other.EnemyPlayer.CooldownPile)
+        //     &&  instance.EnemyPlayer.DrawPile.IsIdentical(other.EnemyPlayer.DrawPile)
+        //     &&  instance.EnemyPlayer.Hand.IsIdentical(other.EnemyPlayer.Hand)
+        //     &&  instance.EnemyPlayer.KnownUpcomingDraws.IsIdentical(other.EnemyPlayer.KnownUpcomingDraws)
+        //     &&  instance.EnemyPlayer.PatronCalls == instance.EnemyPlayer.PatronCalls
+        //     &&  instance.EnemyPlayer.Played.IsIdentical(other.EnemyPlayer.Played)
+        //     &&  instance.EnemyPlayer.Power == instance.EnemyPlayer.Power
+        //     &&  instance.EnemyPlayer.Prestige == instance.EnemyPlayer.Prestige
+
+        //     &&  instance.Patrons.IsIdentical(other.Patrons)
+        //     &&  instance.PatronStates.IsIdentical(other.PatronStates)
+        //     &&  instance.PendingChoice.IsIdentical(other.PendingChoice)
+        //     &&  instance.StartOfNextTurnEffects.IsIdentical(other.StartOfNextTurnEffects)
+        //     &&  instance.TavernAvailableCards.IsIdentical(other.TavernAvailableCards)
+        //     &&  instance.TavernCards.IsIdentical(other.TavernCards)
+        //     &&  instance.UpcomingEffects.IsIdentical(other.UpcomingEffects)
+        //     );
     }
     // TODO check if this will throw a nullpointer or not when instance is null
     public static bool IsIdentical(this SerializedChoice? instance, SerializedChoice? other) {
@@ -237,9 +419,8 @@ public static class Utility
                 // &&  instance.Context == other.Context // content should not matter if you have the same options
                 &&  instance.MaxChoices == other.MaxChoices
                 &&  instance.MinChoices == other.MinChoices
-                &&  instance.PossibleCards.IsIdentical(other.PossibleCards)
-                &&  instance.PossibleEffects.IsIdentical(other.PossibleEffects)
                 &&  instance.Type == other.Type
+                &&  (instance.Type == Choice.DataType.CARD && instance.PossibleCards.IsIdentical(other.PossibleCards) || instance.Type == Choice.DataType.EFFECT && instance.PossibleEffects.IsIdentical(other.PossibleEffects))
             );
         }
     }
@@ -522,17 +703,32 @@ public static class Utility
         var result = new Node(seededGameState, parent, possibleMoves, appliedMove, depth);
 
         if (NodeGameStateHashMap.ContainsKey(result.GameStateHash)){
-            var equalNode = Utility.NodeGameStateHashMap[result.GameStateHash].SingleOrDefault(node => node.GameState.IsIdentical(result.GameState));
+            var equalNode = Utility.NodeGameStateHashMap[result.GameStateHash].SingleOrDefault(node => node.GameState.IsIdentical(result.GameState, "Called from Utlity"));
             if (equalNode != null){
-                Console.WriteLine("-------- Hash collison for equal states -------- ");
+                // Console.WriteLine("-------- Hash collison for equal states -------- ");
                 result = equalNode;
             }
             else {
                 Console.WriteLine("-------- Hash collison without states being equal -------- ");
+                foreach (var node in NodeGameStateHashMap[result.GameStateHash])
+                {
+                    Console.WriteLine($"Hash: {node.GameStateHash}");
+                    Console.WriteLine("Generated hash: " + node.GameState.GenerateHash());
+                    Console.WriteLine("Generated hash2: " + node.GameState.GenerateHash());
+                    Console.WriteLine("Generated hash3: " + node.GameState.GenerateHash());
+                    Console.WriteLine("Generated hash4: " + node.GameState.GenerateHash());
+                    Console.WriteLine("Generated hash5: " + node.GameState.GenerateHash());
+                }
+                if (result.GameStateHash != result.GameState.GenerateHash()) {
+                    Console.WriteLine("WWWWWWWWWWTTTTTTTTFFFFFFFFFFFFF");
+                }
                 NodeGameStateHashMap[result.GameStateHash].Add(result);
             }
         }
         else{
+            if (result.GameStateHash != result.GameState.GenerateHash()) {
+                    Console.WriteLine("WWWWWWWWWWTTTTTTTTHHHHHHHHHHHH");
+                }
             NodeGameStateHashMap.Add(result.GameStateHash, new List<Node>(){result});
         }
 

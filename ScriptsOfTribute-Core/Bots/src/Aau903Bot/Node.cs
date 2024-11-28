@@ -12,8 +12,8 @@ public class Node
     public List<Node> ChildNodes = new List<Node>();
     public int VisitCount = 0;
     public double TotalScore = 0;
-    public int GameStateHash;
-    public SeededGameState GameState;
+    public int GameStateHash { get; private set; }
+    public SeededGameState GameState { get; private set; }
     public Move? AppliedMove;
     public List<Move> PossibleMoves;
     public int Depth;
@@ -25,10 +25,7 @@ public class Node
         PossibleMoves = possibleMoves;
         AppliedMove = appliedMove;
         Depth = depth;
-        /// <summary>
-        /// TODO if this takes too much performance, look into only calling this method on children of chance nodes
-        /// </summary>
-        GameStateHash = GameState.GenerateHash();
+        ApplyAllDeterministicAndObviousMoves();
     }
 
     public virtual void Visit(out double score)
@@ -264,5 +261,7 @@ public class Node
                 }
             }
         }
+
+        GameStateHash = GameState.GenerateHash();
     }
 }
