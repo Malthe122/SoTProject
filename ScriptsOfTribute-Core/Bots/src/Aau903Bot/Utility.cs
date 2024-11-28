@@ -2,6 +2,8 @@ using ExternalHeuristic;
 using ScriptsOfTribute;
 using ScriptsOfTribute.Serializers;
 
+namespace Aau903Bot;
+
 public static class Utility
 {
     public static Random Rng = new Random();
@@ -92,13 +94,12 @@ public static class Utility
         PatronId.RED_EAGLE
     };
 
-    public static int GenerateHash(this SeededGameState state)
+    public static int GenerateHash(this SeededGameState state, MCTSHyperparameters parameters)
     {
-
         // Here i chose to do a quick "hash" code to save performance, meaning we can run more iterations. I view the likelyhood of 2 unequal states counting as equal being extremely low
         // even with this basic method is extremely low and should it happen the loss in evaluation precision also being minor compared to how much we can gain by running 
         // more iterations. I added it as an option though in case we change our minds
-        switch (MCTSHyperparameters.CHOSEN_HASH_GENERATION_TYPE)
+        switch (parameters.CHOSEN_HASH_GENERATION_TYPE)
         {
             case HashGenerationType.Quick:
                 int handHash = 0;
@@ -255,8 +256,9 @@ public static class Utility
         }
     }
 
-    public static double UseBestMCTS3Heuristic(SeededGameState gameState) {
-        
+    public static double UseBestMCTS3Heuristic(SeededGameState gameState)
+    {
+
         GameStrategy strategy;
 
         var currentPlayer = gameState.CurrentPlayer;

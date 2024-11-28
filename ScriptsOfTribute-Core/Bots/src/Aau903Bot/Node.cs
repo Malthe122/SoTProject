@@ -1,6 +1,8 @@
 using ScriptsOfTribute;
 using ScriptsOfTribute.Serializers;
 
+namespace Aau903Bot;
+
 public class Node
 {
     /// <summary>
@@ -18,7 +20,9 @@ public class Node
     public List<Move> PossibleMoves;
     public int Depth;
 
-    public Node(SeededGameState gameState, Node parent, List<Move> possibleMoves, Move appliedMove, int depth)
+    protected readonly MCTSHyperparameters Params;
+
+    public Node(SeededGameState gameState, Node parent, List<Move> possibleMoves, Move appliedMove, int depth, MCTSHyperparameters parameters)
     {
         GameState = gameState;
         Parent = parent;
@@ -28,7 +32,8 @@ public class Node
         /// <summary>
         /// TODO if this takes too much performance, look into only calling this method on children of chance nodes
         /// </summary>
-        GameStateHash = GameState.GenerateHash();
+        Params = parameters;
+        GameStateHash = GameState.GenerateHash(Params);
     }
 
     public virtual void Visit(out double score)
@@ -36,9 +41,9 @@ public class Node
         Node visitedChild = null;
         var playerId = GameState.CurrentPlayer.PlayerID;
 
-        if (MCTSHyperparameters.SET_MAX_EXPANSION_DEPTH)
+        if (Params.SET_MAX_EXPANSION_DEPTH)
         {
-            if(Depth >= MCTSHyperparameters.CHOSEN_MAX_EXPANSION_DEPTH)
+            if (Depth >= Params.CHOSEN_MAX_EXPANSION_DEPTH)
             {
                 score = Score();
                 TotalScore += score;
@@ -70,7 +75,8 @@ public class Node
                 }
             }
         }
-        else {
+        else
+        {
             score = Score();
         }
 
@@ -85,10 +91,10 @@ public class Node
         {
             if (!ChildNodes.Any(child => child.AppliedMove == move))
             {
-                if ((MCTSHyperparameters.INCLUDE_PLAY_MOVE_CHANCE_NODES && move.IsNonDeterministic())
-                    || MCTSHyperparameters.INCLUDE_END_TURN_CHANCE_NODES && move.Command == CommandEnum.END_TURN)
+                if ((Params.INCLUDE_PLAY_MOVE_CHANCE_NODES && move.IsNonDeterministic())
+                    || Params.INCLUDE_END_TURN_CHANCE_NODES && move.Command == CommandEnum.END_TURN)
                 {
-                    var newChild = new ChanceNode(GameState, this, move, Depth+1);
+                    var newChild = new ChanceNode(GameState, this, move, Depth + 1, Params);
                     ChildNodes.Add(newChild);
                     return newChild;
                 }
@@ -96,7 +102,7 @@ public class Node
                 {
                     ulong randomSeed = (ulong)Utility.Rng.Next();
                     var (newGameState, newPossibleMoves) = GameState.ApplyMove(move, randomSeed);
-                    var newChild = new Node(newGameState, this, newPossibleMoves, move, Depth+1);
+                    var newChild = new Node(newGameState, this, newPossibleMoves, move, Depth + 1, Params);
                     ChildNodes.Add(newChild);
                     // Console.WriteLine($"New child added with Depth level: {newChild.Depth}");
                     return newChild;
@@ -109,15 +115,16 @@ public class Node
 
     private double Score()
     {
-        switch(MCTSHyperparameters.CHOSEN_SCORING_METHOD){
+        switch (Params.CHOSEN_SCORING_METHOD)
+        {
             case ScoringMethod.Rollout:
                 return Rollout();
             case ScoringMethod.Heuristic:
                 return Utility.UseBestMCTS3Heuristic(GameState);
             case ScoringMethod.RolloutTurnsCompletionsThenHeuristic:
-                return RolloutTillTurnsEndThenHeuristic(MCTSHyperparameters.ROLLOUT_TURNS_BEFORE_HEURSISTIC);
+                return RolloutTillTurnsEndThenHeuristic(Params.ROLLOUT_TURNS_BEFORE_HEURSISTIC);
             default:
-                throw new NotImplementedException("Tried to applied non-implemented scoring method: " + MCTSHyperparameters.CHOSEN_SCORING_METHOD);
+                throw new NotImplementedException("Tried to applied non-implemented scoring method: " + Params.CHOSEN_SCORING_METHOD);
         }
     }
 
@@ -128,34 +135,39 @@ public class Node
         var rolloutGameState = GameState;
         var rolloutPossibleMoves = PossibleMoves;
 
-        while(rolloutTurnsCompleted < turnsToComplete && rolloutGameState.GameEndState == null) {
-            if (MCTSHyperparameters.FORCE_DELAY_TURN_END_IN_ROLLOUT){
-                if (rolloutPossibleMoves.Count > 1) {
+        while (rolloutTurnsCompleted < turnsToComplete && rolloutGameState.GameEndState == null)
+        {
+            if (Params.FORCE_DELAY_TURN_END_IN_ROLLOUT)
+            {
+                if (rolloutPossibleMoves.Count > 1)
+                {
                     rolloutPossibleMoves.RemoveAll(move => move.Command == CommandEnum.END_TURN);
                 }
             }
-           
+
             var chosenIndex = Utility.Rng.Next(rolloutPossibleMoves.Count);
             var moveToMake = rolloutPossibleMoves[chosenIndex];
 
             var (newGameState, newPossibleMoves) = rolloutGameState.ApplyMove(moveToMake);
 
-                if (newGameState.CurrentPlayer != rolloutPlayer) {
-                    rolloutTurnsCompleted++;
-                    rolloutPlayer = newGameState.CurrentPlayer;
-                }
+            if (newGameState.CurrentPlayer != rolloutPlayer)
+            {
+                rolloutTurnsCompleted++;
+                rolloutPlayer = newGameState.CurrentPlayer;
+            }
 
-                rolloutGameState = newGameState;
-                rolloutPossibleMoves = newPossibleMoves;
+            rolloutGameState = newGameState;
+            rolloutPossibleMoves = newPossibleMoves;
         }
 
         var stateScore = Utility.UseBestMCTS3Heuristic(rolloutGameState);
 
-        if (GameState.CurrentPlayer != rolloutGameState.CurrentPlayer) {
+        if (GameState.CurrentPlayer != rolloutGameState.CurrentPlayer)
+        {
             stateScore *= -1;
         }
 
-        return stateScore; 
+        return stateScore;
     }
 
     internal double Rollout()
@@ -165,13 +177,13 @@ public class Node
         var rolloutPlayerId = rolloutGameState.CurrentPlayer.PlayerID;
         var rolloutPossibleMoves = new List<Move>(PossibleMoves);
 
-        for (int i = 0; i < MCTSHyperparameters.NUMBER_OF_ROLLOUTS; i++)
+        for (int i = 0; i < Params.NUMBER_OF_ROLLOUTS; i++)
         {
             // TODO also apply the playing obvious moves in here
             while (rolloutGameState.GameEndState == null)
             {
                 // Choosing here to remove the "end turn" move before its the last move. This is done to make the random plays a bit more realistic
-                if (MCTSHyperparameters.FORCE_DELAY_TURN_END_IN_ROLLOUT)
+                if (Params.FORCE_DELAY_TURN_END_IN_ROLLOUT)
                 {
                     if (rolloutPossibleMoves.Count > 1)
                     {
@@ -190,15 +202,15 @@ public class Node
             { //TODO here i assume that winner = NO_PLAYER_SELECTED is how they show a draw. Need to confirm this
                 if (rolloutGameState.GameEndState.Winner == rolloutPlayerId)
                 {
-                    result+= 1;
+                    result += 1;
                 }
                 else
                 {
-                    result-= 1;
+                    result -= 1;
                 }
             }
         }
-        
+
         return result;
     }
 
@@ -222,11 +234,11 @@ public class Node
 
     public double GetConfidenceScore()
     {
-        switch (MCTSHyperparameters.CHOSEN_EVALUATION_FUNCTION)
+        switch (Params.CHOSEN_EVALUATION_FUNCTION)
         {
             case EvaluationFunction.UCB1:
                 double exploitation = TotalScore / VisitCount;
-                double exploration = MCTSHyperparameters.UCB1_EXPLORATION_CONSTANT * Math.Sqrt(Math.Log(Parent.VisitCount) / VisitCount);
+                double exploration = Params.UCB1_EXPLORATION_CONSTANT * Math.Sqrt(Math.Log(Parent.VisitCount) / VisitCount);
                 return exploitation + exploration;
             case EvaluationFunction.UCT:
                 // TODO implement

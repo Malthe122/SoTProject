@@ -1,14 +1,16 @@
 using ScriptsOfTribute;
 using ScriptsOfTribute.Serializers;
 
+namespace Aau903Bot;
+
 public class ChanceNode : Node
 {
-    public ChanceNode(SeededGameState gameState, Node parent, Move appliedMove, int depth ) : base(gameState, parent, null, appliedMove, depth) { }
+    public ChanceNode(SeededGameState gameState, Node parent, Move appliedMove, int depth, MCTSHyperparameters parameters) : base(gameState, parent, null, appliedMove, depth, parameters) { }
 
     public override void Visit(out double score)
-    {      
+    {
         (var newState, var newMoves) = Parent.GameState.ApplyMove(AppliedMove, (ulong)Utility.Rng.Next());
-        var newStateHash = newState.GenerateHash();
+        var newStateHash = newState.GenerateHash(Params);
         if (ChildNodes.Any(n => n.GameStateHash == newStateHash))
         {
             // TODO consider if we should visit the child we hit instead of equal distribution. With equal distribution
@@ -29,7 +31,7 @@ public class ChanceNode : Node
         }
         else
         {
-            var newChild = new Node(newState, this, newMoves, AppliedMove, Depth);
+            var newChild = new Node(newState, this, newMoves, AppliedMove, Depth, Params);
             ChildNodes.Add(newChild);
             newChild.Visit(out score);
         }
