@@ -18,7 +18,7 @@ public class MCTSHyperparameters
     /// time usage, but then we exceed it during an iteration. If complete rollouts are completely or partly replaced by Heuristic scoring, this can be lower while with full rollouts it should be big
     /// </summary>
     public double ITERATION_COMPLETION_MILLISECONDS_BUFFER { get; set; }
-    public EvaluationFunction CHOSEN_EVALUATION_FUNCTION { get; set; }
+    public EvaluationFunction CHOSEN_EVALUATION_FUNCTION { get; set; } = EvaluationFunction.UCB1;
     /// <summary>
     /// Default value is 1.41421356237, which is the square root of 2
     /// </summary>
@@ -33,7 +33,7 @@ public class MCTSHyperparameters
     public bool INCLUDE_PLAY_MOVE_CHANCE_NODES { get; set; }
     public bool INCLUDE_END_TURN_CHANCE_NODES { get; set; }
     public HashGenerationType CHOSEN_HASH_GENERATION_TYPE { get; set; }
-    public bool SET_MAX_EXPANSION_DEPTH { get; set; }
+    public bool SET_MAX_EXPANSION_DEPTH { get; set; } = true;
     public int CHOSEN_MAX_EXPANSION_DEPTH { get; set; }
     public ScoringMethod CHOSEN_SCORING_METHOD { get; set; }
     public int ROLLOUT_TURNS_BEFORE_HEURSISTIC { get; set; }
@@ -45,15 +45,15 @@ public class MCTSHyperparameters
 
         DYNAMIC_MOVE_TIME_DISTRIBUTION = config.GetRequiredSection("DYNAMIC_MOVE_TIME_DISTRIBUTION").Get<bool>();
         ITERATION_COMPLETION_MILLISECONDS_BUFFER = config.GetRequiredSection("ITERATION_COMPLETION_MILLISECONDS_BUFFER").Get<double>();
-        ITERATIONS = config.GetRequiredSection("ITERATIONS").Get<int>();
+        // ITERATIONS = config.GetRequiredSection("ITERATIONS").Get<int>();
         NUMBER_OF_ROLLOUTS = config.GetRequiredSection("NUMBER_OF_ROLLOUTS").Get<int>();
         UCB1_EXPLORATION_CONSTANT = config.GetRequiredSection("UCB1_EXPLORATION_CONSTANT").Get<float>();
         FORCE_DELAY_TURN_END_IN_ROLLOUT = config.GetRequiredSection("FORCE_DELAY_TURN_END_IN_ROLLOUT").Get<bool>();
         INCLUDE_PLAY_MOVE_CHANCE_NODES = config.GetRequiredSection("INCLUDE_PLAY_MOVE_CHANCE_NODES").Get<bool>();
         INCLUDE_END_TURN_CHANCE_NODES = config.GetRequiredSection("INCLUDE_END_TURN_CHANCE_NODES").Get<bool>();
 
-        var chosen_evaluation_function = config.GetRequiredSection("CHOSEN_EVALUATION_FUNCTION").Get<string>();
-        CHOSEN_EVALUATION_FUNCTION = Enum.Parse<EvaluationFunction>(chosen_evaluation_function);
+        // var chosen_evaluation_function = config.GetRequiredSection("CHOSEN_EVALUATION_FUNCTION").Get<string>();
+        // CHOSEN_EVALUATION_FUNCTION = Enum.Parse<EvaluationFunction>(chosen_evaluation_function);
 
         var chosen_hash_generation_type = config.GetRequiredSection("CHOSEN_HASH_GENERATION_TYPE").Get<string>();
         CHOSEN_HASH_GENERATION_TYPE = Enum.Parse<HashGenerationType>(chosen_hash_generation_type);
@@ -62,7 +62,7 @@ public class MCTSHyperparameters
         CHOSEN_SCORING_METHOD = Enum.Parse<ScoringMethod>(chosenScoringMethodString);
 
         ROLLOUT_TURNS_BEFORE_HEURSISTIC = config.GetRequiredSection("ROLLOUT_TURNS_BEFORE_HEURSISTIC").Get<int>();
-        SET_MAX_EXPANSION_DEPTH = config.GetRequiredSection("SET_MAX_EXPANSION_DEPTH").Get<bool>();
+        // SET_MAX_EXPANSION_DEPTH = config.GetRequiredSection("SET_MAX_EXPANSION_DEPTH").Get<bool>();
         CHOSEN_MAX_EXPANSION_DEPTH = config.GetRequiredSection("CHOSEN_MAX_EXPANSION_DEPTH").Get<int>();
 
         Console.WriteLine("Loaded settings:");

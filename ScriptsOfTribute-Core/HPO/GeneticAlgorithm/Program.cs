@@ -1,3 +1,4 @@
+using Bots;
 using GeneticSharp;
 
 namespace Aau903Bot;
@@ -11,9 +12,9 @@ class Program
         var mutation = new UniformMutation(true);
         var fitness = new FitnessFunction(); // WE MADE THIS WOO
         var chromosome = new Chromosome(); // ALSO THIS YIPPIE
-        var population = new Population(50,50, chromosome);
+        var population = new Population(50, 50, chromosome);
 
-        var ga = new GeneticAlgorithm(population,fitness,selection,crossover,mutation);
+        var ga = new GeneticAlgorithm(population, fitness, selection, crossover, mutation);
         ga.Termination = new GenerationNumberTermination(100);
 
         Console.WriteLine("GA running...");
