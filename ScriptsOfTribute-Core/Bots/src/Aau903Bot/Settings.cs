@@ -109,6 +109,21 @@ public class Settings
         }
     }
 
+    public static void SaveEnvFile(string filePath, Dictionary<string, string> values)
+    {
+        // Create or overwrite the environment file
+        using (var writer = new StreamWriter(filePath, false))
+        {
+            foreach (var kvp in values)
+            {
+                string key = kvp.Key.Trim();
+                string value = kvp.Value.Trim();
+
+                writer.WriteLine($"{key}={value}");
+            }
+        }
+    }
+
     public static IConfiguration GetConfiguration()
     {
         var builder = new ConfigurationBuilder()
