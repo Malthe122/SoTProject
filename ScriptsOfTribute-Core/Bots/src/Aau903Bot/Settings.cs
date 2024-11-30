@@ -45,6 +45,7 @@ public class MCTSHyperparameters
         Console.WriteLine($"CHOSEN_MAX_EXPANSION_DEPTH: {CHOSEN_MAX_EXPANSION_DEPTH}");
         Console.WriteLine($"CHOSEN_SCORING_METHOD: {CHOSEN_SCORING_METHOD}");
         Console.WriteLine($"ROLLOUT_TURNS_BEFORE_HEURSISTIC: {ROLLOUT_TURNS_BEFORE_HEURSISTIC}");
+        Console.WriteLine("---");
     }
 }
 
