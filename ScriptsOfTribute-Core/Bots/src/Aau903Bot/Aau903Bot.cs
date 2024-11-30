@@ -43,25 +43,14 @@ public class Aau903Bot : AI
 
             int iterationCounter = 0;
 
-            if (Params.DYNAMIC_MOVE_TIME_DISTRIBUTION)
+            while (moveTimer.ElapsedMilliseconds < millisecondsForMove)
             {
-                while (moveTimer.ElapsedMilliseconds < millisecondsForMove)
-                {
-                    // var iterationTimer = new Stopwatch();
-                    // iterationTimer.Start();
-                    // iterationCounter++;
-                    rootNode.Visit(out double score);
-                    // iterationTimer.Stop();
-                    // Console.WriteLine("Iteration took: " + iterationTimer.ElapsedMilliseconds + " milliseconds");
-                }
-            }
-            else
-            {
-                while (iterationCounter <= Params.ITERATIONS)
-                {
-                    rootNode.Visit(out double score);
-                    iterationCounter++;
-                }
+                // var iterationTimer = new Stopwatch();
+                // iterationTimer.Start();
+                // iterationCounter++;
+                rootNode.Visit(out double score);
+                // iterationTimer.Stop();
+                // Console.WriteLine("Iteration took: " + iterationTimer.ElapsedMilliseconds + " milliseconds");
             }
 
             if (rootNode.ChildNodes.Count == 0)

@@ -41,15 +41,12 @@ public class Node
         Node visitedChild = null;
         var playerId = GameState.CurrentPlayer.PlayerID;
 
-        if (Params.SET_MAX_EXPANSION_DEPTH)
+        if (Depth >= Params.CHOSEN_MAX_EXPANSION_DEPTH)
         {
-            if (Depth >= Params.CHOSEN_MAX_EXPANSION_DEPTH)
-            {
-                score = Score();
-                TotalScore += score;
-                VisitCount++;
-                return;
-            }
+            score = Score();
+            TotalScore += score;
+            VisitCount++;
+            return;
         }
 
         if (GameState.GameEndState == null)
@@ -177,37 +174,34 @@ public class Node
         var rolloutPlayerId = rolloutGameState.CurrentPlayer.PlayerID;
         var rolloutPossibleMoves = new List<Move>(PossibleMoves);
 
-        for (int i = 0; i < Params.NUMBER_OF_ROLLOUTS; i++)
+        // TODO also apply the playing obvious moves in here
+        while (rolloutGameState.GameEndState == null)
         {
-            // TODO also apply the playing obvious moves in here
-            while (rolloutGameState.GameEndState == null)
+            // Choosing here to remove the "end turn" move before its the last move. This is done to make the random plays a bit more realistic
+            if (Params.FORCE_DELAY_TURN_END_IN_ROLLOUT)
             {
-                // Choosing here to remove the "end turn" move before its the last move. This is done to make the random plays a bit more realistic
-                if (Params.FORCE_DELAY_TURN_END_IN_ROLLOUT)
+                if (rolloutPossibleMoves.Count > 1)
                 {
-                    if (rolloutPossibleMoves.Count > 1)
-                    {
-                        rolloutPossibleMoves.RemoveAll(move => move.Command == CommandEnum.END_TURN);
-                    }
+                    rolloutPossibleMoves.RemoveAll(move => move.Command == CommandEnum.END_TURN);
                 }
-                var chosenIndex = Utility.Rng.Next(rolloutPossibleMoves.Count);
-                var moveToMake = rolloutPossibleMoves[chosenIndex];
-
-                var (newGameState, newPossibleMoves) = rolloutGameState.ApplyMove(moveToMake);
-                rolloutGameState = newGameState;
-                rolloutPossibleMoves = newPossibleMoves;
             }
+            var chosenIndex = Utility.Rng.Next(rolloutPossibleMoves.Count);
+            var moveToMake = rolloutPossibleMoves[chosenIndex];
 
-            if (rolloutGameState.GameEndState.Winner != PlayerEnum.NO_PLAYER_SELECTED)
-            { //TODO here i assume that winner = NO_PLAYER_SELECTED is how they show a draw. Need to confirm this
-                if (rolloutGameState.GameEndState.Winner == rolloutPlayerId)
-                {
-                    result += 1;
-                }
-                else
-                {
-                    result -= 1;
-                }
+            var (newGameState, newPossibleMoves) = rolloutGameState.ApplyMove(moveToMake);
+            rolloutGameState = newGameState;
+            rolloutPossibleMoves = newPossibleMoves;
+        }
+
+        if (rolloutGameState.GameEndState.Winner != PlayerEnum.NO_PLAYER_SELECTED)
+        { //TODO here i assume that winner = NO_PLAYER_SELECTED is how they show a draw. Need to confirm this
+            if (rolloutGameState.GameEndState.Winner == rolloutPlayerId)
+            {
+                result += 1;
+            }
+            else
+            {
+                result -= 1;
             }
         }
 
@@ -234,21 +228,9 @@ public class Node
 
     public double GetConfidenceScore()
     {
-        switch (Params.CHOSEN_EVALUATION_FUNCTION)
-        {
-            case EvaluationFunction.UCB1:
-                double exploitation = TotalScore / VisitCount;
-                double exploration = Params.UCB1_EXPLORATION_CONSTANT * Math.Sqrt(Math.Log(Parent.VisitCount) / VisitCount);
-                return exploitation + exploration;
-            case EvaluationFunction.UCT:
-                // TODO implement
-                return 0;
-            case EvaluationFunction.Custom:
-                //TODO replace this with something meaningful or remove it
-                return TotalScore - VisitCount;
-            default:
-                return 0;
-        }
+        double exploitation = TotalScore / VisitCount;
+        double exploration = Params.UCT_EXPLORATION_CONSTANT * Math.Sqrt(Math.Log(Parent.VisitCount) / VisitCount);
+        return exploitation + exploration;
     }
 
     internal void ApplyAllDeterministicAndObviousMoves()
