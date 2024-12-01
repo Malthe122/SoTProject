@@ -82,6 +82,8 @@ public static class MCTSHyperparameters
         Console.WriteLine($"ROLLOUT_TURNS_BEFORE_HEURSISTIC: {ROLLOUT_TURNS_BEFORE_HEURSISTIC}");
         Console.WriteLine($"SET_MAX_EXPANSION_DEPTH: {SET_MAX_EXPANSION_DEPTH}");
         Console.WriteLine($"CHOSEN_EXPANSION_DEPTH: {CHOSEN_MAX_EXPANSION_DEPTH}");
+        Console.WriteLine($"EQUAL_CHANCE_NODE_DISTRIBUTION: {EQUAL_CHANCE_NODE_DISTRIBUTION}");
+        Console.WriteLine($"REUSE_TREE: {REUSE_TREE}");
     }
 }
 
