@@ -86,11 +86,7 @@ public class Node
             {
                 if (MCTSHyperparameters.INCLUDE_CHANCE_NODES && move.IsNonDeterministic())
                 {
-                    //TODO add flag
-                    // TODO implement for chance nodes as well
-                    var newChild = Utility.FindOrBuildChanceNode(GameState, this, move);
-                    //else
-                    // var newChild = new ChanceNode(GameState, this, move);
+                    var newChild = new ChanceNode(GameState, this, move);
                     ChildNodes.Add(newChild);
                     return newChild;
                 }
@@ -98,10 +94,7 @@ public class Node
                 {
                     ulong randomSeed = (ulong)Utility.Rng.Next();
                     var (newGameState, newPossibleMoves) = GameState.ApplyMove(move, randomSeed);
-                    //TODO add flag
-                    var newChild = Utility.FindOrBuildNode(newGameState, this, newPossibleMoves, move);
-                    // else
-                    // newChild = new node ...
+                    var newChild = new Node(newGameState, this, newPossibleMoves, move);
                     ChildNodes.Add(newChild);
                     return newChild;
                 }
