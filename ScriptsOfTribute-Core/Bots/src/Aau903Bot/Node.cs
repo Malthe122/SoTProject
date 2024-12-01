@@ -9,7 +9,6 @@ public class Node
     /// with a new random seed which is a possible argument for the applyMove method
     /// </summary>
     public Node? Parent = null;
-    // public HashSet<Node> ChildNodes = new HashSet<Node>();
     public Dictionary<Move, Node> MoveToChildNode;
     public int VisitCount = 0;
     public double TotalScore = 0;
