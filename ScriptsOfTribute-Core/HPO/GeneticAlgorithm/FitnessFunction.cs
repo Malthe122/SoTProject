@@ -1,6 +1,7 @@
 using Bots;
 using GeneticSharp;
 using ScriptsOfTribute;
+using ScriptsOfTribute.Serializers;
 
 namespace Aau903Bot;
 
@@ -31,18 +32,16 @@ class FitnessFunction : IFitness
         Settings.SaveEnvFile("environment", data);
 
         var timeout = 10;
-        ulong seed = 42;
 
         // BOTS CONFIG
         var bot1 = new Aau903Bot();
-        var bot2 = new MCTSBot();
+        var bot2 = new RandomBot();
 
         // GAME CONFIG
         var game = new ScriptsOfTribute.AI.ScriptsOfTribute(bot1, bot2, TimeSpan.FromSeconds(timeout));
-        game.Seed = seed;
 
         var (endGameState, fullGameState) = game.Play();
-
-        return endGameState.Winner == PlayerEnum.PLAYER1 ? 1.0 : 0.0;
+        var seededGameState = new SeededGameState(fullGameState);
+        return Utility.ScoreEndOfGame(seededGameState);
     }
 }
