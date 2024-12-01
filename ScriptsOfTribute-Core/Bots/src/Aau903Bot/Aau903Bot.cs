@@ -35,7 +35,6 @@ public class Aau903Bot : AI
             var obviousMove = FindObviousMove(possibleMoves);
             if (obviousMove != null)
             {
-                CheckMoveLegality(obviousMove, null, gameState, possibleMoves);
                 return obviousMove;
             }
 
@@ -83,8 +82,6 @@ public class Aau903Bot : AI
                 .OrderByDescending(moveNodePair => (moveNodePair.Value.TotalScore / moveNodePair.Value.VisitCount))
                 .FirstOrDefault()
                 .Key;
-
-            CheckMoveLegality(bestMove, rootNode, gameState, possibleMoves);
 
             return bestMove;
         }
