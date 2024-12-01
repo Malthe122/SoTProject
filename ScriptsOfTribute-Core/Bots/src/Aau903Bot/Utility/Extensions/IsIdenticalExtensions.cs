@@ -4,100 +4,77 @@ using ScriptsOfTribute.Board.Cards;
 using ScriptsOfTribute.Serializers;
 
 public static class IsIdenticalExtensions{
-        public static bool IsIdentical(this SeededGameState instance, SeededGameState other, string info) {
+
+    public static List<long> PreciseChecks = new List<long>();
+
+    public static int Amount { get; internal set; }
+
+    public static bool IsIdentical(this SeededGameState instance, SeededGameState other) {
         
+        Amount ++;
         var timer = new Stopwatch();
         timer.Start();
-            
-            bool bool1 = false, bool2 = false, bool3 = false, bool4 = false, bool5 = false, bool6 = false, bool7 = false, bool8 = false, bool9 = false, bool10 = false, bool11 = false;
+
+        bool bool1 = false, bool2 = false, bool3 = false, bool4 = false, bool5 = false, bool6 = false, bool7 = false, bool8 = false, bool9 = false, bool10 = false, bool11 = false;
             bool bool12 = false, bool13 = false, bool14 = false, bool15 = false, bool16 = false, bool17 = false, bool18 = false, bool19 = false, bool20 = false, bool21 = false;
             bool bool22 = false, bool23 = false, bool24 = false, bool25 = false, bool26 = false, bool27 = false, bool28 = false;
 
-            try { bool1 = instance.ComboStates.IsIdentical(other.ComboStates); }
+        try { bool1 = instance.ComboStates.IsIdentical(other.ComboStates); }
             catch (Exception ex) { Console.WriteLine($"Exception in ComboStates.IsIdentical: {ex}"); }
-
             try { bool2 = instance.CurrentPlayer.Agents.IsIdentical(other.CurrentPlayer.Agents); }
             catch (Exception ex) { Console.WriteLine($"Exception in CurrentPlayer.Agents.IsIdentical: {ex}"); }
-
             try { bool3 = instance.CurrentPlayer.Coins == other.CurrentPlayer.Coins; }
             catch (Exception ex) { Console.WriteLine($"Exception in CurrentPlayer.Coins comparison: {ex}"); }
-
             try { bool4 = instance.CurrentPlayer.CooldownPile.IsIdentical(other.CurrentPlayer.CooldownPile); }
             catch (Exception ex) { Console.WriteLine($"Exception in CurrentPlayer.CooldownPile.IsIdentical: {ex}"); }
-
             try { bool5 = instance.CurrentPlayer.DrawPile.IsIdentical(other.CurrentPlayer.DrawPile); }
             catch (Exception ex) { Console.WriteLine($"Exception in CurrentPlayer.DrawPile.IsIdentical: {ex}"); }
-
             try { bool6 = instance.CurrentPlayer.Hand.IsIdentical(other.CurrentPlayer.Hand); }
             catch (Exception ex) { Console.WriteLine($"Exception in CurrentPlayer.Hand.IsIdentical: {ex}"); }
-
             try { bool7 = instance.CurrentPlayer.KnownUpcomingDraws.IsIdentical(other.CurrentPlayer.KnownUpcomingDraws); }
             catch (Exception ex) { Console.WriteLine($"Exception in CurrentPlayer.KnownUpcomingDraws.IsIdentical: {ex}"); }
-
             try { bool8 = instance.CurrentPlayer.PatronCalls == other.CurrentPlayer.PatronCalls; }
             catch (Exception ex) { Console.WriteLine($"Exception in CurrentPlayer.PatronCalls comparison: {ex}"); }
-
             try { bool9 = instance.CurrentPlayer.Played.IsIdentical(other.CurrentPlayer.Played); }
             catch (Exception ex) { Console.WriteLine($"Exception in CurrentPlayer.Played.IsIdentical: {ex}"); }
-
             try { bool10 = instance.CurrentPlayer.Power == other.CurrentPlayer.Power; }
             catch (Exception ex) { Console.WriteLine($"Exception in CurrentPlayer.Power comparison: {ex}"); }
-
             try { bool11 = instance.CurrentPlayer.Prestige == other.CurrentPlayer.Prestige; }
             catch (Exception ex) { Console.WriteLine($"Exception in CurrentPlayer.Prestige comparison: {ex}"); }
-
             try { bool12 = instance.EnemyPlayer.Agents.IsIdentical(other.EnemyPlayer.Agents); }
             catch (Exception ex) { Console.WriteLine($"Exception in EnemyPlayer.Agents.IsIdentical: {ex}"); }
-
             try { bool13 = instance.EnemyPlayer.Coins == other.EnemyPlayer.Coins; }
             catch (Exception ex) { Console.WriteLine($"Exception in EnemyPlayer.Coins comparison: {ex}"); }
-
             try { bool14 = instance.EnemyPlayer.CooldownPile.IsIdentical(other.EnemyPlayer.CooldownPile); }
             catch (Exception ex) { Console.WriteLine($"Exception in EnemyPlayer.CooldownPile.IsIdentical: {ex}"); }
-
             try { bool15 = instance.EnemyPlayer.DrawPile.IsIdentical(other.EnemyPlayer.DrawPile); }
             catch (Exception ex) { Console.WriteLine($"Exception in EnemyPlayer.DrawPile.IsIdentical: {ex}"); }
-
             try { bool16 = instance.EnemyPlayer.Hand.IsIdentical(other.EnemyPlayer.Hand); }
             catch (Exception ex) { Console.WriteLine($"Exception in EnemyPlayer.Hand.IsIdentical: {ex}"); }
-
             try { bool17 = instance.EnemyPlayer.KnownUpcomingDraws.IsIdentical(other.EnemyPlayer.KnownUpcomingDraws); }
             catch (Exception ex) { Console.WriteLine($"Exception in EnemyPlayer.KnownUpcomingDraws.IsIdentical: {ex}"); }
-
             try { bool18 = instance.EnemyPlayer.PatronCalls == instance.EnemyPlayer.PatronCalls; }
             catch (Exception ex) { Console.WriteLine($"Exception in EnemyPlayer.PatronCalls comparison: {ex}"); }
-
             try { bool19 = instance.EnemyPlayer.Played.IsIdentical(other.EnemyPlayer.Played); }
             catch (Exception ex) { Console.WriteLine($"Exception in EnemyPlayer.Played.IsIdentical: {ex}"); }
-
             try { bool20 = instance.EnemyPlayer.Power == instance.EnemyPlayer.Power; }
             catch (Exception ex) { Console.WriteLine($"Exception in EnemyPlayer.Power comparison: {ex}"); }
-
             try { bool21 = instance.EnemyPlayer.Prestige == instance.EnemyPlayer.Prestige; }
             catch (Exception ex) { Console.WriteLine($"Exception in EnemyPlayer.Prestige comparison: {ex}"); }
-
             try { bool22 = instance.Patrons.IsIdentical(other.Patrons); }
             catch (Exception ex) { Console.WriteLine($"Exception in Patrons.IsIdentical: {ex}"); }
-
             try { bool23 = instance.PatronStates.IsIdentical(other.PatronStates); }
             catch (Exception ex) { Console.WriteLine($"Exception in PatronStates.IsIdentical: {ex}"); }
-
             try { bool24 = instance.PendingChoice.IsIdentical(other.PendingChoice); }
             catch (Exception ex) { Console.WriteLine($"Exception in PendingChoice.IsIdentical: {ex}"); }
-
             try { bool25 = instance.StartOfNextTurnEffects.IsIdentical(other.StartOfNextTurnEffects); }
             catch (Exception ex) { Console.WriteLine($"Exception in StartOfNextTurnEffects.IsIdentical: {ex}"); }
-
             try { bool26 = instance.TavernAvailableCards.IsIdentical(other.TavernAvailableCards); }
             catch (Exception ex) { Console.WriteLine($"Exception in TavernAvailableCards.IsIdentical: {ex}"); }
-
             try { bool27 = instance.TavernCards.IsIdentical(other.TavernCards); }
             catch (Exception ex) { Console.WriteLine($"Exception in TavernCards.IsIdentical: {ex}"); }
-
             try { bool28 = instance.UpcomingEffects.IsIdentical(other.UpcomingEffects); }
             catch (Exception ex) { Console.WriteLine($"Exception in UpcomingEffects.IsIdentical: {ex}"); }
-
-
 
         var result = ( 
                 instance.ComboStates.IsIdentical(other.ComboStates)
@@ -134,44 +111,49 @@ public static class IsIdenticalExtensions{
             );
 
         timer.Stop();
-        if (!result) {
-            Console.WriteLine("hash collison for unequal states: ");
-            Console.WriteLine(info);
-            Console.WriteLine("instance hash: " + instance.GenerateHash());
-            Console.WriteLine("other hash: " + other.GenerateHash());
-            Console.WriteLine();
-            Console.WriteLine("INSTANCE:");
-            instance.Log();
-            Console.WriteLine("OTHER:");
-            other.Log();
-            if (!bool1) Console.WriteLine("Bool1: " + bool1);
-            if (!bool2) Console.WriteLine("Bool2: " + bool2);
-            if (!bool3) Console.WriteLine("Bool3: " + bool3);
-            if (!bool4) Console.WriteLine("Bool4: " + bool4);
-            if (!bool5) Console.WriteLine("Bool5: " + bool5);
-            if (!bool6) Console.WriteLine("Bool6: " + bool6);
-            if (!bool7) Console.WriteLine("Bool7: " + bool7);
-            if (!bool8) Console.WriteLine("Bool8: " + bool8);
-            if (!bool9) Console.WriteLine("Bool9: " + bool9);
-            if (!bool10) Console.WriteLine("Bool10: " + bool10);
-            if (!bool11) Console.WriteLine("Bool11: " + bool11);
-            if (!bool12) Console.WriteLine("Bool12: " + bool12);
-            if (!bool13) Console.WriteLine("Bool13: " + bool13);
-            if (!bool14) Console.WriteLine("Bool14: " + bool14);
-            if (!bool15) Console.WriteLine("Bool15: " + bool15);
-            if (!bool16) Console.WriteLine("Bool16: " + bool16);
-            if (!bool17) Console.WriteLine("Bool17: " + bool17);
-            if (!bool18) Console.WriteLine("Bool18: " + bool18);
-            if (!bool19) Console.WriteLine("Bool19: " + bool19);
-            if (!bool20) Console.WriteLine("Bool20: " + bool20);
-            if (!bool21) Console.WriteLine("Bool21: " + bool21);
-            if (!bool22) Console.WriteLine("Bool22: " + bool22);
-            if (!bool23) Console.WriteLine("Bool23: " + bool23);
-            if (!bool24) Console.WriteLine("Bool24: " + bool24);
-            if (!bool25) Console.WriteLine("Bool25: " + bool25);
-            if (!bool26) Console.WriteLine("Bool26: " + bool26);
-            if (!bool27) Console.WriteLine("Bool27: " + bool27);
-            if (!bool28) Console.WriteLine("Bool28: " + bool28);
+        PreciseChecks.Add(timer.ElapsedMilliseconds);
+
+        if (result) {
+            Aau903Bot.CorrectHashCollisions++;
+        }
+        else {
+            Aau903Bot.WrongfulHashCollisions++;
+            // Console.WriteLine("hash collison for unequal states: ");
+            // Console.WriteLine("instance hash: " + instance.GenerateHash());
+            // Console.WriteLine("other hash: " + other.GenerateHash());
+            // Console.WriteLine();
+            // Console.WriteLine("INSTANCE:");
+            // instance.Log();
+            // Console.WriteLine("OTHER:");
+            // other.Log();
+            // if (!bool1) Console.WriteLine("Bool1: " + bool1);
+            // if (!bool2) Console.WriteLine("Bool2: " + bool2);
+            // if (!bool3) Console.WriteLine("Bool3: " + bool3);
+            // if (!bool4) Console.WriteLine("Bool4: " + bool4);
+            // if (!bool5) Console.WriteLine("Bool5: " + bool5);
+            // if (!bool6) Console.WriteLine("Bool6: " + bool6);
+            // if (!bool7) Console.WriteLine("Bool7: " + bool7);
+            // if (!bool8) Console.WriteLine("Bool8: " + bool8);
+            // if (!bool9) Console.WriteLine("Bool9: " + bool9);
+            // if (!bool10) Console.WriteLine("Bool10: " + bool10);
+            // if (!bool11) Console.WriteLine("Bool11: " + bool11);
+            // if (!bool12) Console.WriteLine("Bool12: " + bool12);
+            // if (!bool13) Console.WriteLine("Bool13: " + bool13);
+            // if (!bool14) Console.WriteLine("Bool14: " + bool14);
+            // if (!bool15) Console.WriteLine("Bool15: " + bool15);
+            // if (!bool16) Console.WriteLine("Bool16: " + bool16);
+            // if (!bool17) Console.WriteLine("Bool17: " + bool17);
+            // if (!bool18) Console.WriteLine("Bool18: " + bool18);
+            // if (!bool19) Console.WriteLine("Bool19: " + bool19);
+            // if (!bool20) Console.WriteLine("Bool20: " + bool20);
+            // if (!bool21) Console.WriteLine("Bool21: " + bool21);
+            // if (!bool22) Console.WriteLine("Bool22: " + bool22);
+            // if (!bool23) Console.WriteLine("Bool23: " + bool23);
+            // if (!bool24) Console.WriteLine("Bool24: " + bool24);
+            // if (!bool25) Console.WriteLine("Bool25: " + bool25);
+            // if (!bool26) Console.WriteLine("Bool26: " + bool26);
+            // if (!bool27) Console.WriteLine("Bool27: " + bool27);
+            // if (!bool28) Console.WriteLine("Bool28: " + bool28);
         }
 
         return result;
@@ -210,7 +192,6 @@ public static class IsIdenticalExtensions{
         //     &&  instance.UpcomingEffects.IsIdentical(other.UpcomingEffects)
         //     );
     }
-    // TODO check if this will throw a nullpointer or not when instance is null
     public static bool IsIdentical(this SerializedChoice? instance, SerializedChoice? other) {
         if (instance == null) {
             if (other == null) {
@@ -405,8 +386,19 @@ public static class IsIdenticalExtensions{
 
     public static bool IsIdentical(this PatronStates instance, PatronStates other) {
 
-        if (instance.All.Keys.OrderBy(patronId => patronId).ToList().SequenceEqual(other.All.Keys.OrderBy(patronId => patronId))){
+        if (instance.All.Keys.Count != other.All.Keys.Count) {
             return false;
+        }
+
+        var instanceKeysOrdered = instance.All.Keys.OrderBy(patronId => patronId).ToList();
+        var otherKeysOrdered = instance.All.Keys.OrderBy(patronId => patronId).ToList();
+
+        // This loop replaces list.sequenceEquals, cause for some reason that method wrongly returns false here
+        for(int i = 0; i < instanceKeysOrdered.Count; i++) {
+            if (instanceKeysOrdered[i] != otherKeysOrdered[i]){
+                Console.WriteLine("we hit this cause: " + instanceKeysOrdered[i] + " != " + otherKeysOrdered[i]);
+                return false;
+            }
         }
 
         foreach(var patron in other.All.Keys) {
@@ -416,5 +408,35 @@ public static class IsIdenticalExtensions{
         }
 
         return true;
+    }
+
+    public static bool IsIdentical(this Move instance, Move other) {
+        if(instance.GetType() != other.GetType()) {
+            return false;
+        }
+
+        switch(instance){
+            case SimpleCardMove:
+                return (
+                        (instance as SimpleCardMove).Card.CommonId == (other as SimpleCardMove).Card.CommonId
+                    &&  instance.Command == other.Command);
+            case SimplePatronMove:
+                return (
+                    (instance as SimplePatronMove).PatronId == (other as SimplePatronMove).PatronId
+                    && (instance as SimplePatronMove).Command == (other as SimplePatronMove).Command
+                );
+            case MakeChoiceMoveUniqueCard:
+                return (
+                    (instance as MakeChoiceMoveUniqueCard).Command == (other as MakeChoiceMoveUniqueCard).Command
+                    &&  (instance as MakeChoiceMoveUniqueCard).Choices.IsIdentical((other as MakeChoiceMoveUniqueCard).Choices)
+                );
+            case MakeChoiceMoveUniqueEffect:
+                return (
+                    (instance as MakeChoiceMoveUniqueEffect).Command == (other as MakeChoiceMoveUniqueEffect).Command
+                    && (instance as MakeChoiceMoveUniqueEffect).Choices.IsIdentical((other as MakeChoiceMoveUniqueEffect).Choices)
+                );
+            default:
+                return instance.Command == other.Command;
+        }
     }
 }

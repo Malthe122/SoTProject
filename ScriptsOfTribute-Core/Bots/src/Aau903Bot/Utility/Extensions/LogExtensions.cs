@@ -110,31 +110,35 @@ public static class LogExtensions{
 
     public static void Log(this Move move)
     {
-        switch (move.Command)
+
+        Console.WriteLine("Command:" + move.Command);
+        Console.WriteLine("Type: " + move.GetType().Name);
+        switch (move)
         {
-            case CommandEnum.PLAY_CARD:
-                Console.WriteLine("Play card: " + (move as SimpleCardMove).Card.Name);
+            case SimpleCardMove simpleCardMove:
+                Console.WriteLine("Card: " + simpleCardMove.Card.CommonId);
                 break;
-            case CommandEnum.ACTIVATE_AGENT:
-                Console.WriteLine("Activating agent: " + (move as SimpleCardMove).Card.Name);
+            case SimplePatronMove simplePatronMove:
+                Console.WriteLine(simplePatronMove.PatronId);
                 break;
-            case CommandEnum.ATTACK:
-                Console.WriteLine("Attacking: " + (move as SimpleCardMove).Card.Name);
+            case MakeChoiceMoveUniqueCard uniqueCardMove:
+                Console.WriteLine("Choices:");
+                uniqueCardMove.Choices.ForEach(c => Console.Write(" " + c.CommonId + ","));
                 break;
-            case CommandEnum.BUY_CARD:
-                Console.WriteLine("Buying card: " + (move as SimpleCardMove).Card.Name);
+            case MakeChoiceMoveUniqueEffect uniqueEffectMove:
+                Console.WriteLine("Choices:");
+                uniqueEffectMove.Choices.ForEach(e => e.Log());
                 break;
-            case CommandEnum.CALL_PATRON:
-                Console.WriteLine("Calling patron: " + (move as SimplePatronMove).PatronId);
-                break;
-            case CommandEnum.MAKE_CHOICE:
-                Console.WriteLine("Making choice some choice");
-                break;
-            case CommandEnum.END_TURN:
-                Console.WriteLine("Ending turn");
+            default:
+                Console.WriteLine("Unknown subtype");
                 break;
         }
     }
 
-
+    public static void Log(this UniqueEffect effect) {
+        Console.WriteLine("Type: " + effect.Type);
+        Console.WriteLine("Amount: " + effect.Amount);
+        Console.WriteLine("Combo: " + effect.Combo);
+        Console.WriteLine("Parent card: " + effect.ParentCard.CommonId);
+    }
 }

@@ -1,4 +1,6 @@
 using System.Diagnostics;
+using System.IO.Compression;
+using System.Security.Cryptography.X509Certificates;
 using ScriptsOfTribute;
 using ScriptsOfTribute.AI;
 using ScriptsOfTribute.Board;
@@ -9,6 +11,9 @@ public class Aau903Bot : AI
 
     private Node? rootNode;
     private static int totalIllegalMoveCount = 0;
+    public static int CorrectHashCollisions = 0;
+    public static int WrongfulHashCollisions = 0;
+    public static int TotalHashComparisons = 0;
 
     public override void PregamePrepare()
     {
@@ -23,9 +28,30 @@ public class Aau903Bot : AI
 
         if (state.Reason == GameEndReason.INCORRECT_MOVE) {
             totalIllegalMoveCount++;
+            Console.WriteLine("Additional context:");
+            Console.WriteLine(state.AdditionalContext);
         }
 
         Console.WriteLine("total illegal move count: " + totalIllegalMoveCount);
+        Console.WriteLine("Hash size: " + Utility.NodeGameStateHashMap.Keys.Count);
+        Console.WriteLine("Total comparisons: " + TotalHashComparisons);
+        Console.WriteLine("Hashing amount: " + HashExtensions.Amount);
+        Console.WriteLine("Average hashing time: " +  HashExtensions.Hashings.Sum(h => h) / HashExtensions.Amount);
+        Console.WriteLine("CorrectHashCollisions: " + CorrectHashCollisions);
+        Console.WriteLine("WrongfulHashCollisions: " + WrongfulHashCollisions);
+
+        long avgTime;
+
+        if (IsIdenticalExtensions.PreciseChecks.Count == 0 || IsIdenticalExtensions.PreciseChecks.All(c => c == 0)){
+            avgTime = 0;
+        }
+        else {
+            long total = 0;
+            IsIdenticalExtensions.PreciseChecks.ForEach(c => total += c);
+            avgTime = total / IsIdenticalExtensions.PreciseChecks.Count;
+        }
+        Console.WriteLine("total precise checks done: " + IsIdenticalExtensions.Amount);
+        Console.WriteLine("average precise comparison time: " + avgTime);
     }
 
     public override Move Play(GameState gameState, List<Move> possibleMoves, TimeSpan remainingTime)
@@ -35,6 +61,7 @@ public class Aau903Bot : AI
             var obviousMove = FindObviousMove(possibleMoves);
             if (obviousMove != null)
             {
+                CheckMoveLegality(obviousMove, null, gameState, possibleMoves);
                 return obviousMove;
             }
 
@@ -51,11 +78,7 @@ public class Aau903Bot : AI
             ulong randomSeed = (ulong)Utility.Rng.Next();
             var seededGameState = gameState.ToSeededGameState(randomSeed);
             
-
-            //TODO add HP check
-            var rootNode = Utility.FindOrBuildNode(seededGameState, null, possibleMoves, null, 0);
-            // else
-            // var rootNode = new Node(seededGameState, null, possibleMoves, null, 0);
+            var rootNode = Utility.FindOrBuildNode(seededGameState, null, possibleMoves, 0);
 
             int iterationCounter = 0;
 
@@ -77,16 +100,19 @@ public class Aau903Bot : AI
                 }
             }
 
-            if (rootNode.ChildNodes.Count == 0) {
+            if (rootNode.MoveToChildNode.Count == 0) {
                 // Console.WriteLine("NO TIME FOR CALCULATING MOVE@@@@@@@@@@@@@@@");
                 return possibleMoves[0];
             }
 
-            var bestChildNode = rootNode.ChildNodes
-                .OrderByDescending(child => (child.TotalScore / child.VisitCount))
-                .FirstOrDefault();
+            var bestMove = rootNode.MoveToChildNode
+                .OrderByDescending(moveNodePair => (moveNodePair.Value.TotalScore / moveNodePair.Value.VisitCount))
+                .FirstOrDefault()
+                .Key;
 
-            return bestChildNode.AppliedMove;
+            CheckMoveLegality(bestMove, rootNode, gameState, possibleMoves);
+
+            return bestMove;
         }
         catch (Exception e)
         {
@@ -103,6 +129,23 @@ public class Aau903Bot : AI
         }
     }
 
+    private void CheckMoveLegality(Move moveToCheck, Node rootNode, GameState officialGameState, List<Move> officialPossiblemoves)
+    {
+        if(!officialPossiblemoves.Any(move => move.IsIdentical(moveToCheck))){
+                Console.WriteLine("----- ABOUT TO PERFORM ILLEGAL MOVE -----");
+                Console.WriteLine("Our state:");
+                rootNode?.GameState.Log();
+                Console.WriteLine("Actual state:");
+                officialGameState.ToSeededGameState((ulong)Utility.Rng.Next()).Log();
+                Console.WriteLine("@@@@ Trying to play move:");
+                moveToCheck.Log();
+                Console.WriteLine("@@@@@@@ But available moves were:");
+                officialPossiblemoves.ForEach(m => m.Log());
+                Console.WriteLine("@@@@@@ But we thought moves were:");
+                rootNode.PossibleMoves.ForEach(m => m.Log());
+            }
+    }
+
     private int EstimateRemainingMovesInTurn(GameState inputState, List<Move> inputPossibleMoves){
         return EstimateRemainingMovesInTurn(inputState.ToSeededGameState((ulong)Utility.Rng.Next()), inputPossibleMoves);
     }
@@ -110,15 +153,17 @@ public class Aau903Bot : AI
     private int EstimateRemainingMovesInTurn(SeededGameState inputState, List<Move> inputPossibleMoves)
     {
 
-        if (inputPossibleMoves.Count == 1 && inputPossibleMoves[0].Command == CommandEnum.END_TURN) {
+        var possibleMoves = new List<Move>(inputPossibleMoves);
+
+        if (possibleMoves.Count == 1 && possibleMoves[0].Command == CommandEnum.END_TURN) {
             return 0;
         }
 
-        inputPossibleMoves.RemoveAll(x => x.Command == CommandEnum.END_TURN);
+        possibleMoves.RemoveAll(x => x.Command == CommandEnum.END_TURN);
 
         int result = 1;
         SeededGameState currentState = inputState;
-        List<Move> currentPossibleMoves = inputPossibleMoves;
+        List<Move> currentPossibleMoves = possibleMoves;
 
         while(currentPossibleMoves.Count > 0) {
 

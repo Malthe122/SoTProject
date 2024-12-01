@@ -5,84 +5,120 @@ using ScriptsOfTribute.Serializers;
 
 public static class HashExtensions
 {
+    public static List<long> Hashings = new List<long>();
+    public static int Amount { get; internal set; }
+
     public static int GenerateHash(this SeededGameState state)
     {
+        Amount ++;
         var timer = new Stopwatch();
         timer.Start();
 
         var hashCode = new HashCode();
 
+        int comboHash = 1;
+
         foreach (var comboState in state.ComboStates.All)
         {
-            hashCode.Add(((int)comboState.Key) * 10);
-            hashCode.Add(comboState.Value.CurrentCombo * 2);
+            comboHash *= ((int)comboState.Key + 1) * 10;
+            comboHash *= (comboState.Value.CurrentCombo + 1) * 2;
         }
+
+        hashCode.Add(comboHash);
 
         hashCode.Add(state.CurrentPlayer.GenerateHash());
         hashCode.Add(state.EnemyPlayer.GenerateHash());
 
+        int patronHash = 1;
+
         foreach (var currPatron in state.Patrons)
         {
-            hashCode.Add(((int)currPatron) * 10);
+            patronHash *= (((int)currPatron + 1) * 10);
         }
+
+        hashCode.Add(patronHash);
+
+        int patronStateHash = 1;
 
         foreach (var patronState in state.PatronStates.All)
         {
-            hashCode.Add(((int)patronState.Key) * 200);
-            hashCode.Add(patronState.Value);
+            patronStateHash *= (((int)patronState.Key + 1) * 200);
+            patronStateHash *= ((int)patronState.Value + 1);
         }
+
+        hashCode.Add(patronStateHash);
+
+        int PendingChoiceHash = 1;
 
         if (state.PendingChoice != null)
         {
-            hashCode.Add((int)state.PendingChoice.ChoiceFollowUp * 100);
-            hashCode.Add(state.PendingChoice.MaxChoices);
-            hashCode.Add(state.PendingChoice.MinChoices);
-            hashCode.Add(state.PendingChoice.Type);
+            PendingChoiceHash *= ((int)state.PendingChoice.ChoiceFollowUp + 1) * 100;
+            PendingChoiceHash *= state.PendingChoice.MaxChoices + 1;
+            PendingChoiceHash *= state.PendingChoice.MinChoices + 1;
+            PendingChoiceHash *= ((int)state.PendingChoice.Type + 1);
 
             switch (state.PendingChoice.Type)
             {
                 case Choice.DataType.CARD:
                     foreach (var currCard in state.PendingChoice.PossibleCards)
                     {
-                        hashCode.Add((int)currCard.UniqueId * 100);
+                        PendingChoiceHash *= ((int)currCard.UniqueId + 1) * 100;
                     }
                     break;
                 case Choice.DataType.EFFECT:
                     foreach (var currEffect in state.PendingChoice.PossibleEffects)
                     {
-                        hashCode.Add(currEffect.Amount);
-                        hashCode.Add(currEffect.Combo);
-                        hashCode.Add(currEffect.Type);
-                        hashCode.Add(currEffect.ParentCard.CommonId);
+                        PendingChoiceHash *= (currEffect.Amount + 1) * 100;
+                        PendingChoiceHash *= (currEffect.Combo + 1) * 1_000;
+                        PendingChoiceHash *= ((int)currEffect.Type + 1);
+                        PendingChoiceHash *= ((int)currEffect.ParentCard.CommonId + 1);
                     }
                     break;
             }
         }
 
+        hashCode.Add(PendingChoiceHash);
+
+        int StartOfNextTurnEffectsHash = 1;
+
         foreach (var currEffect in state.StartOfNextTurnEffects)
         {
-            hashCode.Add(currEffect.GenerateHash());
+            StartOfNextTurnEffectsHash *= currEffect.GenerateHash();
         }
+
+        hashCode.Add(StartOfNextTurnEffectsHash);
+
+        int tavernAvailAbleCardsHash = 1;
 
         foreach (var currCard in state.TavernAvailableCards)
         {
-            hashCode.Add((int)currCard.CommonId);
+            tavernAvailAbleCardsHash *= (int)currCard.CommonId + 1;
         }
+
+        hashCode.Add(tavernAvailAbleCardsHash);
+
+        int tavernCardsHash = 1;
 
         foreach (var currCard in state.TavernCards)
         {
-            hashCode.Add((int)currCard.CommonId * 100);
+            tavernCardsHash *= ((int)currCard.CommonId + 1) * 100;
         }
+
+        hashCode.Add(tavernCardsHash);
+
+        int upcomingEffectsHash = 1;
 
         foreach (var currEffect in state.UpcomingEffects)
         {
-            hashCode.Add(currEffect.GenerateHash());
+            upcomingEffectsHash *= currEffect.GenerateHash();
         }
+
+        hashCode.Add(upcomingEffectsHash);
 
         int result = hashCode.ToHashCode();
 
         timer.Stop();
-        // Console.WriteLine("Hash generation took: " + timer.ElapsedMilliseconds + " seconds");
+        Hashings.Add(timer.ElapsedMilliseconds);
 
         return result;
     }
@@ -120,37 +156,54 @@ public static class HashExtensions
 
         var hashCode = new HashCode();
 
+        int agentsHash = 1;
+
         foreach (var currAgent in player.Agents)
         {
-            hashCode.Add(currAgent.Activated);
-            hashCode.Add(currAgent.CurrentHp);
-            hashCode.Add(currAgent.RepresentingCard.CommonId);
+            agentsHash *= currAgent.Activated ? 1 : 100;
+            agentsHash *= currAgent.CurrentHp + 1_000;
+            agentsHash *= ((int)currAgent.RepresentingCard.CommonId + 1);
         }
 
+        hashCode.Add(agentsHash);
         hashCode.Add(player.Coins);
+
+        int cooldownHash = 1;
 
         foreach (var currCard in player.CooldownPile)
         {
-            hashCode.Add(currCard.CommonId);
+            cooldownHash *= ((int)currCard.CommonId + 1) * 100;
         }
+
+        hashCode.Add(cooldownHash);
+
+        int drawPileHash = 1;
 
         foreach (var currCard in player.DrawPile)
         {
-            hashCode.Add(((int)currCard.CommonId) * 1000);
+            drawPileHash *= ((int)currCard.CommonId+1) * 1000;
         }
+
+        hashCode.Add(drawPileHash);
+
+        int knownUpcomingHash = 1;
 
         foreach (var currCard in player.KnownUpcomingDraws)
         {
-            hashCode.Add(((int)currCard.CommonId) * 1_000_000);
+            knownUpcomingHash *= ((int)currCard.CommonId + 1) * 10_000;
         }
 
+        hashCode.Add(knownUpcomingHash);
         hashCode.Add(player.PatronCalls);
+
+        int playedHash = 1;
 
         foreach (var currCard in player.Played)
         {
-            hashCode.Add(currCard.CommonId);
+            playedHash *= ((int)currCard.CommonId + 1);
         }
 
+        hashCode.Add(playedHash);
         hashCode.Add(player.Power);
         hashCode.Add(player.Prestige);
 

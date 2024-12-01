@@ -148,38 +148,25 @@ public static class Utility
         return strategy.Heuristic(gameState);
     }
 
-    public static Node FindOrBuildNode(SeededGameState seededGameState, Node parent, List<Move> possibleMoves, Move appliedMove, int depth)
+    public static Node FindOrBuildNode(SeededGameState seededGameState, Node parent, List<Move> possibleMoves, int depth)
     {
-        var result = new Node(seededGameState, parent, possibleMoves, appliedMove, depth);
+        var result = new Node(seededGameState, parent, possibleMoves, depth);
 
-        if (NodeGameStateHashMap.ContainsKey(result.GameStateHash)){
-            var equalNode = Utility.NodeGameStateHashMap[result.GameStateHash].SingleOrDefault(node => node.GameState.IsIdentical(result.GameState, "Called from Utlity"));
-            if (equalNode != null){
-                // Console.WriteLine("-------- Hash collison for equal states -------- ");
-                result = equalNode;
+        if (MCTSHyperparameters.REUSE_TREE) {
+            Aau903Bot.TotalHashComparisons++;
+
+            if (NodeGameStateHashMap.ContainsKey(result.GameStateHash)){
+                var equalNode = Utility.NodeGameStateHashMap[result.GameStateHash].SingleOrDefault(node => node.GameState.IsIdentical(result.GameState));
+                if (equalNode != null){
+                    result = equalNode;
+                }
+                else {
+                    NodeGameStateHashMap[result.GameStateHash].Add(result);
+                }
             }
-            else {
-                Console.WriteLine("-------- Hash collison without states being equal -------- ");
-                foreach (var node in NodeGameStateHashMap[result.GameStateHash])
-                {
-                    Console.WriteLine($"Hash: {node.GameStateHash}");
-                    Console.WriteLine("Generated hash: " + node.GameState.GenerateHash());
-                    Console.WriteLine("Generated hash2: " + node.GameState.GenerateHash());
-                    Console.WriteLine("Generated hash3: " + node.GameState.GenerateHash());
-                    Console.WriteLine("Generated hash4: " + node.GameState.GenerateHash());
-                    Console.WriteLine("Generated hash5: " + node.GameState.GenerateHash());
-                }
-                if (result.GameStateHash != result.GameState.GenerateHash()) {
-                    Console.WriteLine("WWWWWWWWWWTTTTTTTTFFFFFFFFFFFFF");
-                }
-                NodeGameStateHashMap[result.GameStateHash].Add(result);
+            else{
+                NodeGameStateHashMap.Add(result.GameStateHash, new List<Node>(){result});
             }
-        }
-        else{
-            if (result.GameStateHash != result.GameState.GenerateHash()) {
-                    Console.WriteLine("WWWWWWWWWWTTTTTTTTHHHHHHHHHHHH");
-                }
-            NodeGameStateHashMap.Add(result.GameStateHash, new List<Node>(){result});
         }
 
         return result;

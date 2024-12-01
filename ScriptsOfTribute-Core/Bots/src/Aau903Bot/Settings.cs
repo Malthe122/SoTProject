@@ -35,6 +35,8 @@ public static class MCTSHyperparameters
         public static int CHOSEN_MAX_EXPANSION_DEPTH { get; set; }
         public static ScoringMethod CHOSEN_SCORING_METHOD { get; set; }
         public static int ROLLOUT_TURNS_BEFORE_HEURSISTIC { get; set; }
+        public static bool EQUAL_CHANCE_NODE_DISTRIBUTION { get; set; }
+        public static bool REUSE_TREE { get; set; }
 
     static MCTSHyperparameters()
     {
@@ -62,6 +64,8 @@ public static class MCTSHyperparameters
         ROLLOUT_TURNS_BEFORE_HEURSISTIC = config.GetRequiredSection("ROLLOUT_TURNS_BEFORE_HEURSISTIC").Get<int>();
         SET_MAX_EXPANSION_DEPTH = config.GetRequiredSection("SET_MAX_EXPANSION_DEPTH").Get<bool>();
         CHOSEN_MAX_EXPANSION_DEPTH = config.GetRequiredSection("CHOSEN_MAX_EXPANSION_DEPTH").Get<int>();
+        EQUAL_CHANCE_NODE_DISTRIBUTION = config.GetRequiredSection("EQUAL_CHANCE_NODE_DISTRIBUTION").Get<bool>();
+        REUSE_TREE = config.GetRequiredSection("REUSE_TREE").Get<bool>();
 
         Console.WriteLine("Loaded settings:");
         Console.WriteLine($"NUMBER_OF_ROLLOUTS: {NUMBER_OF_ROLLOUTS}");
