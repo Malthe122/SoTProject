@@ -10,48 +10,22 @@ public class Aau903Bot : AI
 {
 
     private Node? rootNode;
-    private static int totalIllegalMoveCount = 0;
-    public static int CorrectHashCollisions = 0;
-    public static int WrongfulHashCollisions = 0;
-    public static int TotalHashComparisons = 0;
+    /// <summary>
+    /// TODO refactor this from being static. It works with only 1 aau-bot playing at a time. Also would work with more, but then they would share information between them,
+    /// and this might not be allowed according to competetion, but we would have to figure that out. But in that case, we should not reset it when a game begins, like we do now
+    /// </summary>
+    public static Dictionary<int, List<Node>> NodeGameStateHashMap = new Dictionary<int, List<Node>>();
 
     public override void PregamePrepare()
     {
         base.PregamePrepare();
         rootNode = null;
-        Utility.NodeGameStateHashMap = new Dictionary<int, List<Node>>(); //TODO move this to here
+        NodeGameStateHashMap = new Dictionary<int, List<Node>>(); //TODO move this to here
     }
     public override void GameEnd(EndGameState state, FullGameState? finalBoardState)
     {
         Console.WriteLine("@@@ Game ended because of " + state.Reason + " @@@");
         Console.WriteLine("@@@ Winner was " + state.Winner + " @@@");
-
-        if (state.Reason == GameEndReason.INCORRECT_MOVE) {
-            totalIllegalMoveCount++;
-            Console.WriteLine("Additional context:");
-            Console.WriteLine(state.AdditionalContext);
-        }
-
-        Console.WriteLine("total illegal move count: " + totalIllegalMoveCount);
-        Console.WriteLine("Hash size: " + Utility.NodeGameStateHashMap.Keys.Count);
-        Console.WriteLine("Total comparisons: " + TotalHashComparisons);
-        Console.WriteLine("Hashing amount: " + HashExtensions.Amount);
-        Console.WriteLine("Average hashing time: " +  HashExtensions.Hashings.Sum(h => h) / HashExtensions.Amount);
-        Console.WriteLine("CorrectHashCollisions: " + CorrectHashCollisions);
-        Console.WriteLine("WrongfulHashCollisions: " + WrongfulHashCollisions);
-
-        long avgTime;
-
-        if (IsIdenticalExtensions.PreciseChecks.Count == 0 || IsIdenticalExtensions.PreciseChecks.All(c => c == 0)){
-            avgTime = 0;
-        }
-        else {
-            long total = 0;
-            IsIdenticalExtensions.PreciseChecks.ForEach(c => total += c);
-            avgTime = total / IsIdenticalExtensions.PreciseChecks.Count;
-        }
-        Console.WriteLine("total precise checks done: " + IsIdenticalExtensions.Amount);
-        Console.WriteLine("average precise comparison time: " + avgTime);
     }
 
     public override Move Play(GameState gameState, List<Move> possibleMoves, TimeSpan remainingTime)

@@ -5,15 +5,8 @@ using ScriptsOfTribute.Serializers;
 
 public static class HashExtensions
 {
-    public static List<long> Hashings = new List<long>();
-    public static int Amount { get; internal set; }
-
     public static int GenerateHash(this SeededGameState state)
     {
-        Amount ++;
-        var timer = new Stopwatch();
-        timer.Start();
-
         var hashCode = new HashCode();
 
         int comboHash = 1;
@@ -115,12 +108,7 @@ public static class HashExtensions
 
         hashCode.Add(upcomingEffectsHash);
 
-        int result = hashCode.ToHashCode();
-
-        timer.Stop();
-        Hashings.Add(timer.ElapsedMilliseconds);
-
-        return result;
+        return hashCode.ToHashCode();
     }
 
     public static int GenerateHash(this UniqueBaseEffect effect)

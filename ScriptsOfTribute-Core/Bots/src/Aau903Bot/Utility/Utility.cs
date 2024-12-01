@@ -8,8 +8,6 @@ public static class Utility
 {
     public static Random Rng = new Random();
 
-    public static Dictionary<int,List<Node>> NodeGameStateHashMap = new Dictionary<int, List<Node>>();
-
     // TODO consider making an evaluation function at start of the game, that populates these lists
     // based on their effects, rather than relying on manually categorising them correctly
     public static readonly List<CardId> OBVIOUS_ACTION_PLAYS = new List<CardId>(){
@@ -119,7 +117,7 @@ public static class Utility
             case CommandEnum.MAKE_CHOICE:
                 return false; //TODO we might add some check here too
             case CommandEnum.END_TURN:
-                return false; //TODO we consider this false for now, but it should be considered true since the opponent will draw their cards which is random
+                return false;
             default:
                 return false;
         }
@@ -153,19 +151,18 @@ public static class Utility
         var result = new Node(seededGameState, parent, possibleMoves, depth);
 
         if (MCTSHyperparameters.REUSE_TREE) {
-            Aau903Bot.TotalHashComparisons++;
 
-            if (NodeGameStateHashMap.ContainsKey(result.GameStateHash)){
-                var equalNode = Utility.NodeGameStateHashMap[result.GameStateHash].SingleOrDefault(node => node.GameState.IsIdentical(result.GameState));
+            if (Aau903Bot.NodeGameStateHashMap.ContainsKey(result.GameStateHash)){
+                var equalNode = Aau903Bot.NodeGameStateHashMap[result.GameStateHash].SingleOrDefault(node => node.GameState.IsIdentical(result.GameState));
                 if (equalNode != null){
                     result = equalNode;
                 }
                 else {
-                    NodeGameStateHashMap[result.GameStateHash].Add(result);
+                    Aau903Bot.NodeGameStateHashMap[result.GameStateHash].Add(result);
                 }
             }
             else{
-                NodeGameStateHashMap.Add(result.GameStateHash, new List<Node>(){result});
+                Aau903Bot.NodeGameStateHashMap.Add(result.GameStateHash, new List<Node>(){result});
             }
         }
 
