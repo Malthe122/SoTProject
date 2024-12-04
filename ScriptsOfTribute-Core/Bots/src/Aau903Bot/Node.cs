@@ -214,9 +214,17 @@ public class Node
 
     public double GetConfidenceScore()
     {
-        double exploitation = TotalScore / VisitCount;
-        double exploration = Params.UCT_EXPLORATION_CONSTANT * Math.Sqrt(Math.Log(Parent.VisitCount) / VisitCount);
-        return exploitation + exploration;
+        switch (Params.CHOSEN_EVALUATION_METHOD)
+        {
+            case EvaluationMethod.UCT:
+                double exploitation = TotalScore / VisitCount;
+                double exploration = Params.UCT_EXPLORATION_CONSTANT * Math.Sqrt(Math.Log(Parent.VisitCount) / VisitCount);
+                return exploitation + exploration;
+            case EvaluationMethod.Custom:
+                return TotalScore - VisitCount;
+            default:
+                return 0;
+        }
     }
 
     internal void ApplyAllDeterministicAndObviousMoves()
