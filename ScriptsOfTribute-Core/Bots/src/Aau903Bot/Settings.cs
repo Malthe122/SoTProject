@@ -20,6 +20,7 @@ public class MCTSHyperparameters
     public bool FORCE_DELAY_TURN_END_IN_ROLLOUT { get; set; }
     public bool INCLUDE_PLAY_MOVE_CHANCE_NODES { get; set; }
     public bool INCLUDE_END_TURN_CHANCE_NODES { get; set; }
+    public EvaluationMethod CHOSEN_EVALUATION_METHOD { get; set; }
     public ScoringMethod CHOSEN_SCORING_METHOD { get; set; }
     public int ROLLOUT_TURNS_BEFORE_HEURSISTIC { get; set; }
     public bool EQUAL_CHANCE_NODE_DISTRIBUTION { get; set; }
@@ -41,6 +42,7 @@ public class MCTSHyperparameters
         FORCE_DELAY_TURN_END_IN_ROLLOUT = config.GetValue("FORCE_DELAY_TURN_END_IN_ROLLOUT", true);
         INCLUDE_PLAY_MOVE_CHANCE_NODES = config.GetValue("INCLUDE_PLAY_MOVE_CHANCE_NODES", false);
         INCLUDE_END_TURN_CHANCE_NODES = config.GetValue("INCLUDE_END_TURN_CHANCE_NODES", false);
+        CHOSEN_EVALUATION_METHOD = Enum.Parse<EvaluationMethod>(config.GetValue("CHOSEN_EVALUATION_METHOD", "UCT")!);
         CHOSEN_SCORING_METHOD = Enum.Parse<ScoringMethod>(config.GetValue("CHOSEN_SCORING_METHOD", "Rollout")!);
         ROLLOUT_TURNS_BEFORE_HEURSISTIC = config.GetValue("ROLLOUT_TURNS_BEFORE_HEURSISTIC", 3);
         EQUAL_CHANCE_NODE_DISTRIBUTION = config.GetValue("EQUAL_CHANCE_NODE_DISTRIBUTION", true);
@@ -54,6 +56,7 @@ public class MCTSHyperparameters
         Console.WriteLine($"FORCE_DELAY_TURN_END_IN_ROLLOUT: {FORCE_DELAY_TURN_END_IN_ROLLOUT}");
         Console.WriteLine($"INCLUDE_PLAY_MOVE_CHANCE_NODES: {INCLUDE_PLAY_MOVE_CHANCE_NODES}");
         Console.WriteLine($"INCLUDE_END_TURN_CHANCE_NODES: {INCLUDE_END_TURN_CHANCE_NODES}");
+        Console.WriteLine($"CHOSEN_EVALUATION_METHOD: {CHOSEN_EVALUATION_METHOD}");
         Console.WriteLine($"CHOSEN_SCORING_METHOD: {CHOSEN_SCORING_METHOD}");
         Console.WriteLine($"ROLLOUT_TURNS_BEFORE_HEURSISTIC: {ROLLOUT_TURNS_BEFORE_HEURSISTIC}");
         Console.WriteLine($"EQUAL_CHANCE_NODE_DISTRIBUTION: {EQUAL_CHANCE_NODE_DISTRIBUTION}");
