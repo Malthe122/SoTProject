@@ -9,31 +9,26 @@ public class Node
     /// with a new random seed which is a possible argument for the applyMove method
     /// </summary>
     public Node? Parent = null;
-    public List<Node> ChildNodes = new List<Node>();
+    public Dictionary<Move, Node> MoveToChildNode;
     public int VisitCount = 0;
     public double TotalScore = 0;
-    public int GameStateHash;
-    public SeededGameState GameState;
-    public Move? AppliedMove;
+    public int GameStateHash { get; private set; }
+    public SeededGameState GameState { get; private set; }
     public List<Move> PossibleMoves;
     public int Depth;
 
-    public Node(SeededGameState gameState, Node parent, List<Move> possibleMoves, Move appliedMove, int depth)
+    public Node(SeededGameState gameState, Node parent, List<Move> possibleMoves, int depth)
     {
         GameState = gameState;
         Parent = parent;
         PossibleMoves = possibleMoves;
-        AppliedMove = appliedMove;
         Depth = depth;
-        /// <summary>
-        /// TODO if this takes too much performance, look into only calling this method on children of chance nodes
-        /// </summary>
-        GameStateHash = GameState.GenerateHash();
+        MoveToChildNode = new Dictionary<Move, Node>();
+        ApplyAllDeterministicAndObviousMoves();
     }
 
     public virtual void Visit(out double score)
     {
-        Node visitedChild = null;
         var playerId = GameState.CurrentPlayer.PlayerID;
 
         if (MCTSHyperparameters.SET_MAX_EXPANSION_DEPTH)
@@ -54,7 +49,7 @@ public class Node
                 ApplyAllDeterministicAndObviousMoves();
                 score = Score();
             }
-            else if (PossibleMoves.Count > ChildNodes.Count)
+            else if (PossibleMoves.Count > MoveToChildNode.Count)
             {
                 var expandedChild = Expand();
                 expandedChild.Visit(out score);
@@ -66,7 +61,7 @@ public class Node
 
                 if (selectedChild.GameState.CurrentPlayer.PlayerID != playerId)
                 {
-                    score *= -1;
+                    score *= -1; //TODO check if this is also correct with the heuristic. The heurisitc evaluation might not be zero-sum
                 }
             }
         }
@@ -83,22 +78,21 @@ public class Node
     {
         foreach (var move in PossibleMoves)
         {
-            if (!ChildNodes.Any(child => child.AppliedMove == move))
+            if (!MoveToChildNode.ContainsKey(move))
             {
                 if ((MCTSHyperparameters.INCLUDE_PLAY_MOVE_CHANCE_NODES && move.IsNonDeterministic())
                     || MCTSHyperparameters.INCLUDE_END_TURN_CHANCE_NODES && move.Command == CommandEnum.END_TURN)
                 {
                     var newChild = new ChanceNode(GameState, this, move, Depth+1);
-                    ChildNodes.Add(newChild);
+                    MoveToChildNode.Add(move, newChild);
                     return newChild;
                 }
                 else
                 {
                     ulong randomSeed = (ulong)Utility.Rng.Next();
                     var (newGameState, newPossibleMoves) = GameState.ApplyMove(move, randomSeed);
-                    var newChild = new Node(newGameState, this, newPossibleMoves, move, Depth+1);
-                    ChildNodes.Add(newChild);
-                    // Console.WriteLine($"New child added with Depth level: {newChild.Depth}");
+                    var newChild = Utility.FindOrBuildNode(newGameState, this, newPossibleMoves, Depth+1);
+                    MoveToChildNode.Add(move, newChild);
                     return newChild;
                 }
             }
@@ -205,9 +199,9 @@ public class Node
     internal virtual Node Select()
     {
         double maxConfidence = -double.MaxValue;
-        var highestConfidenceChild = ChildNodes[0];
+        var highestConfidenceChild = MoveToChildNode.First().Value;
 
-        foreach (var childNode in ChildNodes)
+        foreach (var childNode in MoveToChildNode.Values)
         {
             double confidence = childNode.GetConfidenceScore();
             if (confidence > maxConfidence)
@@ -264,5 +258,7 @@ public class Node
                 }
             }
         }
+
+        GameStateHash = GameState.GenerateHash();
     }
 }

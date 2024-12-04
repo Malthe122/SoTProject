@@ -1,4 +1,6 @@
 using System.Diagnostics;
+using System.IO.Compression;
+using System.Security.Cryptography.X509Certificates;
 using ScriptsOfTribute;
 using ScriptsOfTribute.AI;
 using ScriptsOfTribute.Board;
@@ -6,6 +8,20 @@ using ScriptsOfTribute.Serializers;
 
 public class Aau903Bot : AI
 {
+
+    private Node? rootNode;
+    /// <summary>
+    /// TODO refactor this from being static. It works with only 1 aau-bot playing at a time. Also would work with more, but then they would share information between them,
+    /// and this might not be allowed according to competetion, but we would have to figure that out. But in that case, we should not reset it when a game begins, like we do now
+    /// </summary>
+    public static Dictionary<int, List<Node>> NodeGameStateHashMap = new Dictionary<int, List<Node>>();
+
+    public override void PregamePrepare()
+    {
+        base.PregamePrepare();
+        rootNode = null;
+        NodeGameStateHashMap = new Dictionary<int, List<Node>>(); //TODO move this to here
+    }
     public override void GameEnd(EndGameState state, FullGameState? finalBoardState)
     {
         Console.WriteLine("@@@ Game ended because of " + state.Reason + " @@@");
@@ -34,7 +50,8 @@ public class Aau903Bot : AI
 
             ulong randomSeed = (ulong)Utility.Rng.Next();
             var seededGameState = gameState.ToSeededGameState(randomSeed);
-            var rootNode = new Node(seededGameState, null, possibleMoves, null, 0);
+            
+            var rootNode = Utility.FindOrBuildNode(seededGameState, null, possibleMoves, 0);
 
             int iterationCounter = 0;
 
@@ -56,16 +73,17 @@ public class Aau903Bot : AI
                 }
             }
 
-            if (rootNode.ChildNodes.Count == 0) {
+            if (rootNode.MoveToChildNode.Count == 0) {
                 // Console.WriteLine("NO TIME FOR CALCULATING MOVE@@@@@@@@@@@@@@@");
                 return possibleMoves[0];
             }
 
-            var bestChildNode = rootNode.ChildNodes
-                .OrderByDescending(child => (child.TotalScore / child.VisitCount))
-                .FirstOrDefault();
+            var bestMove = rootNode.MoveToChildNode
+                .OrderByDescending(moveNodePair => (moveNodePair.Value.TotalScore / moveNodePair.Value.VisitCount))
+                .FirstOrDefault()
+                .Key;
 
-            return bestChildNode.AppliedMove;
+            return bestMove;
         }
         catch (Exception e)
         {
@@ -82,6 +100,23 @@ public class Aau903Bot : AI
         }
     }
 
+    private void CheckMoveLegality(Move moveToCheck, Node rootNode, GameState officialGameState, List<Move> officialPossiblemoves)
+    {
+        if(!officialPossiblemoves.Any(move => move.IsIdentical(moveToCheck))){
+                Console.WriteLine("----- ABOUT TO PERFORM ILLEGAL MOVE -----");
+                Console.WriteLine("Our state:");
+                rootNode?.GameState.Log();
+                Console.WriteLine("Actual state:");
+                officialGameState.ToSeededGameState((ulong)Utility.Rng.Next()).Log();
+                Console.WriteLine("@@@@ Trying to play move:");
+                moveToCheck.Log();
+                Console.WriteLine("@@@@@@@ But available moves were:");
+                officialPossiblemoves.ForEach(m => m.Log());
+                Console.WriteLine("@@@@@@ But we thought moves were:");
+                rootNode.PossibleMoves.ForEach(m => m.Log());
+            }
+    }
+
     private int EstimateRemainingMovesInTurn(GameState inputState, List<Move> inputPossibleMoves){
         return EstimateRemainingMovesInTurn(inputState.ToSeededGameState((ulong)Utility.Rng.Next()), inputPossibleMoves);
     }
@@ -89,15 +124,17 @@ public class Aau903Bot : AI
     private int EstimateRemainingMovesInTurn(SeededGameState inputState, List<Move> inputPossibleMoves)
     {
 
-        if (inputPossibleMoves.Count == 1 && inputPossibleMoves[0].Command == CommandEnum.END_TURN) {
+        var possibleMoves = new List<Move>(inputPossibleMoves);
+
+        if (possibleMoves.Count == 1 && possibleMoves[0].Command == CommandEnum.END_TURN) {
             return 0;
         }
 
-        inputPossibleMoves.RemoveAll(x => x.Command == CommandEnum.END_TURN);
+        possibleMoves.RemoveAll(x => x.Command == CommandEnum.END_TURN);
 
         int result = 1;
         SeededGameState currentState = inputState;
-        List<Move> currentPossibleMoves = inputPossibleMoves;
+        List<Move> currentPossibleMoves = possibleMoves;
 
         while(currentPossibleMoves.Count > 0) {
 
