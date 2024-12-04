@@ -8,6 +8,7 @@ public class MCTSHyperparameters
     /// This variable is an upper threshold, telling how much time we need to have left for our move and still complete an iteration. This is to avoid time checking, saying that we did not exceed
     /// time usage, but then we exceed it during an iteration. If complete rollouts are completely or partly replaced by Heuristic scoring, this can be lower while with full rollouts it should be big
     /// </summary>
+    public int ITERATIONS { get; set; }
     public double ITERATION_COMPLETION_MILLISECONDS_BUFFER { get; set; }
     public double UCT_EXPLORATION_CONSTANT { get; set; } // sqrt 2
     /// <summary>
@@ -15,6 +16,7 @@ public class MCTSHyperparameters
     /// Idea is that setting this to true will first of all be closer to a realistic simulation and also it should end the game quicker, making the simulation
     /// faster than if agents were allowed to spend moves ending turns without really doing anything in the game
     /// </summary>
+    public int NUMBER_OF_ROLLOUTS { get; set; }
     public bool FORCE_DELAY_TURN_END_IN_ROLLOUT { get; set; }
     public bool INCLUDE_PLAY_MOVE_CHANCE_NODES { get; set; }
     public bool INCLUDE_END_TURN_CHANCE_NODES { get; set; }
@@ -26,11 +28,16 @@ public class MCTSHyperparameters
 
     public MCTSHyperparameters(string filePath = "environment")
     {
-        Settings.LoadEnvFile(filePath);
-        var config = Settings.GetConfiguration();
+        var envVariables = Settings.LoadEnvFile(filePath);
 
+        var builder = new ConfigurationBuilder()
+            .AddInMemoryCollection(envVariables);
+        var config = builder.Build();
+
+        ITERATIONS = config.GetValue("ITERATIONS", 0);
         ITERATION_COMPLETION_MILLISECONDS_BUFFER = config.GetValue("ITERATION_COMPLETION_MILLISECONDS_BUFFER", 100.0);
         UCT_EXPLORATION_CONSTANT = config.GetValue("UCT_EXPLORATION_CONSTANT", 1.41421356237);
+        NUMBER_OF_ROLLOUTS = config.GetValue("NUMBER_OF_ROLLOUTS", 1);
         FORCE_DELAY_TURN_END_IN_ROLLOUT = config.GetValue("FORCE_DELAY_TURN_END_IN_ROLLOUT", true);
         INCLUDE_PLAY_MOVE_CHANCE_NODES = config.GetValue("INCLUDE_PLAY_MOVE_CHANCE_NODES", false);
         INCLUDE_END_TURN_CHANCE_NODES = config.GetValue("INCLUDE_END_TURN_CHANCE_NODES", false);
@@ -40,8 +47,10 @@ public class MCTSHyperparameters
         REUSE_TREE = config.GetValue("REUSE_TREE", true);
 
         Console.WriteLine("Loaded settings:");
+        Console.WriteLine($"ITERATIONS: {ITERATIONS}");
         Console.WriteLine($"ITERATION_COMPLETION_MILLISECONDS_BUFFER: {ITERATION_COMPLETION_MILLISECONDS_BUFFER}");
         Console.WriteLine($"UCT_EXPLORATION_CONSTANT: {UCT_EXPLORATION_CONSTANT}");
+        Console.WriteLine($"NUMBER_OF_ROLLOUTS: {NUMBER_OF_ROLLOUTS}");
         Console.WriteLine($"FORCE_DELAY_TURN_END_IN_ROLLOUT: {FORCE_DELAY_TURN_END_IN_ROLLOUT}");
         Console.WriteLine($"INCLUDE_PLAY_MOVE_CHANCE_NODES: {INCLUDE_PLAY_MOVE_CHANCE_NODES}");
         Console.WriteLine($"INCLUDE_END_TURN_CHANCE_NODES: {INCLUDE_END_TURN_CHANCE_NODES}");
@@ -54,13 +63,15 @@ public class MCTSHyperparameters
 
 public class Settings
 {
-    public static void LoadEnvFile(string filePath)
+    public static Dictionary<string, string> LoadEnvFile(string filePath)
     {
         if (!File.Exists(filePath))
         {
             Console.Error.WriteLine($"Env file '{filePath}' not found");
-            return;
+            return new Dictionary<string, string>();
         }
+
+        var envVariables = new Dictionary<string, string>();
 
         foreach (var line in File.ReadAllLines(filePath))
         {
@@ -74,9 +85,12 @@ public class Settings
             var key = parts[0].Trim();
             var value = parts[1].Trim().Trim('"');
 
-            Environment.SetEnvironmentVariable(key, value);
+            envVariables[key] = value;
         }
+
+        return envVariables;
     }
+
 
     public static void SaveEnvFile(string filePath, Dictionary<string, string> values)
     {

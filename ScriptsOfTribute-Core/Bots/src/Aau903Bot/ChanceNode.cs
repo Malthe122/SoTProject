@@ -14,7 +14,7 @@ public class ChanceNode : Node
     }
 
     public override void Visit(out double score)
-    {
+    {   
         (var newState, var newMoves) = Parent.GameState.ApplyMove(AppliedMove, (ulong)Utility.Rng.Next());
 
         var child = Utility.FindOrBuildNode(newState, this, newMoves, Params);

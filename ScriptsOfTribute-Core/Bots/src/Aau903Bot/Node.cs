@@ -157,34 +157,37 @@ public class Node
         var rolloutPlayerId = rolloutGameState.CurrentPlayer.PlayerID;
         var rolloutPossibleMoves = new List<Move>(PossibleMoves);
 
-        // TODO also apply the playing obvious moves in here
-        while (rolloutGameState.GameEndState == null)
+        for (int i = 0; i < Params.NUMBER_OF_ROLLOUTS; i++)
         {
-            // Choosing here to remove the "end turn" move before its the last move. This is done to make the random plays a bit more realistic
-            if (Params.FORCE_DELAY_TURN_END_IN_ROLLOUT)
+            // TODO also apply the playing obvious moves in here
+            while (rolloutGameState.GameEndState == null)
             {
-                if (rolloutPossibleMoves.Count > 1)
+                // Choosing here to remove the "end turn" move before its the last move. This is done to make the random plays a bit more realistic
+                if (Params.FORCE_DELAY_TURN_END_IN_ROLLOUT)
                 {
-                    rolloutPossibleMoves.RemoveAll(move => move.Command == CommandEnum.END_TURN);
+                    if (rolloutPossibleMoves.Count > 1)
+                    {
+                        rolloutPossibleMoves.RemoveAll(move => move.Command == CommandEnum.END_TURN);
+                    }
                 }
-            }
-            var chosenIndex = Utility.Rng.Next(rolloutPossibleMoves.Count);
-            var moveToMake = rolloutPossibleMoves[chosenIndex];
+                var chosenIndex = Utility.Rng.Next(rolloutPossibleMoves.Count);
+                var moveToMake = rolloutPossibleMoves[chosenIndex];
 
-            var (newGameState, newPossibleMoves) = rolloutGameState.ApplyMove(moveToMake);
-            rolloutGameState = newGameState;
-            rolloutPossibleMoves = newPossibleMoves;
-        }
-
-        if (rolloutGameState.GameEndState.Winner != PlayerEnum.NO_PLAYER_SELECTED)
-        { //TODO here i assume that winner = NO_PLAYER_SELECTED is how they show a draw. Need to confirm this
-            if (rolloutGameState.GameEndState.Winner == rolloutPlayerId)
-            {
-                result += 1;
+                var (newGameState, newPossibleMoves) = rolloutGameState.ApplyMove(moveToMake);
+                rolloutGameState = newGameState;
+                rolloutPossibleMoves = newPossibleMoves;
             }
-            else
-            {
-                result -= 1;
+
+            if (rolloutGameState.GameEndState.Winner != PlayerEnum.NO_PLAYER_SELECTED)
+            { //TODO here i assume that winner = NO_PLAYER_SELECTED is how they show a draw. Need to confirm this
+                if (rolloutGameState.GameEndState.Winner == rolloutPlayerId)
+                {
+                    result += 1;
+                }
+                else
+                {
+                    result -= 1;
+                }
             }
         }
 
