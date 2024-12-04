@@ -18,9 +18,11 @@ public class MCTSHyperparameters
     public bool FORCE_DELAY_TURN_END_IN_ROLLOUT { get; set; }
     public bool INCLUDE_PLAY_MOVE_CHANCE_NODES { get; set; }
     public bool INCLUDE_END_TURN_CHANCE_NODES { get; set; }
-    public int CHOSEN_MAX_EXPANSION_DEPTH { get; set; }
     public ScoringMethod CHOSEN_SCORING_METHOD { get; set; }
     public int ROLLOUT_TURNS_BEFORE_HEURSISTIC { get; set; }
+    public bool EQUAL_CHANCE_NODE_DISTRIBUTION { get; set; }
+    public bool REUSE_TREE { get; set; }
+
 
     public MCTSHyperparameters(string filePath = "environment")
     {
@@ -32,20 +34,21 @@ public class MCTSHyperparameters
         FORCE_DELAY_TURN_END_IN_ROLLOUT = config.GetValue("FORCE_DELAY_TURN_END_IN_ROLLOUT", true);
         INCLUDE_PLAY_MOVE_CHANCE_NODES = config.GetValue("INCLUDE_PLAY_MOVE_CHANCE_NODES", false);
         INCLUDE_END_TURN_CHANCE_NODES = config.GetValue("INCLUDE_END_TURN_CHANCE_NODES", false);
-        CHOSEN_MAX_EXPANSION_DEPTH = config.GetValue("CHOSEN_MAX_EXPANSION_DEPTH", 99999);
-        var chosenScoringMethodString = config.GetValue("CHOSEN_SCORING_METHOD", "Rollout");
-        CHOSEN_SCORING_METHOD = Enum.Parse<ScoringMethod>(chosenScoringMethodString!);
+        CHOSEN_SCORING_METHOD = Enum.Parse<ScoringMethod>(config.GetValue("CHOSEN_SCORING_METHOD", "Rollout")!);
         ROLLOUT_TURNS_BEFORE_HEURSISTIC = config.GetValue("ROLLOUT_TURNS_BEFORE_HEURSISTIC", 3);
+        EQUAL_CHANCE_NODE_DISTRIBUTION = config.GetValue("EQUAL_CHANCE_NODE_DISTRIBUTION", true);
+        REUSE_TREE = config.GetValue("REUSE_TREE", true);
 
+        Console.WriteLine("Loaded settings:");
         Console.WriteLine($"ITERATION_COMPLETION_MILLISECONDS_BUFFER: {ITERATION_COMPLETION_MILLISECONDS_BUFFER}");
         Console.WriteLine($"UCT_EXPLORATION_CONSTANT: {UCT_EXPLORATION_CONSTANT}");
         Console.WriteLine($"FORCE_DELAY_TURN_END_IN_ROLLOUT: {FORCE_DELAY_TURN_END_IN_ROLLOUT}");
         Console.WriteLine($"INCLUDE_PLAY_MOVE_CHANCE_NODES: {INCLUDE_PLAY_MOVE_CHANCE_NODES}");
         Console.WriteLine($"INCLUDE_END_TURN_CHANCE_NODES: {INCLUDE_END_TURN_CHANCE_NODES}");
-        Console.WriteLine($"CHOSEN_MAX_EXPANSION_DEPTH: {CHOSEN_MAX_EXPANSION_DEPTH}");
         Console.WriteLine($"CHOSEN_SCORING_METHOD: {CHOSEN_SCORING_METHOD}");
         Console.WriteLine($"ROLLOUT_TURNS_BEFORE_HEURSISTIC: {ROLLOUT_TURNS_BEFORE_HEURSISTIC}");
-        Console.WriteLine("---");
+        Console.WriteLine($"EQUAL_CHANCE_NODE_DISTRIBUTION: {EQUAL_CHANCE_NODE_DISTRIBUTION}");
+        Console.WriteLine($"REUSE_TREE: {REUSE_TREE}");
     }
 }
 

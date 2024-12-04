@@ -4,7 +4,7 @@ namespace Aau903Bot;
 
 public class Chromosome : ChromosomeBase
 {
-    public Chromosome() : base(8)
+    public Chromosome() : base(9)
     {
         ReplaceGene(0, GenerateGene(0));
         ReplaceGene(1, GenerateGene(1));
@@ -14,6 +14,7 @@ public class Chromosome : ChromosomeBase
         ReplaceGene(5, GenerateGene(5));
         ReplaceGene(6, GenerateGene(6));
         ReplaceGene(7, GenerateGene(7));
+        ReplaceGene(8, GenerateGene(8));
     }
 
     public double ITERATION_COMPLETION_MILLISECONDS_BUFFER
@@ -41,19 +42,24 @@ public class Chromosome : ChromosomeBase
         get { return (bool)GetGene(4).Value; }
     }
 
-    public int CHOSEN_MAX_EXPANSION_DEPTH
-    {
-        get { return (int)GetGene(5).Value; }
-    }
-
     public string CHOSEN_SCORING_METHOD
     {
-        get { return (string)GetGene(6).Value; }
+        get { return (string)GetGene(5).Value; }
     }
 
     public int ROLLOUT_TURNS_BEFORE_HEURSISTIC
     {
-        get { return (int)GetGene(7).Value; }
+        get { return (int)GetGene(6).Value; }
+    }
+
+    public bool EQUAL_CHANCE_NODE_DISTRIBUTION
+    {
+        get { return (bool)GetGene(7).Value; }
+    }
+
+    public bool REUSE_TREE
+    {
+        get { return (bool)GetGene(8).Value; }
     }
 
     public override Gene GenerateGene(int geneIndex)
@@ -76,16 +82,16 @@ public class Chromosome : ChromosomeBase
             case 4:
                 return new Gene(RandomizationProvider.Current.GetInt(0, 2) == 1);
             case 5:
-                int gene5Min = 1;
-                int gene5Max = 10; // Maybe this has to be increased
-                return new Gene(RandomizationProvider.Current.GetInt(gene5Min, gene5Max + 1));
-            case 6:
                 var scoringMethodTypes = new List<string> { "Rollout", "Heuristic", "RolloutTurnsCompletionsThenHeuristic" };
                 return new Gene(scoringMethodTypes[RandomizationProvider.Current.GetInt(0, scoringMethodTypes.Count)]);
-            case 7:
+            case 6:
                 var gene7Min = 1;
                 var gene7Max = 5;
                 return new Gene(RandomizationProvider.Current.GetInt(gene7Min, gene7Max + 1));
+            case 7:
+                return new Gene(RandomizationProvider.Current.GetInt(0, 2) == 1);
+            case 8:
+                return new Gene(RandomizationProvider.Current.GetInt(0, 2) == 1);
             default:
                 throw new ArgumentOutOfRangeException(nameof(geneIndex), "Invalid gene index.");
         }

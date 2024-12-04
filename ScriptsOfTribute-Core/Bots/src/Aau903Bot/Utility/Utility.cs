@@ -94,80 +94,6 @@ public static class Utility
         PatronId.RED_EAGLE
     };
 
-    public static int GenerateHash(this SeededGameState state, MCTSHyperparameters parameters)
-    {
-        int handHash = 0;
-        foreach (var currCard in state.CurrentPlayer.Hand)
-        {
-            handHash *= 1 * (int)currCard.CommonId;
-        }
-
-        int tavernHash = 0;
-        foreach (var currCard in state.TavernAvailableCards)
-        {
-            tavernHash *= 2 * ((int)currCard.CommonId);
-        }
-        foreach (var currCard in state.TavernCards)
-        {
-            tavernHash *= 3 * ((int)currCard.CommonId);
-        }
-
-        int cooldownHash = 0;
-        foreach (var currCard in state.CurrentPlayer.CooldownPile)
-        {
-            cooldownHash *= 4 * ((int)currCard.CommonId);
-        }
-        foreach (var currCard in state.EnemyPlayer.CooldownPile)
-        {
-            cooldownHash *= 5 * ((int)currCard.CommonId);
-        }
-
-        int upcomingDrawsHash = 0;
-        foreach (var currCard in state.CurrentPlayer.KnownUpcomingDraws)
-        {
-            upcomingDrawsHash *= 6 * ((int)currCard.CommonId);
-        }
-        foreach (var currCard in state.EnemyPlayer.KnownUpcomingDraws)
-        {
-            cooldownHash *= 7 * ((int)currCard.CommonId);
-        }
-
-        int drawPileHash = 0;
-        foreach (var currCard in state.CurrentPlayer.DrawPile)
-        {
-            drawPileHash *= 8 * ((int)currCard.CommonId);
-        }
-        foreach (var currCard in state.EnemyPlayer.DrawPile)
-        {
-            drawPileHash *= 9 * ((int)currCard.CommonId);
-        }
-
-        int commingEffectsHash = 0; //TODO
-
-        int resourceHash = state.CurrentPlayer.Coins * 10 + state.CurrentPlayer.Prestige * 11 + state.CurrentPlayer.Power * 12 + state.EnemyPlayer.Prestige * 13;
-
-        int agentHash = 0;
-
-        foreach (var currAgent in state.CurrentPlayer.Agents)
-        {
-            agentHash *= 14 * (currAgent.Activated ? 2 : 3);
-            agentHash *= 15 * currAgent.CurrentHp;
-        }
-
-        foreach (var currAgent in state.EnemyPlayer.Agents)
-        {
-            agentHash *= 16 * (currAgent.Activated ? 2 : 3);
-            agentHash *= 17 * currAgent.CurrentHp;
-        }
-
-        // TODO patron hash
-        int patronHash = 0;
-        // TODO pending choice hash
-        int pendingChoiceHash = 0;
-
-        return handHash + tavernHash + cooldownHash + upcomingDrawsHash + drawPileHash + commingEffectsHash + resourceHash + agentHash + patronHash + pendingChoiceHash;
-    }
-
     /// <summary>
     /// Is not taking Combo effects into account at the moment, but here we should also not look at whether the played card has an effect, but also whether there is a combo cards already played that
     /// will be activated by playing said card
@@ -191,61 +117,15 @@ public static class Utility
             case CommandEnum.MAKE_CHOICE:
                 return false; //TODO we might add some check here too
             case CommandEnum.END_TURN:
-                return false; //TODO we consider this false for now, but it should be considered true since the opponent will draw their cards which is random
+                return false;
             default:
                 return false;
         }
     }
 
-    public static void Log(this SeededGameState gameState)
-    {
-        Console.WriteLine("State:");
-        Console.WriteLine("You:");
-        gameState.CurrentPlayer.Log();
-        Console.WriteLine("Opponent:");
-        gameState.EnemyPlayer.Log();
-        Console.WriteLine("Tavern:");
-        Console.WriteLine("Cards in tavern: " + gameState.TavernAvailableCards.Count);
-    }
-
-    public static void Log(this SerializedPlayer player)
-    {
-        Console.WriteLine("Coins: " + player.Coins);
-        Console.WriteLine("Power: " + player.Power);
-        Console.WriteLine("Prestige: " + player.Prestige);
-        Console.WriteLine("Cards in cooldown: " + player.CooldownPile.Count);
-    }
-
-    public static void Log(this Move move)
-    {
-        switch (move.Command)
-        {
-            case CommandEnum.PLAY_CARD:
-                Console.WriteLine("Play card: " + (move as SimpleCardMove).Card.Name);
-                break;
-            case CommandEnum.ACTIVATE_AGENT:
-                Console.WriteLine("Activating agent: " + (move as SimpleCardMove).Card.Name);
-                break;
-            case CommandEnum.ATTACK:
-                Console.WriteLine("Attacking: " + (move as SimpleCardMove).Card.Name);
-                break;
-            case CommandEnum.BUY_CARD:
-                Console.WriteLine("Buying card: " + (move as SimpleCardMove).Card.Name);
-                break;
-            case CommandEnum.CALL_PATRON:
-                Console.WriteLine("Calling patron: " + (move as SimplePatronMove).PatronId);
-                break;
-            case CommandEnum.MAKE_CHOICE:
-                Console.WriteLine("Making choice some choice");
-                break;
-            case CommandEnum.END_TURN:
-                Console.WriteLine("Ending turn");
-                break;
-        }
-    }
-
     public static double UseBestMCTS3Heuristic(SeededGameState gameState)
     {
+
         GameStrategy strategy;
 
         var currentPlayer = gameState.CurrentPlayer;
@@ -267,6 +147,33 @@ public static class Utility
         return strategy.Heuristic(gameState);
     }
 
+    public static Node FindOrBuildNode(SeededGameState seededGameState, Node parent, List<Move> possibleMoves, MCTSHyperparameters parameters)
+    {
+        var result = new Node(seededGameState, parent, possibleMoves, parameters);
+
+        if (result.Params.REUSE_TREE)
+        {
+
+            if (Aau903Bot.NodeGameStateHashMap.ContainsKey(result.GameStateHash))
+            {
+                var equalNode = Aau903Bot.NodeGameStateHashMap[result.GameStateHash].SingleOrDefault(node => node.GameState.IsIdentical(result.GameState));
+                if (equalNode != null)
+                {
+                    result = equalNode;
+                }
+                else
+                {
+                    Aau903Bot.NodeGameStateHashMap[result.GameStateHash].Add(result);
+                }
+            }
+            else
+            {
+                Aau903Bot.NodeGameStateHashMap.Add(result.GameStateHash, new List<Node>() { result });
+            }
+        }
+
+        return result;
+    }
     public static double ScoreEndOfGame(SeededGameState gameState)
     {
         double score = 1.0;
