@@ -43,28 +43,24 @@ public class Aau903Bot : AI
                 return possibleMoves[0];
             }
 
-            var moveTimer = new Stopwatch();
-            moveTimer.Start();
-
-            int estimatedRemainingMovesInTurn = EstimateRemainingMovesInTurn(gameState, possibleMoves);
-            double millisecondsForMove = (remainingTime.TotalMilliseconds / estimatedRemainingMovesInTurn) - Params.ITERATION_COMPLETION_MILLISECONDS_BUFFER;
-
             ulong randomSeed = (ulong)Utility.Rng.Next();
             var seededGameState = gameState.ToSeededGameState(randomSeed);
 
             var rootNode = Utility.FindOrBuildNode(seededGameState, null, possibleMoves, Params);
 
-            int iterationCounter = 0;
-
             if (Params.ITERATIONS > 0)
             {
-                while(iterationCounter <= Params.ITERATIONS){
+                for (int i = 0; i < Params.ITERATIONS; i++)
+                {
                     rootNode.Visit(out double score);
-                    iterationCounter++;
                 }
             }
             else
             {
+                var moveTimer = new Stopwatch();
+                moveTimer.Start();
+                int estimatedRemainingMovesInTurn = EstimateRemainingMovesInTurn(gameState, possibleMoves);
+                double millisecondsForMove = (remainingTime.TotalMilliseconds / estimatedRemainingMovesInTurn) - Params.ITERATION_COMPLETION_MILLISECONDS_BUFFER;
                 while (moveTimer.ElapsedMilliseconds < millisecondsForMove)
                 {
                     // var iterationTimer = new Stopwatch();
@@ -73,7 +69,7 @@ public class Aau903Bot : AI
                     rootNode.Visit(out double score);
                     // iterationTimer.Stop();
                     // Console.WriteLine("Iteration took: " + iterationTimer.ElapsedMilliseconds + " milliseconds");
-                }                
+                }
             }
 
             if (rootNode.MoveToChildNode.Count == 0)
