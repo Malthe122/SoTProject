@@ -1,7 +1,7 @@
 #!/bin/bash
 
 server="$1"
-remote_path="/ceph/project/sot/"
+remote_path="/home/arch/"
 tar_file="sot.tar.gz"
 docker_file="sot.tar"
 
