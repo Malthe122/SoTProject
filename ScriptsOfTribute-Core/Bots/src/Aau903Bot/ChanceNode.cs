@@ -8,7 +8,7 @@ public class ChanceNode : Node
 {
     public Move AppliedMove;
     private Dictionary<int, List<Node>> knownPossibleOutcomes;
-    public ChanceNode(SeededGameState gameState, Node parent, Move appliedMove, MCTSHyperparameters parameters) : base(gameState, parent, new List<Move>(), parameters)
+    public ChanceNode(SeededGameState gameState, Node parent, Move appliedMove, Aau903Bot bot) : base(gameState, parent, new List<Move>(), bot)
     {
         AppliedMove = appliedMove;
         knownPossibleOutcomes = new Dictionary<int, List<Node>>();
@@ -18,9 +18,9 @@ public class ChanceNode : Node
     {   
         (var newState, var newMoves) = Parent.GameState.ApplyMove(AppliedMove, (ulong)Utility.Rng.Next());
 
-        var child = Utility.FindOrBuildNode(newState, this, newMoves, Params);
+        var child = Utility.FindOrBuildNode(newState, this, newMoves, Bot);
 
-        if (Params.EQUAL_CHANCE_NODE_DISTRIBUTION)
+        if (Bot.Params.EQUAL_CHANCE_NODE_DISTRIBUTION)
         {
             Node? existingChild = null;
             if (knownPossibleOutcomes.Keys.Contains(child.GameStateHash)){

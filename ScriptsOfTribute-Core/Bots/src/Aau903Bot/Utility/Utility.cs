@@ -147,28 +147,28 @@ public static class Utility
         return strategy.Heuristic(gameState);
     }
 
-    public static Node FindOrBuildNode(SeededGameState seededGameState, Node parent, List<Move> possibleMoves, MCTSHyperparameters parameters)
+    public static Node FindOrBuildNode(SeededGameState seededGameState, Node parent, List<Move> possibleMoves, Aau903Bot bot)
     {
-        var result = new Node(seededGameState, parent, possibleMoves, parameters);
+        var result = new Node(seededGameState, parent, possibleMoves, bot);
 
-        if (result.Params.REUSE_TREE)
+        if (bot.Params.REUSE_TREE)
         {
 
-            if (Aau903Bot.NodeGameStateHashMap.ContainsKey(result.GameStateHash))
+            if (bot.NodeGameStateHashMap.ContainsKey(result.GameStateHash))
             {
-                var equalNode = Aau903Bot.NodeGameStateHashMap[result.GameStateHash].SingleOrDefault(node => node.GameState.IsIdentical(result.GameState));
+                var equalNode = bot.NodeGameStateHashMap[result.GameStateHash].SingleOrDefault(node => node.GameState.IsIdentical(result.GameState));
                 if (equalNode != null)
                 {
                     result = equalNode;
                 }
                 else
                 {
-                    Aau903Bot.NodeGameStateHashMap[result.GameStateHash].Add(result);
+                    bot.NodeGameStateHashMap[result.GameStateHash].Add(result);
                 }
             }
             else
             {
-                Aau903Bot.NodeGameStateHashMap.Add(result.GameStateHash, new List<Node>() { result });
+                bot.NodeGameStateHashMap.Add(result.GameStateHash, new List<Node>() { result });
             }
         }
 

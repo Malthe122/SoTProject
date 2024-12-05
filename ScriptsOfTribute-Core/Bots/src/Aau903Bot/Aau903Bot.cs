@@ -9,18 +9,14 @@ namespace Aau903Bot;
 public class Aau903Bot : AI
 {
     private Node? rootNode;
-    /// <summary>
-    /// TODO refactor this from being static. It works with only 1 aau-bot playing at a time. Also would work with more, but then they would share information between them,
-    /// and this might not be allowed according to competetion, but we would have to figure that out. But in that case, we should not reset it when a game begins, like we do now
-    /// </summary>
-    public static Dictionary<int, List<Node>> NodeGameStateHashMap = new Dictionary<int, List<Node>>();
-    private MCTSHyperparameters Params = new MCTSHyperparameters();
+    public Dictionary<int, List<Node>> NodeGameStateHashMap = new Dictionary<int, List<Node>>();
+    public MCTSHyperparameters Params = new MCTSHyperparameters();
 
     public override void PregamePrepare()
     {
         base.PregamePrepare();
         rootNode = null;
-        NodeGameStateHashMap = new Dictionary<int, List<Node>>(); //TODO move this to here
+        NodeGameStateHashMap = new Dictionary<int, List<Node>>();
     }
     public override void GameEnd(EndGameState state, FullGameState? finalBoardState)
     {
@@ -46,7 +42,7 @@ public class Aau903Bot : AI
             ulong randomSeed = (ulong)Utility.Rng.Next();
             var seededGameState = gameState.ToSeededGameState(randomSeed);
 
-            var rootNode = Utility.FindOrBuildNode(seededGameState, null, possibleMoves, Params);
+            var rootNode = Utility.FindOrBuildNode(seededGameState, null, possibleMoves, this);
 
             if (Params.ITERATIONS > 0)
             {
