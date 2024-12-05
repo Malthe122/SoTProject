@@ -17,16 +17,16 @@ public class Node
     public int GameStateHash { get; private set; }
     public SeededGameState GameState { get; private set; }
     public List<Move> PossibleMoves;
-    internal MCTSHyperparameters Params;
+    internal Aau903Bot Bot;
 
-    public Node(SeededGameState gameState, Node parent, List<Move> possibleMoves, MCTSHyperparameters parameters)
+    public Node(SeededGameState gameState, Node parent, List<Move> possibleMoves, Aau903Bot bot)
     {
         GameState = gameState;
         Parent = parent;
         PossibleMoves = possibleMoves;
         MoveToChildNode = new Dictionary<Move, Node>();
         ApplyAllDeterministicAndObviousMoves();
-        Params = parameters;
+        Bot = bot;
     }
 
     public virtual void Visit(out double score)
@@ -72,10 +72,10 @@ public class Node
         {
             if (!MoveToChildNode.ContainsKey(move))
             {
-                if ((Params.INCLUDE_PLAY_MOVE_CHANCE_NODES && move.IsNonDeterministic())
-                    || Params.INCLUDE_END_TURN_CHANCE_NODES && move.Command == CommandEnum.END_TURN)
+                if ((Bot.Params.INCLUDE_PLAY_MOVE_CHANCE_NODES && move.IsNonDeterministic())
+                    || Bot.Params.INCLUDE_END_TURN_CHANCE_NODES && move.Command == CommandEnum.END_TURN)
                 {
-                    var newChild = new ChanceNode(GameState, this, move, Params);
+                    var newChild = new ChanceNode(GameState, this, move, Bot);
                     MoveToChildNode.Add(move, newChild);
                     return newChild;
                 }
@@ -83,7 +83,7 @@ public class Node
                 {
                     ulong randomSeed = (ulong)Utility.Rng.Next();
                     var (newGameState, newPossibleMoves) = GameState.ApplyMove(move, randomSeed);
-                    var newChild = Utility.FindOrBuildNode(newGameState, this, newPossibleMoves, Params);
+                    var newChild = Utility.FindOrBuildNode(newGameState, this, newPossibleMoves, Bot);
                     MoveToChildNode.Add(move, newChild);
                     return newChild;
                 }
@@ -95,16 +95,16 @@ public class Node
 
     private double Score()
     {
-        switch (Params.CHOSEN_SCORING_METHOD)
+        switch (Bot.Params.CHOSEN_SCORING_METHOD)
         {
             case ScoringMethod.Rollout:
                 return Rollout();
             case ScoringMethod.Heuristic:
                 return Utility.UseBestMCTS3Heuristic(GameState);
             case ScoringMethod.RolloutTurnsCompletionsThenHeuristic:
-                return RolloutTillTurnsEndThenHeuristic(Params.ROLLOUT_TURNS_BEFORE_HEURSISTIC);
+                return RolloutTillTurnsEndThenHeuristic(Bot.Params.ROLLOUT_TURNS_BEFORE_HEURSISTIC);
             default:
-                throw new NotImplementedException("Tried to applied non-implemented scoring method: " + Params.CHOSEN_SCORING_METHOD);
+                throw new NotImplementedException("Tried to applied non-implemented scoring method: " + Bot.Params.CHOSEN_SCORING_METHOD);
         }
     }
 
@@ -117,7 +117,7 @@ public class Node
 
         while (rolloutTurnsCompleted < turnsToComplete && rolloutGameState.GameEndState == null)
         {
-            if (Params.FORCE_DELAY_TURN_END_IN_ROLLOUT)
+            if (Bot.Params.FORCE_DELAY_TURN_END_IN_ROLLOUT)
             {
                 if (rolloutPossibleMoves.Count > 1)
                 {
@@ -157,13 +157,13 @@ public class Node
         var rolloutPlayerId = rolloutGameState.CurrentPlayer.PlayerID;
         var rolloutPossibleMoves = new List<Move>(PossibleMoves);
 
-        for (int i = 0; i < Params.NUMBER_OF_ROLLOUTS; i++)
+        for (int i = 0; i < Bot.Params.NUMBER_OF_ROLLOUTS; i++)
         {
             // TODO also apply the playing obvious moves in here
             while (rolloutGameState.GameEndState == null)
             {
                 // Choosing here to remove the "end turn" move before its the last move. This is done to make the random plays a bit more realistic
-                if (Params.FORCE_DELAY_TURN_END_IN_ROLLOUT)
+                if (Bot.Params.FORCE_DELAY_TURN_END_IN_ROLLOUT)
                 {
                     if (rolloutPossibleMoves.Count > 1)
                     {
@@ -214,11 +214,11 @@ public class Node
 
     public double GetConfidenceScore()
     {
-        switch (Params.CHOSEN_EVALUATION_METHOD)
+        switch (Bot.Params.CHOSEN_EVALUATION_METHOD)
         {
             case EvaluationMethod.UCT:
                 double exploitation = TotalScore / VisitCount;
-                double exploration = Params.UCT_EXPLORATION_CONSTANT * Math.Sqrt(Math.Log(Parent.VisitCount) / VisitCount);
+                double exploration = Bot.Params.UCT_EXPLORATION_CONSTANT * Math.Sqrt(Math.Log(Parent.VisitCount) / VisitCount);
                 return exploitation + exploration;
             case EvaluationMethod.Custom:
                 return TotalScore - VisitCount;
