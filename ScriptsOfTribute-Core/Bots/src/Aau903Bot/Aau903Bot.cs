@@ -1,20 +1,20 @@
 using System.Diagnostics;
-using System.IO.Compression;
-using System.Security.Cryptography.X509Certificates;
 using ScriptsOfTribute;
 using ScriptsOfTribute.AI;
 using ScriptsOfTribute.Board;
 using ScriptsOfTribute.Serializers;
 
+namespace Aau903Bot;
+
 public class Aau903Bot : AI
 {
-
     private Node? rootNode;
     /// <summary>
     /// TODO refactor this from being static. It works with only 1 aau-bot playing at a time. Also would work with more, but then they would share information between them,
     /// and this might not be allowed according to competetion, but we would have to figure that out. But in that case, we should not reset it when a game begins, like we do now
     /// </summary>
     public static Dictionary<int, List<Node>> NodeGameStateHashMap = new Dictionary<int, List<Node>>();
+    private MCTSHyperparameters Params = new MCTSHyperparameters();
 
     public override void PregamePrepare()
     {
@@ -38,24 +38,29 @@ public class Aau903Bot : AI
                 return obviousMove;
             }
 
-            if(possibleMoves.Count == 1){
+            if (possibleMoves.Count == 1)
+            {
                 return possibleMoves[0];
             }
 
-            var moveTimer = new Stopwatch();
-            moveTimer.Start();
-
-            int estimatedRemainingMovesInTurn = EstimateRemainingMovesInTurn(gameState, possibleMoves);
-            double millisecondsForMove = (remainingTime.TotalMilliseconds / estimatedRemainingMovesInTurn) - MCTSHyperparameters.ITERATION_COMPLETION_MILLISECONDS_BUFFER;
-
             ulong randomSeed = (ulong)Utility.Rng.Next();
             var seededGameState = gameState.ToSeededGameState(randomSeed);
-            
-            var rootNode = Utility.FindOrBuildNode(seededGameState, null, possibleMoves, 0);
 
-            int iterationCounter = 0;
+            var rootNode = Utility.FindOrBuildNode(seededGameState, null, possibleMoves, Params);
 
-            if (MCTSHyperparameters.DYNAMIC_MOVE_TIME_DISTRIBUTION) {
+            if (Params.ITERATIONS > 0)
+            {
+                for (int i = 0; i < Params.ITERATIONS; i++)
+                {
+                    rootNode.Visit(out double score);
+                }
+            }
+            else
+            {
+                var moveTimer = new Stopwatch();
+                moveTimer.Start();
+                int estimatedRemainingMovesInTurn = EstimateRemainingMovesInTurn(gameState, possibleMoves);
+                double millisecondsForMove = (remainingTime.TotalMilliseconds / estimatedRemainingMovesInTurn) - Params.ITERATION_COMPLETION_MILLISECONDS_BUFFER;
                 while (moveTimer.ElapsedMilliseconds < millisecondsForMove)
                 {
                     // var iterationTimer = new Stopwatch();
@@ -66,14 +71,9 @@ public class Aau903Bot : AI
                     // Console.WriteLine("Iteration took: " + iterationTimer.ElapsedMilliseconds + " milliseconds");
                 }
             }
-            else {
-                while(iterationCounter <= MCTSHyperparameters.ITERATIONS){
-                    rootNode.Visit(out double score);
-                    iterationCounter++;
-                }
-            }
 
-            if (rootNode.MoveToChildNode.Count == 0) {
+            if (rootNode.MoveToChildNode.Count == 0)
+            {
                 // Console.WriteLine("NO TIME FOR CALCULATING MOVE@@@@@@@@@@@@@@@");
                 return possibleMoves[0];
             }
@@ -102,22 +102,24 @@ public class Aau903Bot : AI
 
     private void CheckMoveLegality(Move moveToCheck, Node rootNode, GameState officialGameState, List<Move> officialPossiblemoves)
     {
-        if(!officialPossiblemoves.Any(move => move.IsIdentical(moveToCheck))){
-                Console.WriteLine("----- ABOUT TO PERFORM ILLEGAL MOVE -----");
-                Console.WriteLine("Our state:");
-                rootNode?.GameState.Log();
-                Console.WriteLine("Actual state:");
-                officialGameState.ToSeededGameState((ulong)Utility.Rng.Next()).Log();
-                Console.WriteLine("@@@@ Trying to play move:");
-                moveToCheck.Log();
-                Console.WriteLine("@@@@@@@ But available moves were:");
-                officialPossiblemoves.ForEach(m => m.Log());
-                Console.WriteLine("@@@@@@ But we thought moves were:");
-                rootNode.PossibleMoves.ForEach(m => m.Log());
-            }
+        if (!officialPossiblemoves.Any(move => move.IsIdentical(moveToCheck)))
+        {
+            Console.WriteLine("----- ABOUT TO PERFORM ILLEGAL MOVE -----");
+            Console.WriteLine("Our state:");
+            rootNode?.GameState.Log();
+            Console.WriteLine("Actual state:");
+            officialGameState.ToSeededGameState((ulong)Utility.Rng.Next()).Log();
+            Console.WriteLine("@@@@ Trying to play move:");
+            moveToCheck.Log();
+            Console.WriteLine("@@@@@@@ But available moves were:");
+            officialPossiblemoves.ForEach(m => m.Log());
+            Console.WriteLine("@@@@@@ But we thought moves were:");
+            rootNode.PossibleMoves.ForEach(m => m.Log());
+        }
     }
 
-    private int EstimateRemainingMovesInTurn(GameState inputState, List<Move> inputPossibleMoves){
+    private int EstimateRemainingMovesInTurn(GameState inputState, List<Move> inputPossibleMoves)
+    {
         return EstimateRemainingMovesInTurn(inputState.ToSeededGameState((ulong)Utility.Rng.Next()), inputPossibleMoves);
     }
 
@@ -126,7 +128,8 @@ public class Aau903Bot : AI
 
         var possibleMoves = new List<Move>(inputPossibleMoves);
 
-        if (possibleMoves.Count == 1 && possibleMoves[0].Command == CommandEnum.END_TURN) {
+        if (possibleMoves.Count == 1 && possibleMoves[0].Command == CommandEnum.END_TURN)
+        {
             return 0;
         }
 
@@ -136,18 +139,22 @@ public class Aau903Bot : AI
         SeededGameState currentState = inputState;
         List<Move> currentPossibleMoves = possibleMoves;
 
-        while(currentPossibleMoves.Count > 0) {
+        while (currentPossibleMoves.Count > 0)
+        {
 
             var obviousMove = FindObviousMove(currentPossibleMoves);
-            if (obviousMove != null) {
+            if (obviousMove != null)
+            {
                 (currentState, currentPossibleMoves) = currentState.ApplyMove(obviousMove);
             }
-            else if (currentPossibleMoves.Count == 1) {
+            else if (currentPossibleMoves.Count == 1)
+            {
                 // TODO add this to ovious moves instead
                 // we already checked that its not end turn, so this is make choice in cases where there is only one choice
                 (currentState, currentPossibleMoves) = currentState.ApplyMove(currentPossibleMoves[0]);
             }
-            else {
+            else
+            {
                 result++;
                 (currentState, currentPossibleMoves) = currentState.ApplyMove(currentPossibleMoves[0]);
             }
@@ -184,7 +191,8 @@ public class Aau903Bot : AI
     /// <summary>
     /// Used for logging when debugging. Do not delete even though it has no references
     /// </summary>
-    private double GetTimeSpentBeforeTurn(TimeSpan remainingTime){
+    private double GetTimeSpentBeforeTurn(TimeSpan remainingTime)
+    {
         return 10_000d - remainingTime.TotalMilliseconds;
     }
     public override PatronId SelectPatron(List<PatronId> availablePatrons, int round)

@@ -1,8 +1,8 @@
-using System.Diagnostics;
 using ExternalHeuristic;
 using ScriptsOfTribute;
-using ScriptsOfTribute.Board.Cards;
 using ScriptsOfTribute.Serializers;
+
+namespace Aau903Bot;
 
 public static class Utility
 {
@@ -123,8 +123,9 @@ public static class Utility
         }
     }
 
-    public static double UseBestMCTS3Heuristic(SeededGameState gameState) {
-        
+    public static double UseBestMCTS3Heuristic(SeededGameState gameState)
+    {
+
         GameStrategy strategy;
 
         var currentPlayer = gameState.CurrentPlayer;
@@ -146,26 +147,88 @@ public static class Utility
         return strategy.Heuristic(gameState);
     }
 
-    public static Node FindOrBuildNode(SeededGameState seededGameState, Node parent, List<Move> possibleMoves, int depth)
+    public static Node FindOrBuildNode(SeededGameState seededGameState, Node parent, List<Move> possibleMoves, MCTSHyperparameters parameters)
     {
-        var result = new Node(seededGameState, parent, possibleMoves, depth);
+        var result = new Node(seededGameState, parent, possibleMoves, parameters);
 
-        if (MCTSHyperparameters.REUSE_TREE) {
+        if (result.Params.REUSE_TREE)
+        {
 
-            if (Aau903Bot.NodeGameStateHashMap.ContainsKey(result.GameStateHash)){
+            if (Aau903Bot.NodeGameStateHashMap.ContainsKey(result.GameStateHash))
+            {
                 var equalNode = Aau903Bot.NodeGameStateHashMap[result.GameStateHash].SingleOrDefault(node => node.GameState.IsIdentical(result.GameState));
-                if (equalNode != null){
+                if (equalNode != null)
+                {
                     result = equalNode;
                 }
-                else {
+                else
+                {
                     Aau903Bot.NodeGameStateHashMap[result.GameStateHash].Add(result);
                 }
             }
-            else{
-                Aau903Bot.NodeGameStateHashMap.Add(result.GameStateHash, new List<Node>(){result});
+            else
+            {
+                Aau903Bot.NodeGameStateHashMap.Add(result.GameStateHash, new List<Node>() { result });
             }
         }
 
         return result;
+    }
+    public static double ScoreEndOfGame(SeededGameState gameState)
+    {
+        double score = 1.0;
+        // We need to make sure the players haven't been swapped out
+        // when extracting the seededGameState out of the fullGameState
+        var currentPlayer = gameState.CurrentPlayer.PlayerID == PlayerEnum.PLAYER1 ? gameState.CurrentPlayer : gameState.EnemyPlayer;
+        var enemyPlayer = gameState.EnemyPlayer.PlayerID == PlayerEnum.PLAYER2 ? gameState.EnemyPlayer : gameState.CurrentPlayer;
+
+        var prestigeDifference = currentPlayer.Prestige - enemyPlayer.Prestige;
+        var currentPlayerFavors = gameState.PatronStates.All.Count(patronState => patronState.Value == currentPlayer.PlayerID);
+        var enemyPlayerFavors = gameState.PatronStates.All.Count(patronState => patronState.Value == enemyPlayer.PlayerID);
+
+        // Winning state patron favors
+        if (currentPlayerFavors == 4 && prestigeDifference > 0)
+        {
+            var prestigeWeight = currentPlayer.Prestige >= 40 ? 1.0 : 0.5;
+            score += prestigeWeight * Math.Min(prestigeDifference / 80.0, prestigeWeight);
+        }
+        // Loosing state patron favors
+        else if (enemyPlayerFavors == 4)
+        {
+            score -= 0.5;
+            if (prestigeDifference < 0)
+            {
+                var prestigeWeight = enemyPlayer.Prestige >= 40 ? 0.5 : 0.25;
+                score -= prestigeWeight * Math.Min(-prestigeDifference / 80.0, prestigeWeight);
+            }
+            else
+            {
+                var prestigeWeight = currentPlayer.Prestige >= 40 ? 0.5 : 0.25;
+                score += prestigeWeight * Math.Min(prestigeDifference / 80.0, prestigeWeight);
+            }
+        }
+        // Winning state prestige
+        else if (currentPlayer.Prestige >= 40 && prestigeDifference > 0)
+        {
+            var weight = 0.5;
+            score += Math.Min(currentPlayerFavors / 4.0, weight) * weight;
+            score += Math.Min(prestigeDifference / 80.0, weight) * weight;
+        }
+        // Loosing state prestige
+        else if (enemyPlayer.Prestige >= 40 && prestigeDifference < 0)
+        {
+            var weight = 0.5;
+            score -= Math.Min(enemyPlayerFavors / 4.0, weight) * weight;
+            score -= Math.Min(-prestigeDifference / 80.0, weight) * weight;
+        }
+        // Draw state
+        else
+        {
+            var weight = 0.5;
+            score -= 0.5;
+            score += Math.Min(prestigeDifference / 80.0, weight) * weight;
+        }
+
+        return score;
     }
 }

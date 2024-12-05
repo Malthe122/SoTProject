@@ -1,7 +1,8 @@
-using System.ComponentModel;
 using ScriptsOfTribute;
 using ScriptsOfTribute.Board.Cards;
 using ScriptsOfTribute.Serializers;
+
+namespace Aau903Bot;
 
 public static class LogExtensions{
 

@@ -1,18 +1,11 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
-
+<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<OutputType>Library</OutputType>
-		<ImplicitUsings>enable</ImplicitUsings>
+		<OutputType>Exe</OutputType>
+    <ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>enable</Nullable>
-		<LangVersion>10</LangVersion>
 		<TargetFramework>net7.0</TargetFramework>
-		<RootNamespace>SimpleBots</RootNamespace>
 	</PropertyGroup>
-
-    <ItemGroup>
-      <ProjectReference Include="..\Engine\TalesOfTribute.csproj" />
-    </ItemGroup>
 
     <ItemGroup>
       <PackageReference Include="GeneticSharp" Version="3.1.4" />
@@ -23,4 +16,7 @@
       <PackageReference Include="Microsoft.Extensions.Configuration.EnvironmentVariables" Version="8.0.0" />
     </ItemGroup>
 
+    <ItemGroup>
+      <ProjectReference Include="..\..\Bots\Bots.csproj" />
+    </ItemGroup>
 </Project>
