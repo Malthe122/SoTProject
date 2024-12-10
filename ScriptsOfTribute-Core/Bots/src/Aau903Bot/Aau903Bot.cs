@@ -10,15 +10,15 @@ public class Aau903Bot : AI
 {
     private Node? rootNode;
     public Dictionary<int, List<Node>> NodeGameStateHashMap = new Dictionary<int, List<Node>>();
-    public MCTSHyperparameters Params;
-
-    public Aau903Bot(string? filePath)
-    {
-        Params = new MCTSHyperparameters(filePath);
-    }
+    public MCTSHyperparameters? Params { get; set; }
 
     public override void PregamePrepare()
     {
+        if (Params == null)
+        {
+            Params = new MCTSHyperparameters();
+        }
+        // Console.WriteLine(Params);
         base.PregamePrepare();
         rootNode = null;
         NodeGameStateHashMap = new Dictionary<int, List<Node>>();
