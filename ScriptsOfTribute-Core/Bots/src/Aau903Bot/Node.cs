@@ -100,7 +100,7 @@ public class Node
             case ScoringMethod.Rollout:
                 return Rollout();
             case ScoringMethod.Heuristic:
-                return Utility.UseBestMCTS3Heuristic(GameState);
+                return Utility.UseBestMCTS3Heuristic(GameState, false);
             case ScoringMethod.RolloutTurnsCompletionsThenHeuristic:
                 return RolloutTillTurnsEndThenHeuristic(Bot.Params.ROLLOUT_TURNS_BEFORE_HEURSISTIC);
             default:
@@ -140,7 +140,7 @@ public class Node
             rolloutPossibleMoves = newPossibleMoves;
         }
 
-        var stateScore = Utility.UseBestMCTS3Heuristic(rolloutGameState);
+        var stateScore = Utility.UseBestMCTS3Heuristic(rolloutGameState, true);
 
         if (GameState.CurrentPlayer != rolloutGameState.CurrentPlayer)
         {
