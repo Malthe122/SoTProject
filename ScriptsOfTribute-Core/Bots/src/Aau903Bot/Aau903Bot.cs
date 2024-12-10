@@ -10,7 +10,12 @@ public class Aau903Bot : AI
 {
     private Node? rootNode;
     public Dictionary<int, List<Node>> NodeGameStateHashMap = new Dictionary<int, List<Node>>();
-    public MCTSHyperparameters Params = new MCTSHyperparameters();
+    public MCTSHyperparameters Params;
+
+    public Aau903Bot(string? filePath)
+    {
+        Params = new MCTSHyperparameters(filePath);
+    }
 
     public override void PregamePrepare()
     {
@@ -18,6 +23,7 @@ public class Aau903Bot : AI
         rootNode = null;
         NodeGameStateHashMap = new Dictionary<int, List<Node>>();
     }
+
     public override void GameEnd(EndGameState state, FullGameState? finalBoardState)
     {
         Console.WriteLine("@@@ Game ended because of " + state.Reason + " @@@");

@@ -110,6 +110,14 @@ public class Settings
         }
     }
 
+    public static void RemoveEnvFile(string filePath)
+    {
+        if (File.Exists(filePath))
+        {
+            File.Delete(filePath);
+        }
+    }
+
     public static IConfiguration GetConfiguration()
     {
         var builder = new ConfigurationBuilder()
