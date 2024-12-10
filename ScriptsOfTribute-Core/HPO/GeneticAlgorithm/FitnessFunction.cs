@@ -44,7 +44,7 @@ class FitnessFunction : IFitness
 
         var (endGameState, fullGameState) = game.Play();
         var seededGameState = new SeededGameState(fullGameState);
-        return Utility.ScoreEndOfGame(seededGameState);
+        return ScoreEndOfGame(seededGameState);
     }
 
     private double ScoreEndOfGame(SeededGameState gameState)
