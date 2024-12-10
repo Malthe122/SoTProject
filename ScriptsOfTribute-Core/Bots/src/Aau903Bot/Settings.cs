@@ -47,24 +47,20 @@ public class MCTSHyperparameters
         ROLLOUT_TURNS_BEFORE_HEURSISTIC = config.GetValue("ROLLOUT_TURNS_BEFORE_HEURSISTIC", 3);
         EQUAL_CHANCE_NODE_DISTRIBUTION = config.GetValue("EQUAL_CHANCE_NODE_DISTRIBUTION", true);
         REUSE_TREE = config.GetValue("REUSE_TREE", true);
-    }
 
-    public override string ToString()
-    {
-        return @$"Loaded settings:
-ITERATIONS={ITERATIONS}
-ITERATION_COMPLETION_MILLISECONDS_BUFFER={ITERATION_COMPLETION_MILLISECONDS_BUFFER}
-UCT_EXPLORATION_CONSTANT={UCT_EXPLORATION_CONSTANT}
-NUMBER_OF_ROLLOUTS={NUMBER_OF_ROLLOUTS}
-FORCE_DELAY_TURN_END_IN_ROLLOUT={FORCE_DELAY_TURN_END_IN_ROLLOUT}
-INCLUDE_PLAY_MOVE_CHANCE_NODES={INCLUDE_PLAY_MOVE_CHANCE_NODES}
-INCLUDE_END_TURN_CHANCE_NODES={INCLUDE_END_TURN_CHANCE_NODES}
-CHOSEN_EVALUATION_METHOD={CHOSEN_EVALUATION_METHOD}
-CHOSEN_SCORING_METHOD={CHOSEN_SCORING_METHOD}
-ROLLOUT_TURNS_BEFORE_HEURSISTIC={ROLLOUT_TURNS_BEFORE_HEURSISTIC}
-EQUAL_CHANCE_NODE_DISTRIBUTION={EQUAL_CHANCE_NODE_DISTRIBUTION}
-REUSE_TREE={REUSE_TREE}
-";
+        Console.WriteLine("Loaded settings:");
+        Console.WriteLine($"ITERATIONS={ITERATIONS}");
+        Console.WriteLine($"ITERATION_COMPLETION_MILLISECONDS_BUFFER={ITERATION_COMPLETION_MILLISECONDS_BUFFER}");
+        Console.WriteLine($"UCT_EXPLORATION_CONSTANT={UCT_EXPLORATION_CONSTANT}");
+        Console.WriteLine($"NUMBER_OF_ROLLOUTS={NUMBER_OF_ROLLOUTS}");
+        Console.WriteLine($"FORCE_DELAY_TURN_END_IN_ROLLOUT={FORCE_DELAY_TURN_END_IN_ROLLOUT}");
+        Console.WriteLine($"INCLUDE_PLAY_MOVE_CHANCE_NODES={INCLUDE_PLAY_MOVE_CHANCE_NODES}");
+        Console.WriteLine($"INCLUDE_END_TURN_CHANCE_NODES={INCLUDE_END_TURN_CHANCE_NODES}");
+        Console.WriteLine($"CHOSEN_EVALUATION_METHOD={CHOSEN_EVALUATION_METHOD}");
+        Console.WriteLine($"CHOSEN_SCORING_METHOD={CHOSEN_SCORING_METHOD}");
+        Console.WriteLine($"ROLLOUT_TURNS_BEFORE_HEURSISTIC={ROLLOUT_TURNS_BEFORE_HEURSISTIC}");
+        Console.WriteLine($"EQUAL_CHANCE_NODE_DISTRIBUTION={EQUAL_CHANCE_NODE_DISTRIBUTION}");
+        Console.WriteLine($"REUSE_TREE={REUSE_TREE}");
     }
 }
 
@@ -101,13 +97,6 @@ public class Settings
 
     public static void SaveEnvFile(string filePath, Dictionary<string, string> values)
     {
-        // Ensure all directories in the filePath exist
-        string directoryPath = Path.GetDirectoryName(filePath);
-        if (!string.IsNullOrEmpty(directoryPath))
-        {
-            Directory.CreateDirectory(directoryPath);
-        }
-
         // Create or overwrite the environment file
         using (var writer = new StreamWriter(filePath, false))
         {
@@ -120,7 +109,6 @@ public class Settings
             }
         }
     }
-
 
     public static void RemoveEnvFile(string filePath)
     {

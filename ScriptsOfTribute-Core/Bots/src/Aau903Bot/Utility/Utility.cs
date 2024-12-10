@@ -131,6 +131,8 @@ public static class Utility
         }
     }
 
+    public static List<double> heuristicScores = new List<double>();
+
     public static double UseBestMCTS3Heuristic(SeededGameState gameState, bool onlyEndOfTurns)
     {
 
@@ -153,6 +155,7 @@ public static class Utility
         }
 
         var result = strategy.Heuristic(gameState);
+        heuristicScores.Add(result);
 
         // TODO add flag for normalizing or not, if we want to do some benchmarking on it
 
@@ -168,8 +171,7 @@ public static class Utility
     /// </summary>
     private static double NormalizeBestMCTS3Score(double score, bool onlyEndOfTurns)
     {
-        if (onlyEndOfTurns)
-        {
+        if (onlyEndOfTurns){
             if (score < average_bestmcts3_heuristic_end_of_turn_score)
             {
                 return (score - average_bestmcts3_heuristic_end_of_turn_score) / average_bestmcts3_heuristic_end_of_turn_score;
@@ -179,8 +181,7 @@ public static class Utility
                 return (score - average_bestmcts3_heuristic_end_of_turn_score) / (1 - average_bestmcts3_heuristic_end_of_turn_score);
             }
         }
-        else
-        {
+        else {
             if (score < average_bestmcts3_heuristic_score)
             {
                 return (score - average_bestmcts3_heuristic_score) / average_bestmcts3_heuristic_score;
