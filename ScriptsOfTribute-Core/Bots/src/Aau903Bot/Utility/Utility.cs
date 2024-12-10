@@ -6,6 +6,14 @@ namespace Aau903Bot;
 
 public static class Utility
 {
+    /// <summary>
+    /// Calculated average from 500,800 evaluations on a version of AauBot that only evaluated states at the end of turns
+    /// </summary>
+    private const double average_bestmcts3_heuristic_end_of_turn_score = 0.35039018318061976f;
+    /// <summary>
+    /// Calculated average from 11_193_363 states appearing in games of RandomBot playing versus RandomBot and 45_886_781 states generated from AauBot playing versus AauBot
+    /// </summary>
+    private const double average_bestmcts3_heuristic_score = 0.4855746429f;
     public static Random Rng = new Random();
 
     // TODO consider making an evaluation function at start of the game, that populates these lists
@@ -123,7 +131,7 @@ public static class Utility
         }
     }
 
-    public static double UseBestMCTS3Heuristic(SeededGameState gameState)
+    public static double UseBestMCTS3Heuristic(SeededGameState gameState, bool onlyEndOfTurns)
     {
 
         GameStrategy strategy;
@@ -144,7 +152,44 @@ public static class Utility
             strategy = new GameStrategy(cardCount, GamePhase.MidGame);
         }
 
-        return strategy.Heuristic(gameState);
+        var result = strategy.Heuristic(gameState);
+
+        // TODO add flag for normalizing or not, if we want to do some benchmarking on it
+
+        return NormalizeBestMCTS3Score(result, onlyEndOfTurns);
+
+        // return result;
+    }
+
+    /// <summary>
+    /// For normalizing BestMCTS3 heuristic score into a -1 - 1 value, using knowledge of average BestMCTS3 score
+    /// This is needed to be able to treat the game like a zero-sum-game with this heuristic that was made for the
+    /// BestMCTS3 that treated the game like a planning problem of a single turn rather than a zero-sum-game
+    /// </summary>
+    private static double NormalizeBestMCTS3Score(double score, bool onlyEndOfTurns)
+    {
+        if (onlyEndOfTurns)
+        {
+            if (score < average_bestmcts3_heuristic_end_of_turn_score)
+            {
+                return (score - average_bestmcts3_heuristic_end_of_turn_score) / average_bestmcts3_heuristic_end_of_turn_score;
+            }
+            else
+            {
+                return (score - average_bestmcts3_heuristic_end_of_turn_score) / (1 - average_bestmcts3_heuristic_end_of_turn_score);
+            }
+        }
+        else
+        {
+            if (score < average_bestmcts3_heuristic_score)
+            {
+                return (score - average_bestmcts3_heuristic_score) / average_bestmcts3_heuristic_score;
+            }
+            else
+            {
+                return (score - average_bestmcts3_heuristic_score) / (1 - average_bestmcts3_heuristic_score);
+            }
+        }
     }
 
     public static Node FindOrBuildNode(SeededGameState seededGameState, Node parent, List<Move> possibleMoves, Aau903Bot bot)
