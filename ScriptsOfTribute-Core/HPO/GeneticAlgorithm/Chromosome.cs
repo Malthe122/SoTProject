@@ -1,3 +1,4 @@
+using System.Globalization;
 using GeneticSharp;
 
 namespace Aau903Bot;
@@ -100,5 +101,22 @@ public class Chromosome : ChromosomeBase
     public override IChromosome CreateNew()
     {
         return new Chromosome();
+    }
+
+    public void SaveGenes(string fileName)
+    {
+        var data = new Dictionary<string, string>
+        {
+            {"ITERATION_COMPLETION_MILLISECONDS_BUFFER", ITERATION_COMPLETION_MILLISECONDS_BUFFER.ToString(CultureInfo.InvariantCulture)},
+            {"UCT_EXPLORATION_CONSTANT", UCT_EXPLORATION_CONSTANT.ToString(CultureInfo.InvariantCulture)},
+            {"FORCE_DELAY_TURN_END_IN_ROLLOUT", FORCE_DELAY_TURN_END_IN_ROLLOUT.ToString(CultureInfo.InvariantCulture)},
+            {"INCLUDE_PLAY_MOVE_CHANCE_NODES", INCLUDE_PLAY_MOVE_CHANCE_NODES.ToString(CultureInfo.InvariantCulture)},
+            {"INCLUDE_END_TURN_CHANCE_NODES", INCLUDE_END_TURN_CHANCE_NODES.ToString(CultureInfo.InvariantCulture)},
+            {"CHOSEN_SCORING_METHOD", CHOSEN_SCORING_METHOD},
+            {"ROLLOUT_TURNS_BEFORE_HEURSISTIC", ROLLOUT_TURNS_BEFORE_HEURSISTIC.ToString(CultureInfo.InvariantCulture)},
+            {"EQUAL_CHANCE_NODE_DISTRIBUTION", EQUAL_CHANCE_NODE_DISTRIBUTION.ToString(CultureInfo.InvariantCulture)},
+            {"REUSE_TREE", REUSE_TREE.ToString(CultureInfo.InvariantCulture)},
+        };
+        Settings.SaveEnvFile(fileName, data);
     }
 }

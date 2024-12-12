@@ -4,6 +4,10 @@ using ScriptsOfTribute.Serializers;
 using ScriptsOfTribute.Board;
 using ScriptsOfTribute;
 using System.Globalization;
+using Sakkarin;
+using SOISMCTS_;
+using hql_bot;
+using BestMCTS3_;
 
 namespace Aau903Bot;
 
@@ -50,11 +54,11 @@ class FitnessFunction : IFitness
             var mctsBot = new MCTSBot();
 
             // competition bots ranked by winrate
-            var sakkirinBot = new Sakkirin();
-            // ToT skipped for now, cause it needs to be used differently cause its written in Python
-            var soisMctsBot = new SOISMCTS();
-            var hqlBot = new HQL_BOT();
-            var bestMcts3 = new BestMCTS3();
+            // var sakkirinBot = new Sakkirin();
+            // // ToT skipped for now, cause it needs to be used differently cause its written in Python
+            // var soisMctsBot = new SOISMCTS();
+            // var hqlBot = new HQL_BOT();
+            // var bestMcts3 = new BestMCTS3();
 
 
             // Games

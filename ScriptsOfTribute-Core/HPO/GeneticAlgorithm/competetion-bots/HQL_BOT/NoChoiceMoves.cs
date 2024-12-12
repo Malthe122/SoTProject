@@ -1,6 +1,6 @@
 using ScriptsOfTribute;
 
-namespace Bots;
+namespace hql_bot;
 
 public static class NoChoiceMoves
 {

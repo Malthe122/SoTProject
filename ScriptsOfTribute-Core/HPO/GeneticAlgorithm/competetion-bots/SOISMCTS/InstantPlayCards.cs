@@ -1,6 +1,6 @@
 using ScriptsOfTribute;
 
-namespace Bots;
+namespace SOISMCTS_;
 
 public static class InstantPlayCards
 {
