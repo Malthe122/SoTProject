@@ -131,8 +131,6 @@ public static class Utility
         }
     }
 
-    public static List<double> heuristicScores = new List<double>();
-
     public static double UseBestMCTS3Heuristic(SeededGameState gameState, bool onlyEndOfTurns)
     {
 
@@ -155,7 +153,6 @@ public static class Utility
         }
 
         var result = strategy.Heuristic(gameState);
-        heuristicScores.Add(result);
 
         // TODO add flag for normalizing or not, if we want to do some benchmarking on it
 
