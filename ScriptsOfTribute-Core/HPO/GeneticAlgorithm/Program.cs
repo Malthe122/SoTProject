@@ -11,13 +11,13 @@ class Program
         var mutation = new UniformMutation(true);
         var fitness = new FitnessFunction(); // WE MADE THIS WOO
         var chromosome = new Chromosome(); // ALSO THIS YIPPIE
-        var population = new Population(50, 50, chromosome);
+        var population = new Population(100, 100, chromosome);
 
         var ga = new GeneticAlgorithm(population, fitness, selection, crossover, mutation)
         {
             TaskExecutor = new ParallelTaskExecutor()
         };
-        ga.Termination = new GenerationNumberTermination(1);
+        ga.Termination = new GenerationNumberTermination(100);
 
         Console.WriteLine("GA running...");
         ga.Start();

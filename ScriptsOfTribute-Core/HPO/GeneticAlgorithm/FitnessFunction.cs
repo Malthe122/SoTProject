@@ -41,17 +41,70 @@ class FitnessFunction : IFitness
         double score = 0.0;
         try {
             var timeout = 10;
+            var aauBot = new Aau903Bot(uniqueFileName);
 
-            // BOTS CONFIG
-            var bot1 = new Aau903Bot(uniqueFileName);
-            var bot2 = new MCTSBot();
+            // built-in bots ranked by winrate
+            var randomBot = new RandomBot();
+            var maxPrestigeBot = new MaxPrestigeBot();
+            var decisionTreeBot = new DecisionTreeBot();
+            var mctsBot = new MCTSBot();
 
-            // GAME CONFIG
-            var game = new ScriptsOfTribute.AI.ScriptsOfTribute(bot1, bot2, TimeSpan.FromSeconds(timeout));
+            // competition bots ranked by winrate
+            var sakkirinBot = new Sakkirin();
+            // ToT skipped for now, cause it needs to be used differently cause its written in Python
+            var soisMctsBot = new SOISMCTS();
+            var hqlBot = new HQL_BOT();
+            var bestMcts3 = new BestMCTS3();
 
-            var (endGameState, fullGameState) = game.Play();
-            var seededGameState = new SeededGameState(fullGameState);
-            score = ScoreEndOfGame(endGameState, seededGameState);
+
+            // Games
+            for(int i = 0; i < 2; i++) {
+                var gameResult = new ScriptsOfTribute.AI.ScriptsOfTribute(aauBot, randomBot, TimeSpan.FromSeconds(timeout)).Play().Item1;
+                if (gameResult.Winner == PlayerEnum.PLAYER1) {
+                    score += 1;
+                }
+            }
+
+            if (score < 1) { //if bot cant beat random bot, there is no reason spending time playing the other bots
+                return score;
+            }
+
+            for(int i = 0; i < 2; i++) {
+                var gameResult = new ScriptsOfTribute.AI.ScriptsOfTribute(aauBot, maxPrestigeBot, TimeSpan.FromSeconds(timeout)).Play().Item1;
+                if (gameResult.Winner == PlayerEnum.PLAYER1) {
+                    score += 10;
+                }
+            }
+
+            if (score < 10) { //if bot cant beat max prestige bot, there is no reason spending time playing the other bots
+                return score;
+            }
+
+            for(int i = 0; i < 2; i++) {
+                var gameResult = new ScriptsOfTribute.AI.ScriptsOfTribute(aauBot, decisionTreeBot, TimeSpan.FromSeconds(timeout)).Play().Item1;
+                if (gameResult.Winner == PlayerEnum.PLAYER1) {
+                    score += 100;
+                }
+            }
+
+            if (score < 100) { //if bot cant beat decision tree bot, there is no reason spending time playing the other bots
+                return score;
+            }
+
+            for(int i = 0; i < 2; i++) {
+                var gameResult = new ScriptsOfTribute.AI.ScriptsOfTribute(aauBot, mctsBot, TimeSpan.FromSeconds(timeout)).Play().Item1;
+                if (gameResult.Winner == PlayerEnum.PLAYER1) {
+                    score += 1000;
+                }
+            }
+
+            return score;
+
+            // if (score < 1000) { //if bot cant beat mctsBot bot, there is no reason spending time playing the other bots
+            //     return score;
+            // }
+
+            // TODO add the compition bots here, for a new GA (and remove the built in ones or most of them), when we have a solution that beats mcts
         }
         finally
         {
