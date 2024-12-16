@@ -11,7 +11,7 @@ class Program
         var mutation = new UniformMutation(true);
         var fitness = new FitnessFunction(); // WE MADE THIS WOO
         var chromosome = new Chromosome(); // ALSO THIS YIPPIE
-        var population = new Population(16, 16, chromosome);
+        var population = new Population(100, 100, chromosome);
 
         var ga = new GeneticAlgorithm(population, fitness, selection, crossover, mutation)
         {
@@ -41,6 +41,7 @@ class Program
             var bestFitness = (double)bestChromosome.Fitness!;
             string fileName = $"best_{bestFitness.ToString("F2")}";
             Console.WriteLine(bestChromosome);
+            bestChromosome.SaveGenes(fileName);
         }
     }
 }

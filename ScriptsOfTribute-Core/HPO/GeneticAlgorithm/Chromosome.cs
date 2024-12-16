@@ -54,11 +54,6 @@ public class Chromosome : ChromosomeBase
         get { return (int)GetGene(6).Value; }
     }
 
-    public bool EQUAL_CHANCE_NODE_DISTRIBUTION
-    {
-        get { return (bool)GetGene(7).Value; }
-    }
-
     public bool REUSE_TREE
     {
         get { return (bool)GetGene(8).Value; }
@@ -69,30 +64,28 @@ public class Chromosome : ChromosomeBase
         //This module's Get_ is exclusive on the right
         switch (geneIndex)
         {
-            case 0:
+            case 0: //ITERATION_COMPLETION_MILLISECONDS_BUFFER
                 double gene0Min = 50.0;
                 double gene0Max = 500.0;
                 return new Gene(Math.Round(RandomizationProvider.Current.GetDouble(gene0Min, gene0Max), 3));
-            case 1:
+            case 1: //UCT_EXPLORATION_CONSTANT
                 double gene1Min = 0.5;
-                double gene1Max = 2.0; // Might want to just set it to root2
+                double gene1Max = 4.0;
                 return new Gene(Math.Round(RandomizationProvider.Current.GetDouble(gene1Min, gene1Max), 3));
-            case 2:
+            case 2: //FORCE_DELAY_TURN_END_IN_ROLLOUT
                 return new Gene(RandomizationProvider.Current.GetInt(0, 2) == 1);
-            case 3:
+            case 3: //INCLUDE_PLAY_MOVE_CHANCE_NODE
                 return new Gene(RandomizationProvider.Current.GetInt(0, 2) == 1);
-            case 4:
+            case 4: //INCLUDE_END_TURN_CHANCE_NODES
                 return new Gene(RandomizationProvider.Current.GetInt(0, 2) == 1);
-            case 5:
+            case 5: //CHOSEN_SCORING_METHOD
                 var scoringMethodTypes = new List<string> { "Rollout", "Heuristic", "RolloutTurnsCompletionsThenHeuristic" };
                 return new Gene(scoringMethodTypes[RandomizationProvider.Current.GetInt(0, scoringMethodTypes.Count)]);
-            case 6:
+            case 6: //ROLLOUT_TURNS_BEFORE_HEURSISTIC
                 var gene7Min = 1;
                 var gene7Max = 10;
                 return new Gene(RandomizationProvider.Current.GetInt(gene7Min, gene7Max + 1));
-            case 7:
-                return new Gene(RandomizationProvider.Current.GetInt(0, 2) == 1);
-            case 8:
+            case 8: //REUSE_TREE
                 return new Gene(RandomizationProvider.Current.GetInt(0, 2) == 1);
             default:
                 throw new ArgumentOutOfRangeException(nameof(geneIndex), "Invalid gene index.");

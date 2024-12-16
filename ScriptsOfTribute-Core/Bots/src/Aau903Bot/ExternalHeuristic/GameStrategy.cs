@@ -159,7 +159,7 @@ namespace ExternalHeuristic
                     }
                     else
                     {
-                        ourCombos[card.Deck] = 1;
+                        ourCombos.Add(card.Deck, 1);
                     }
                 }
             }
@@ -175,7 +175,7 @@ namespace ExternalHeuristic
                     }
                     else
                     {
-                        enemyCombos[card.Deck] = 1;
+                        enemyCombos.Add(card.Deck, 1);
                     }
                 }
             }
@@ -192,7 +192,7 @@ namespace ExternalHeuristic
                     }
                     else
                     {
-                        ourCombos[agent.RepresentingCard.Deck] = 1;
+                        ourCombos.Add(agent.RepresentingCard.Deck, 1);
                     }
                 }
                 double toAdd = agent.CurrentHp * GetWeight(Param.Prestige) * GetWeight(Param.OurAgent);
@@ -211,7 +211,7 @@ namespace ExternalHeuristic
                     }
                     else
                     {
-                        enemyCombos[agent.RepresentingCard.Deck] = 1;
+                        enemyCombos.Add(agent.RepresentingCard.Deck, 1);
                     }
                 }
                 value += AgentTier.GetCardTier(agent.RepresentingCard.CommonId) * GetWeight(Param.EnemyAgent) * (((double)agent.CurrentHp + 2) / ((double)agent.RepresentingCard.HP) + 2);
