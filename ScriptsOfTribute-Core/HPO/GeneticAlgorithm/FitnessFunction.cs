@@ -21,8 +21,7 @@ class FitnessFunction : IFitness
         var INCLUDE_END_TURN_CHANCE_NODES = (bool)chromosome.GetGene(4).Value;
         var CHOSEN_SCORING_METHOD = (string)chromosome.GetGene(5).Value;
         var ROLLOUT_TURNS_BEFORE_HEURSISTIC = (int)chromosome.GetGene(6).Value;
-        var EQUAL_CHANCE_NODE_DISTRIBUTION = (bool)chromosome.GetGene(7).Value;
-        var REUSE_TREE = (bool)chromosome.GetGene(8).Value;
+        var REUSE_TREE = (bool)chromosome.GetGene(7).Value;
 
         var data = new Dictionary<string, string>
         {
@@ -33,7 +32,6 @@ class FitnessFunction : IFitness
             {"INCLUDE_END_TURN_CHANCE_NODES", INCLUDE_END_TURN_CHANCE_NODES.ToString(CultureInfo.InvariantCulture)},
             {"CHOSEN_SCORING_METHOD", CHOSEN_SCORING_METHOD},
             {"ROLLOUT_TURNS_BEFORE_HEURSISTIC", ROLLOUT_TURNS_BEFORE_HEURSISTIC.ToString(CultureInfo.InvariantCulture)},
-            {"EQUAL_CHANCE_NODE_DISTRIBUTION", EQUAL_CHANCE_NODE_DISTRIBUTION.ToString(CultureInfo.InvariantCulture)},
             {"REUSE_TREE", REUSE_TREE.ToString(CultureInfo.InvariantCulture)},
         };
         Settings.SaveEnvFile(uniqueFileName, data);
