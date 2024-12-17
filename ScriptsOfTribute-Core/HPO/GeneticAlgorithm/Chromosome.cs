@@ -6,7 +6,7 @@ namespace Aau903Bot;
 
 public class Chromosome : ChromosomeBase
 {
-    public Chromosome() : base(9)
+    public Chromosome() : base(8)
     {
         ReplaceGene(0, GenerateGene(0));
         ReplaceGene(1, GenerateGene(1));
@@ -16,7 +16,6 @@ public class Chromosome : ChromosomeBase
         ReplaceGene(5, GenerateGene(5));
         ReplaceGene(6, GenerateGene(6));
         ReplaceGene(7, GenerateGene(7));
-        ReplaceGene(8, GenerateGene(8));
     }
 
     public double ITERATION_COMPLETION_MILLISECONDS_BUFFER
@@ -56,7 +55,7 @@ public class Chromosome : ChromosomeBase
 
     public bool REUSE_TREE
     {
-        get { return (bool)GetGene(8).Value; }
+        get { return (bool)GetGene(7).Value; }
     }
 
     public override Gene GenerateGene(int geneIndex)
@@ -85,7 +84,7 @@ public class Chromosome : ChromosomeBase
                 var gene7Min = 1;
                 var gene7Max = 10;
                 return new Gene(RandomizationProvider.Current.GetInt(gene7Min, gene7Max + 1));
-            case 8: //REUSE_TREE
+            case 7: //REUSE_TREE
                 return new Gene(RandomizationProvider.Current.GetInt(0, 2) == 1);
             default:
                 throw new ArgumentOutOfRangeException(nameof(geneIndex), "Invalid gene index.");
@@ -107,7 +106,6 @@ public class Chromosome : ChromosomeBase
             INCLUDE_END_TURN_CHANCE_NODES={INCLUDE_END_TURN_CHANCE_NODES}
             CHOSEN_SCORING_METHOD={CHOSEN_SCORING_METHOD}
             ROLLOUT_TURNS_BEFORE_HEURSISTIC={ROLLOUT_TURNS_BEFORE_HEURSISTIC}
-            EQUAL_CHANCE_NODE_DISTRIBUTION={EQUAL_CHANCE_NODE_DISTRIBUTION}
             REUSE_TREE={REUSE_TREE}
             ";
     }
@@ -123,7 +121,6 @@ public class Chromosome : ChromosomeBase
             {"INCLUDE_END_TURN_CHANCE_NODES", INCLUDE_END_TURN_CHANCE_NODES.ToString(CultureInfo.InvariantCulture)},
             {"CHOSEN_SCORING_METHOD", CHOSEN_SCORING_METHOD},
             {"ROLLOUT_TURNS_BEFORE_HEURSISTIC", ROLLOUT_TURNS_BEFORE_HEURSISTIC.ToString(CultureInfo.InvariantCulture)},
-            {"EQUAL_CHANCE_NODE_DISTRIBUTION", EQUAL_CHANCE_NODE_DISTRIBUTION.ToString(CultureInfo.InvariantCulture)},
             {"REUSE_TREE", REUSE_TREE.ToString(CultureInfo.InvariantCulture)},
         };
         Settings.SaveEnvFile(fileName, data);
