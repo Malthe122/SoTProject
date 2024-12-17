@@ -50,11 +50,7 @@ public class Node
             }
             else if (PossibleMoves.Count > MoveToChildNode.Count)
             {
-                var message = "Possible moves:\n";
-                PossibleMoves.ForEach(m => {message += "Move: " + m.Move.GetLog() + "\n";});
-                message += "Keys in Move to childNode:\n";
-                MoveToChildNode.ToList().ForEach(m => {message += "Move: " + m.Key.Move.GetLog() + "\n";});
-                var expandedChild = Expand(message);
+                var expandedChild = Expand();
                 expandedChild.Visit(out score, travelsDone++);
             }
             else
@@ -78,7 +74,7 @@ public class Node
     }
 
 
-    internal Node Expand(string message)
+    internal Node Expand()
     {
         foreach (var moveContainer in PossibleMoves)
         {
@@ -102,7 +98,7 @@ public class Node
             }
         }
 
-        throw new Exception("Expand was unexpectedly called on a node that was fully expanded. Message:\n" + message);
+        throw new Exception("Expand was unexpectedly called on a node that was fully expanded");
     }
 
     private double Score()
