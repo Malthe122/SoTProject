@@ -136,10 +136,49 @@ public static class LogExtensions{
         }
     }
 
+    public static string GetLog(this Move move)
+    {
+
+        var log = "Command:" + move.Command;
+        log += "Type: " + move.GetType().Name;
+        switch (move)
+        {
+            case SimpleCardMove simpleCardMove:
+                log += "Card: " + simpleCardMove.Card.CommonId;
+                break;
+            case SimplePatronMove simplePatronMove:
+                log += simplePatronMove.PatronId;
+                break;
+            case MakeChoiceMoveUniqueCard uniqueCardMove:
+                log += "Choices:";
+                uniqueCardMove.Choices.ForEach(c => log += (" " + c.CommonId + ","));
+                break;
+            case MakeChoiceMoveUniqueEffect uniqueEffectMove:
+                log += "Choices:";
+                uniqueEffectMove.Choices.ForEach(e => e.GetLog());
+                break;
+            default:
+                log += "Unknown subtype";
+                break;
+        }
+
+        return log;
+    }
+
+
     public static void Log(this UniqueEffect effect) {
         Console.WriteLine("Type: " + effect.Type);
         Console.WriteLine("Amount: " + effect.Amount);
         Console.WriteLine("Combo: " + effect.Combo);
         Console.WriteLine("Parent card: " + effect.ParentCard.CommonId);
+    }
+
+    public static string GetLog(this UniqueEffect effect) {
+        var log = "Type: " + effect.Type;
+        log += "Amount: " + effect.Amount;
+        log += "Combo: " + effect.Combo;
+        log += "Parent card: " + effect.ParentCard.CommonId;
+
+        return log;
     }
 }

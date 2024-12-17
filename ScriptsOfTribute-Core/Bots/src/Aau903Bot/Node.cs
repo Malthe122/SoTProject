@@ -11,20 +11,20 @@ public class Node
     /// with a new random seed which is a possible argument for the applyMove method
     /// </summary>
     public Node? Parent = null;
-    public Dictionary<Move, Node> MoveToChildNode;
+    public Dictionary<MoveContainer, Node> MoveToChildNode;
     public int VisitCount = 0;
     public double TotalScore = 0;
     public int GameStateHash { get; private set; }
     public SeededGameState GameState { get; private set; }
-    public List<Move> PossibleMoves;
+    public List<MoveContainer> PossibleMoves;
     internal Aau903Bot Bot;
 
     public Node(SeededGameState gameState, Node parent, List<Move> possibleMoves, Aau903Bot bot)
     {
         GameState = gameState;
         Parent = parent;
-        PossibleMoves = possibleMoves;
-        MoveToChildNode = new Dictionary<Move, Node>();
+        PossibleMoves = Utility.BuildUniqueMovesContainers(possibleMoves);
+        MoveToChildNode = new Dictionary<MoveContainer, Node>();
         ApplyAllDeterministicAndObviousMoves();
         Bot = bot;
     }
@@ -50,7 +50,11 @@ public class Node
             }
             else if (PossibleMoves.Count > MoveToChildNode.Count)
             {
-                var expandedChild = Expand();
+                var message = "Possible moves:\n";
+                PossibleMoves.ForEach(m => {message += "Move: " + m.Move.GetLog() + "\n";});
+                message += "Keys in Move to childNode:\n";
+                MoveToChildNode.ToList().ForEach(m => {message += "Move: " + m.Key.Move.GetLog() + "\n";});
+                var expandedChild = Expand(message);
                 expandedChild.Visit(out score, travelsDone++);
             }
             else
@@ -74,31 +78,31 @@ public class Node
     }
 
 
-    internal Node Expand()
+    internal Node Expand(string message)
     {
-        foreach (var move in PossibleMoves)
+        foreach (var moveContainer in PossibleMoves)
         {
-            if (!MoveToChildNode.ContainsKey(move))
+            if (!MoveToChildNode.Keys.Any(mc => mc.Move.IsIdentical(moveContainer.Move)))
             {
-                if ((Bot.Params.INCLUDE_PLAY_MOVE_CHANCE_NODES && move.IsNonDeterministic())
-                    || Bot.Params.INCLUDE_END_TURN_CHANCE_NODES && move.Command == CommandEnum.END_TURN)
+                if ((Bot.Params.INCLUDE_PLAY_MOVE_CHANCE_NODES && moveContainer.Move.IsNonDeterministic())
+                    || Bot.Params.INCLUDE_END_TURN_CHANCE_NODES && moveContainer.Move.Command == CommandEnum.END_TURN)
                 {
-                    var newChild = new ChanceNode(GameState, this, move, Bot);
-                    MoveToChildNode.Add(move, newChild);
+                    var newChild = new ChanceNode(GameState, this, moveContainer.Move, Bot);
+                    MoveToChildNode.Add(new MoveContainer(moveContainer.Move), newChild);
                     return newChild;
                 }
                 else
                 {
                     ulong randomSeed = (ulong)Utility.Rng.Next();
-                    var (newGameState, newPossibleMoves) = GameState.ApplyMove(move, randomSeed);
+                    var (newGameState, newPossibleMoves) = GameState.ApplyMove(moveContainer.Move, randomSeed);
                     var newChild = Utility.FindOrBuildNode(newGameState, this, newPossibleMoves, Bot);
-                    MoveToChildNode.Add(move, newChild);
+                    MoveToChildNode.Add(new MoveContainer(moveContainer.Move), newChild);
                     return newChild;
                 }
             }
         }
 
-        throw new Exception("Expand was unexpectedly called on a node that was fully expanded");
+        throw new Exception("Expand was unexpectedly called on a node that was fully expanded. Message:\n" + message);
     }
 
     private double Score()
@@ -129,14 +133,14 @@ public class Node
             {
                 if (rolloutPossibleMoves.Count > 1)
                 {
-                    rolloutPossibleMoves.RemoveAll(move => move.Command == CommandEnum.END_TURN);
+                    rolloutPossibleMoves.RemoveAll(moveContainer => moveContainer.Move.Command == CommandEnum.END_TURN);
                 }
             }
 
             var chosenIndex = Utility.Rng.Next(rolloutPossibleMoves.Count);
             var moveToMake = rolloutPossibleMoves[chosenIndex];
 
-            var (newGameState, newPossibleMoves) = rolloutGameState.ApplyMove(moveToMake);
+            var (newGameState, newPossibleMoves) = rolloutGameState.ApplyMove(moveToMake.Move);
 
             if (newGameState.CurrentPlayer != rolloutPlayer)
             {
@@ -145,7 +149,7 @@ public class Node
             }
 
             rolloutGameState = newGameState;
-            rolloutPossibleMoves = newPossibleMoves;
+            rolloutPossibleMoves = Utility.BuildUniqueMovesContainers(newPossibleMoves);
         }
 
         var stateScore = Utility.UseBestMCTS3Heuristic(rolloutGameState, true);
@@ -163,7 +167,7 @@ public class Node
         double result = 0;
         var rolloutGameState = GameState;
         var rolloutPlayerId = rolloutGameState.CurrentPlayer.PlayerID;
-        var rolloutPossibleMoves = new List<Move>(PossibleMoves);
+        var rolloutPossibleMoves = new List<MoveContainer>(PossibleMoves);
 
         for (int i = 0; i < Bot.Params.NUMBER_OF_ROLLOUTS; i++)
         {
@@ -175,15 +179,15 @@ public class Node
                 {
                     if (rolloutPossibleMoves.Count > 1)
                     {
-                        rolloutPossibleMoves.RemoveAll(move => move.Command == CommandEnum.END_TURN);
+                        rolloutPossibleMoves.RemoveAll(moveContainer => moveContainer.Move.Command == CommandEnum.END_TURN);
                     }
                 }
                 var chosenIndex = Utility.Rng.Next(rolloutPossibleMoves.Count);
                 var moveToMake = rolloutPossibleMoves[chosenIndex];
 
-                var (newGameState, newPossibleMoves) = rolloutGameState.ApplyMove(moveToMake);
+                var (newGameState, newPossibleMoves) = rolloutGameState.ApplyMove(moveToMake.Move);
                 rolloutGameState = newGameState;
-                rolloutPossibleMoves = newPossibleMoves;
+                rolloutPossibleMoves = Utility.BuildUniqueMovesContainers(newPossibleMoves);
             }
 
             if (rolloutGameState.GameEndState.Winner != PlayerEnum.NO_PLAYER_SELECTED)
@@ -237,24 +241,26 @@ public class Node
 
     internal void ApplyAllDeterministicAndObviousMoves()
     {
-        foreach (Move currMove in PossibleMoves)
+        foreach (var currMove in PossibleMoves)
         {
-            if (currMove.Command == CommandEnum.PLAY_CARD)
+            if (currMove.Move.Command == CommandEnum.PLAY_CARD)
             {
-                if (Utility.OBVIOUS_ACTION_PLAYS.Contains(((SimpleCardMove)currMove).Card.CommonId))
+                if (Utility.OBVIOUS_ACTION_PLAYS.Contains(((SimpleCardMove)currMove.Move).Card.CommonId))
                 {
                     // TODO consider if some of the choice cards are also obvious moves, since the choice will be a new move
                     // or how to handle this issue
-                    (GameState, PossibleMoves) = GameState.ApplyMove(currMove, (ulong)Utility.Rng.Next());
+                    (GameState, var possibleMoves) = GameState.ApplyMove(currMove.Move, (ulong)Utility.Rng.Next());
+                    PossibleMoves = Utility.BuildUniqueMovesContainers(possibleMoves);
                     ApplyAllDeterministicAndObviousMoves();
                     break;
                 }
             }
-            else if (currMove.Command == CommandEnum.ACTIVATE_AGENT)
+            else if (currMove.Move.Command == CommandEnum.ACTIVATE_AGENT)
             {
-                if (Utility.OBVIOUS_AGENT_EFFECTS.Contains(((SimpleCardMove)currMove).Card.CommonId))
+                if (Utility.OBVIOUS_AGENT_EFFECTS.Contains(((SimpleCardMove)currMove.Move).Card.CommonId))
                 {
-                    (GameState, PossibleMoves) = GameState.ApplyMove(currMove, (ulong)Utility.Rng.Next());
+                    (GameState, var possibleMoves) = GameState.ApplyMove(currMove.Move, (ulong)Utility.Rng.Next());
+                    PossibleMoves = Utility.BuildUniqueMovesContainers(possibleMoves);
                     ApplyAllDeterministicAndObviousMoves();
                     break;
                 }

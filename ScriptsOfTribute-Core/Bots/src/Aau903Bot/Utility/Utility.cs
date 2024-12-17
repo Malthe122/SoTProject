@@ -1,3 +1,4 @@
+using Bots;
 using ExternalHeuristic;
 using ScriptsOfTribute;
 using ScriptsOfTribute.Serializers;
@@ -216,5 +217,28 @@ public static class Utility
         }
 
         return result;
+    }
+
+    internal static List<MoveContainer> BuildUniqueMovesContainers(List<Move> possibleMoves)
+    {
+        var result = new List<MoveContainer>();
+
+        foreach(var currMove in possibleMoves) {
+            if (!result.Any(mc => mc.Move.IsIdentical(currMove))){
+                result.Add(new MoveContainer(currMove));
+            }
+        }
+
+        return result;
+    }
+
+    /// <summary>
+    /// Since we reuse identical states, our move will not be identical to the move in the official gamestate, since although gamestates are logically identical
+    /// we might have a specific card on hand with ID 1 in our gamestate, while the official gamestate has an identical card in our hand but with a different id.
+    /// Becuase of this, we need to find the offical move that is logically identcal to our move
+    /// </summary>
+    internal static Move FindOfficialMove(Move move, List<Move> possibleMoves)
+    {
+        return possibleMoves.First(m => m.IsIdentical(move));
     }
 }

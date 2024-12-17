@@ -30,17 +30,18 @@ public class Aau903Bot : AI
         Console.WriteLine("@@@ Winner was " + state.Winner + " @@@");
 
         if (state.Reason == GameEndReason.INCORRECT_MOVE) {
-            string errorMessage = "PLAYED illegal move\n";
+            string errorMessage = state.Winner == PlayerEnum.PLAYER1 ? PlayerEnum.PLAYER2.ToString() : PlayerEnum.PLAYER1.ToString() + " played illegal move\n";
                 errorMessage += "Environment was:\n";
-                errorMessage += "ITERATION_COMPLETION_MILLISECONDS_BUFFER: " + Params.ITERATION_COMPLETION_MILLISECONDS_BUFFER;
-                errorMessage += "UCT_EXPLORATION_CONSTANT: " + Params.UCT_EXPLORATION_CONSTANT;
-                errorMessage += "FORCE_DELAY_TURN_END_IN_ROLLOUT: " + Params.FORCE_DELAY_TURN_END_IN_ROLLOUT;
-                errorMessage += "INCLUDE_PLAY_MOVE_CHANCE_NODES: " + Params.INCLUDE_PLAY_MOVE_CHANCE_NODES;
-                errorMessage += "INCLUDE_END_TURN_CHANCE_NODES: " + Params.INCLUDE_END_TURN_CHANCE_NODES;
-                errorMessage += "CHOSEN_SCORING_METHOD: " + Params.CHOSEN_SCORING_METHOD;
-                errorMessage += "ROLLOUT_TURNS_BEFORE_HEURSISTIC: " + Params.ROLLOUT_TURNS_BEFORE_HEURSISTIC;
-                errorMessage += "EQUAL_CHANCE_NODE_DISTRIBUTION: " + Params.EQUAL_CHANCE_NODE_DISTRIBUTION;
-                errorMessage += "REUSE_TREE: " + Params.REUSE_TREE;
+                errorMessage += "ITERATION_COMPLETION_MILLISECONDS_BUFFER: " + Params.ITERATION_COMPLETION_MILLISECONDS_BUFFER + "\n";
+                errorMessage += "UCT_EXPLORATION_CONSTANT: " + Params.UCT_EXPLORATION_CONSTANT + "\n";
+                errorMessage += "FORCE_DELAY_TURN_END_IN_ROLLOUT: " + Params.FORCE_DELAY_TURN_END_IN_ROLLOUT + "\n";
+                errorMessage += "INCLUDE_PLAY_MOVE_CHANCE_NODES: " + Params.INCLUDE_PLAY_MOVE_CHANCE_NODES + "\n";
+                errorMessage += "INCLUDE_END_TURN_CHANCE_NODES: " + Params.INCLUDE_END_TURN_CHANCE_NODES + "\n";
+                errorMessage += "CHOSEN_SCORING_METHOD: " + Params.CHOSEN_SCORING_METHOD + "\n";
+                errorMessage += "ROLLOUT_TURNS_BEFORE_HEURSISTIC: " + Params.ROLLOUT_TURNS_BEFORE_HEURSISTIC + "\n";
+                errorMessage += "EQUAL_CHANCE_NODE_DISTRIBUTION: " + Params.EQUAL_CHANCE_NODE_DISTRIBUTION + "\n";
+                errorMessage += "REUSE_TREE: " + Params.REUSE_TREE + "\n";
+                errorMessage += "Additional context:\n" + state.AdditionalContext; 
 
                 SaveErrorLog(errorMessage);
         }
@@ -101,23 +102,23 @@ public class Aau903Bot : AI
                 .FirstOrDefault()
                 .Key;
 
-            if (!CheckMoveLegality(bestMove, rootNode, gameState, possibleMoves)) {
+            if (!CheckMoveLegality(bestMove.Move, rootNode, gameState, possibleMoves)) {
                 string errorMessage = "Tried to play illegal move\n";
                 errorMessage += "Environment was:\n";
-                errorMessage += "ITERATION_COMPLETION_MILLISECONDS_BUFFER: " + Params.ITERATION_COMPLETION_MILLISECONDS_BUFFER;
-                errorMessage += "UCT_EXPLORATION_CONSTANT: " + Params.UCT_EXPLORATION_CONSTANT;
-                errorMessage += "FORCE_DELAY_TURN_END_IN_ROLLOUT: " + Params.FORCE_DELAY_TURN_END_IN_ROLLOUT;
-                errorMessage += "INCLUDE_PLAY_MOVE_CHANCE_NODES: " + Params.INCLUDE_PLAY_MOVE_CHANCE_NODES;
-                errorMessage += "INCLUDE_END_TURN_CHANCE_NODES: " + Params.INCLUDE_END_TURN_CHANCE_NODES;
-                errorMessage += "CHOSEN_SCORING_METHOD: " + Params.CHOSEN_SCORING_METHOD;
-                errorMessage += "ROLLOUT_TURNS_BEFORE_HEURSISTIC: " + Params.ROLLOUT_TURNS_BEFORE_HEURSISTIC;
-                errorMessage += "EQUAL_CHANCE_NODE_DISTRIBUTION: " + Params.EQUAL_CHANCE_NODE_DISTRIBUTION;
-                errorMessage += "REUSE_TREE: " + Params.REUSE_TREE;
+                errorMessage += "ITERATION_COMPLETION_MILLISECONDS_BUFFER: " + Params.ITERATION_COMPLETION_MILLISECONDS_BUFFER + "\n";
+                errorMessage += "UCT_EXPLORATION_CONSTANT: " + Params.UCT_EXPLORATION_CONSTANT + "\n";
+                errorMessage += "FORCE_DELAY_TURN_END_IN_ROLLOUT: " + Params.FORCE_DELAY_TURN_END_IN_ROLLOUT + "\n";
+                errorMessage += "INCLUDE_PLAY_MOVE_CHANCE_NODES: " + Params.INCLUDE_PLAY_MOVE_CHANCE_NODES + "\n";
+                errorMessage += "INCLUDE_END_TURN_CHANCE_NODES: " + Params.INCLUDE_END_TURN_CHANCE_NODES + "\n";
+                errorMessage += "CHOSEN_SCORING_METHOD: " + Params.CHOSEN_SCORING_METHOD + "\n";
+                errorMessage += "ROLLOUT_TURNS_BEFORE_HEURSISTIC: " + Params.ROLLOUT_TURNS_BEFORE_HEURSISTIC + "\n";
+                errorMessage += "EQUAL_CHANCE_NODE_DISTRIBUTION: " + Params.EQUAL_CHANCE_NODE_DISTRIBUTION + "\n";
+                errorMessage += "REUSE_TREE: " + Params.REUSE_TREE + "\n";
 
                 SaveErrorLog(errorMessage);
             }
 
-            return bestMove;
+            return Utility.FindOfficialMove(bestMove.Move, possibleMoves);
         }
         catch (Exception e)
         {
@@ -130,13 +131,36 @@ public class Aau903Bot : AI
                 Console.WriteLine("Inner excpetion: " + e.InnerException.Message);
                 Console.WriteLine("Inner stacktrace: " + e.InnerException.StackTrace);
             }
+
+            var errorMessage = "Something went wrong while trying to compute move. Playing random move instead. Exception:" + "\n" ;
+            errorMessage += "Message: " + e.Message + "\n";
+            errorMessage += "Stacktrace: " + e.StackTrace + "\n";
+            errorMessage += "Data: " + e.Data + "\n";
+            if (e.InnerException != null)
+            {
+                errorMessage += "Inner excpetion: " + e.InnerException.Message + "\n";
+                errorMessage += "Inner stacktrace: " + e.InnerException.StackTrace + "\n";
+            }
+
+            errorMessage += "Environment was:\n";
+                errorMessage += "ITERATION_COMPLETION_MILLISECONDS_BUFFER: " + Params.ITERATION_COMPLETION_MILLISECONDS_BUFFER + "\n";
+                errorMessage += "UCT_EXPLORATION_CONSTANT: " + Params.UCT_EXPLORATION_CONSTANT + "\n";
+                errorMessage += "FORCE_DELAY_TURN_END_IN_ROLLOUT: " + Params.FORCE_DELAY_TURN_END_IN_ROLLOUT + "\n";
+                errorMessage += "INCLUDE_PLAY_MOVE_CHANCE_NODES: " + Params.INCLUDE_PLAY_MOVE_CHANCE_NODES + "\n";
+                errorMessage += "INCLUDE_END_TURN_CHANCE_NODES: " + Params.INCLUDE_END_TURN_CHANCE_NODES + "\n";
+                errorMessage += "CHOSEN_SCORING_METHOD: " + Params.CHOSEN_SCORING_METHOD + "\n";
+                errorMessage += "ROLLOUT_TURNS_BEFORE_HEURSISTIC: " + Params.ROLLOUT_TURNS_BEFORE_HEURSISTIC + "\n";
+                errorMessage += "EQUAL_CHANCE_NODE_DISTRIBUTION: " + Params.EQUAL_CHANCE_NODE_DISTRIBUTION + "\n";
+                errorMessage += "REUSE_TREE: " + Params.REUSE_TREE + "\n";
+
+            SaveErrorLog(errorMessage);
             return possibleMoves[0];
         }
     }
 
     private void SaveErrorLog(string errorMessage)
     {
-        var filePath = "Error";
+        var filePath = "Error.txt";
 
         string directoryPath = Path.GetDirectoryName(filePath);
         if (!string.IsNullOrEmpty(directoryPath))
@@ -144,10 +168,10 @@ public class Aau903Bot : AI
             Directory.CreateDirectory(directoryPath);
         }
 
-        // Create or overwrite the environment file
-        using (var writer = new StreamWriter(filePath, false))
+        using (var writer = new StreamWriter(filePath, true))
         {
-            writer.WriteLine(errorMessage);
+            writer.Write("\n");
+            writer.Write(errorMessage);
         }
     }
 
@@ -165,7 +189,7 @@ public class Aau903Bot : AI
             Console.WriteLine("@@@@@@@ But available moves were:");
             officialPossiblemoves.ForEach(m => m.Log());
             Console.WriteLine("@@@@@@ But we thought moves were:");
-            rootNode.PossibleMoves.ForEach(m => m.Log());
+            rootNode.PossibleMoves.ForEach(m => m.Move.Log());
 
             return false;
         }
