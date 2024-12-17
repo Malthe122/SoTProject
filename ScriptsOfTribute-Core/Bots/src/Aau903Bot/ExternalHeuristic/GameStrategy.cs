@@ -232,9 +232,10 @@ namespace ExternalHeuristic
             foreach (UniqueCard card in gameState.EnemyPlayer.KnownUpcomingDraws.Take(3))
             {
                 value -= HandTierList.GetCardTier(card.CommonId) * GetWeight(Param.UpcomingCard);
-                if (ourCombos.ContainsKey(card.Deck))
+                if (enemyCombos.ContainsKey(card.Deck))
                 {
-                    value -= ourCombos[card.Deck] * GetWeight(Param.KnowingCardCombo) * wspEnemy;
+                    //bugfix here by aauBot. canged ourCombos to enemyCombos
+                    value -= enemyCombos[card.Deck] * GetWeight(Param.KnowingCardCombo) * wspEnemy;
                 }
             }
 
