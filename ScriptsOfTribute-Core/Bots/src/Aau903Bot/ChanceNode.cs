@@ -6,12 +6,14 @@ namespace Aau903Bot;
 
 public class ChanceNode : Node
 {
+    public Node Parent;
     public Move AppliedMove;
     private Dictionary<int, List<Node>> knownPossibleOutcomes;
-    public ChanceNode(SeededGameState gameState, Node parent, Move appliedMove, Aau903Bot bot) : base(gameState, parent, new List<Move>(), bot)
+    public ChanceNode(SeededGameState gameState, Node parent, Move appliedMove, Aau903Bot bot) : base(gameState, new List<Move>(), bot)
     {
         AppliedMove = appliedMove;
         knownPossibleOutcomes = new Dictionary<int, List<Node>>();
+        Parent = parent;
     }
 
     public override void Visit(out double score, int travelsDone)

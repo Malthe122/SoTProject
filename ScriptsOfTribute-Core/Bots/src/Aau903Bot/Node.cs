@@ -5,12 +5,6 @@ namespace Aau903Bot;
 
 public class Node
 {
-    /// <summary>
-    /// Has to be stored like a seeded game state although its a bit non-intuitive, but this is the object type that applyMove method returns.
-    /// However we never want to actually reuse the seed inside the object, so when we call apply move on the seeded state, we need to call it
-    /// with a new random seed which is a possible argument for the applyMove method
-    /// </summary>
-    public Node? Parent = null;
     public Dictionary<MoveContainer, Node> MoveToChildNode;
     public int VisitCount = 0;
     public double TotalScore = 0;
@@ -19,10 +13,9 @@ public class Node
     public List<MoveContainer> PossibleMoves;
     internal Aau903Bot Bot;
 
-    public Node(SeededGameState gameState, Node parent, List<Move> possibleMoves, Aau903Bot bot)
+    public Node(SeededGameState gameState, List<Move> possibleMoves, Aau903Bot bot)
     {
         GameState = gameState;
-        Parent = parent;
         PossibleMoves = Utility.BuildUniqueMovesContainers(possibleMoves);
         MoveToChildNode = new Dictionary<MoveContainer, Node>();
         ApplyAllDeterministicAndObviousMoves();
@@ -209,7 +202,7 @@ public class Node
 
         foreach (var childNode in MoveToChildNode.Values)
         {
-            double confidence = childNode.GetConfidenceScore();
+            double confidence = childNode.GetConfidenceScore(VisitCount);
             if (confidence > maxConfidence)
             {
                 maxConfidence = confidence;
@@ -220,13 +213,15 @@ public class Node
         return highestConfidenceChild;
     }
 
-    public double GetConfidenceScore()
+    /// <param name="parentVisitCount"> Must be supplied here as Nodes does not have a single fixed parent becuase of tree-reusal</param>
+    /// <returns></returns>
+    public double GetConfidenceScore(int parentVisitCount)
     {
         switch (Bot.Params.CHOSEN_EVALUATION_METHOD)
         {
             case EvaluationMethod.UCT:
                 double exploitation = TotalScore / VisitCount;
-                double exploration = Bot.Params.UCT_EXPLORATION_CONSTANT * Math.Sqrt(Math.Log(Parent.VisitCount) / VisitCount);
+                double exploration = Bot.Params.UCT_EXPLORATION_CONSTANT * Math.Sqrt(Math.Log(parentVisitCount) / VisitCount);
                 return exploitation + exploration;
             case EvaluationMethod.Custom:
                 return TotalScore - VisitCount;

@@ -193,7 +193,7 @@ public static class Utility
 
     public static Node FindOrBuildNode(SeededGameState seededGameState, Node parent, List<Move> possibleMoves, Aau903Bot bot)
     {
-        var result = new Node(seededGameState, parent, possibleMoves, bot);
+        var result = new Node(seededGameState, possibleMoves, bot);
 
         if (bot.Params.REUSE_TREE)
         {
