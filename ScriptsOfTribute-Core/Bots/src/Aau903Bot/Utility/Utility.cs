@@ -200,7 +200,18 @@ public static class Utility
 
             if (bot.NodeGameStateHashMap.ContainsKey(result.GameStateHash))
             {
-                var equalNode = bot.NodeGameStateHashMap[result.GameStateHash].SingleOrDefault(node => node.GameState.IsIdentical(result.GameState));
+                Node equalNode = null;
+                try{
+                    equalNode = bot.NodeGameStateHashMap[result.GameStateHash].SingleOrDefault(node => node.GameState.IsIdentical(result.GameState));
+                }
+                catch(Exception e) {
+                    var error = "Somehow two identical states were both added to hashmap.\n";
+                    error += "State hashes:\n";
+                    bot.NodeGameStateHashMap[result.GameStateHash].ToList().ForEach(n => {error += n.GameStateHashMap + "\n";});
+                    error += "Full states:\n";
+                    bot.NodeGameStateHashMap[result.GameStateHash].ToList().ForEach(n => n.GameState.Log());
+                }
+
                 if (equalNode != null)
                 {
                     result = equalNode;
