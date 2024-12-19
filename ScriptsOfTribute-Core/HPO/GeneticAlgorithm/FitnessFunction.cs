@@ -4,6 +4,7 @@ using ScriptsOfTribute.Serializers;
 using ScriptsOfTribute.Board;
 using ScriptsOfTribute;
 using System.Globalization;
+using ScriptsOfTribute.AI;
 
 namespace Aau903Bot;
 
@@ -60,7 +61,7 @@ class FitnessFunction : IFitness
             for(int i = 0; i < 2; i++) {
                 aauBot = new Aau903Bot();
                 aauBot.Params = new MCTSHyperparameters(uniqueFileName);
-                var gameResult = new ScriptsOfTribute.AI.ScriptsOfTribute(aauBot, randomBot, TimeSpan.FromSeconds(timeout)).Play().Item1;
+                var gameResult = PlayGame(aauBot, randomBot, timeout);
                 if (gameResult.Winner == PlayerEnum.PLAYER1) {
                     score += 1;
                 }
@@ -73,7 +74,7 @@ class FitnessFunction : IFitness
             for(int i = 0; i < 2; i++) {
                 aauBot = new Aau903Bot();
                 aauBot.Params = new MCTSHyperparameters(uniqueFileName);
-                var gameResult = new ScriptsOfTribute.AI.ScriptsOfTribute(aauBot, maxPrestigeBot, TimeSpan.FromSeconds(timeout)).Play().Item1;
+                var gameResult = PlayGame(aauBot, maxPrestigeBot, timeout);
                 if (gameResult.Winner == PlayerEnum.PLAYER1) {
                     score += 10;
                 }
@@ -86,7 +87,7 @@ class FitnessFunction : IFitness
             for(int i = 0; i < 2; i++) {
                 aauBot = new Aau903Bot();
                 aauBot.Params = new MCTSHyperparameters(uniqueFileName);
-                var gameResult = new ScriptsOfTribute.AI.ScriptsOfTribute(aauBot, decisionTreeBot, TimeSpan.FromSeconds(timeout)).Play().Item1;
+                var gameResult = PlayGame(aauBot, decisionTreeBot, timeout);
                 if (gameResult.Winner == PlayerEnum.PLAYER1) {
                     score += 100;
                 }
@@ -99,7 +100,7 @@ class FitnessFunction : IFitness
             for(int i = 0; i < 2; i++) {
                 aauBot = new Aau903Bot();
                 aauBot.Params = new MCTSHyperparameters(uniqueFileName);
-                var gameResult = new ScriptsOfTribute.AI.ScriptsOfTribute(aauBot, mctsBot, TimeSpan.FromSeconds(timeout)).Play().Item1;
+                var gameResult = PlayGame(aauBot, mctsBot, timeout);
                 if (gameResult.Winner == PlayerEnum.PLAYER1) {
                     score += 1000;
                 }
@@ -119,6 +120,19 @@ class FitnessFunction : IFitness
         }
 
         return score;
+    }
+
+    /// <summary>
+    /// Sometimes exceptions happens in the framework. In these cases, we will replay the game. This is not bot specific exceptions, as in these cases, the game runner 
+    /// will simply grant the victory to the opponent instead of rethrowing the exception
+    /// </summary>
+    private EndGameState PlayGame(AI bot1, AI bot2, int timeout) {
+        try {
+            return new ScriptsOfTribute.AI.ScriptsOfTribute(bot1, bot2, TimeSpan.FromSeconds(timeout)).Play().Item1;
+        }
+        catch{
+            return PlayGame(bot1, bot2, timeout);
+        }
     }
 
     private double ScoreEndOfGame(EndGameState endGameState, SeededGameState gameState)
