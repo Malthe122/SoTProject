@@ -6,16 +6,47 @@ namespace Aau903Bot;
 
 public class Chromosome : ChromosomeBase
 {
-    public Chromosome() : base(8)
+    public Chromosome(
+        double? iterationCompletionMillisecondsBuffer = null,
+        double? uctExplorationConstant = null,
+        bool? forceDelayTurnEndInRollout = null,
+        bool? includePlayMoveChanceNodes = null,
+        bool? includeEndTurnChanceNodes = null,
+        string? chosenScoringMethod = null,
+        int? rolloutTurnsBeforeHeuristic = null,
+        bool? reuseTree = null) : base(8)
     {
-        ReplaceGene(0, GenerateGene(0));
-        ReplaceGene(1, GenerateGene(1));
-        ReplaceGene(2, GenerateGene(2));
-        ReplaceGene(3, GenerateGene(3));
-        ReplaceGene(4, GenerateGene(4));
-        ReplaceGene(5, GenerateGene(5));
-        ReplaceGene(6, GenerateGene(6));
-        ReplaceGene(7, GenerateGene(7));
+        ReplaceGene(0, iterationCompletionMillisecondsBuffer.HasValue 
+        ? new Gene(iterationCompletionMillisecondsBuffer.Value) 
+        : GenerateGene(0));
+
+        ReplaceGene(1, uctExplorationConstant.HasValue 
+            ? new Gene(uctExplorationConstant.Value) 
+            : GenerateGene(1));
+
+        ReplaceGene(2, forceDelayTurnEndInRollout.HasValue 
+            ? new Gene(forceDelayTurnEndInRollout.Value) 
+            : GenerateGene(2));
+
+        ReplaceGene(3, includePlayMoveChanceNodes.HasValue 
+            ? new Gene(includePlayMoveChanceNodes.Value) 
+            : GenerateGene(3));
+
+        ReplaceGene(4, includeEndTurnChanceNodes.HasValue 
+            ? new Gene(includeEndTurnChanceNodes.Value) 
+            : GenerateGene(4));
+
+        ReplaceGene(5, chosenScoringMethod != null 
+            ? new Gene(chosenScoringMethod) 
+            : GenerateGene(5));
+
+        ReplaceGene(6, rolloutTurnsBeforeHeuristic.HasValue 
+            ? new Gene(rolloutTurnsBeforeHeuristic.Value) 
+            : GenerateGene(6));
+
+        ReplaceGene(7, reuseTree.HasValue 
+            ? new Gene(reuseTree.Value) 
+            : GenerateGene(7));
     }
 
     public double ITERATION_COMPLETION_MILLISECONDS_BUFFER

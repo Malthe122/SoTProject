@@ -58,51 +58,56 @@ class FitnessFunction : IFitness
 
 
             // Games
-            for(int i = 0; i < 2; i++) {
-                aauBot = new Aau903Bot();
-                aauBot.Params = new MCTSHyperparameters(uniqueFileName);
-                var gameResult = PlayGame(aauBot, randomBot, timeout);
-                if (gameResult.Winner == PlayerEnum.PLAYER1) {
-                    score += 1;
-                }
-            }
+            // for(int i = 0; i < 2; i++) {
+            //     aauBot = new Aau903Bot();
+            //     aauBot.Params = new MCTSHyperparameters(uniqueFileName);
+            //     var gameResult = PlayGame(aauBot, randomBot, timeout);
+            //     if (gameResult.Winner == PlayerEnum.PLAYER1) {
+            //         score += 1;
+            //     }
+            // }
 
-            if (score < 1) { //if bot cant beat random bot, there is no reason spending time playing the other bots
-                return score;
-            }
+            // if (score < 1) { //if bot cant beat random bot, there is no reason spending time playing the other bots
+            //     return score;
+            // }
 
-            for(int i = 0; i < 2; i++) {
-                aauBot = new Aau903Bot();
-                aauBot.Params = new MCTSHyperparameters(uniqueFileName);
-                var gameResult = PlayGame(aauBot, maxPrestigeBot, timeout);
-                if (gameResult.Winner == PlayerEnum.PLAYER1) {
-                    score += 10;
-                }
-            }
+            // for(int i = 0; i < 2; i++) {
+            //     aauBot = new Aau903Bot();
+            //     aauBot.Params = new MCTSHyperparameters(uniqueFileName);
+            //     var gameResult = PlayGame(aauBot, maxPrestigeBot, timeout);
+            //     if (gameResult.Winner == PlayerEnum.PLAYER1) {
+            //         score += 10;
+            //     }
+            // }
 
-            if (score < 10) { //if bot cant beat max prestige bot, there is no reason spending time playing the other bots
-                return score;
-            }
+            // if (score < 10) { //if bot cant beat max prestige bot, there is no reason spending time playing the other bots
+            //     return score;
+            // }
 
-            for(int i = 0; i < 2; i++) {
-                aauBot = new Aau903Bot();
-                aauBot.Params = new MCTSHyperparameters(uniqueFileName);
-                var gameResult = PlayGame(aauBot, decisionTreeBot, timeout);
-                if (gameResult.Winner == PlayerEnum.PLAYER1) {
-                    score += 100;
-                }
-            }
+            // for(int i = 0; i < 2; i++) {
+            //     aauBot = new Aau903Bot();
+            //     aauBot.Params = new MCTSHyperparameters(uniqueFileName);
+            //     var gameResult = PlayGame(aauBot, decisionTreeBot, timeout);
+            //     if (gameResult.Winner == PlayerEnum.PLAYER1) {
+            //         score += 100;
+            //     }
+            // }
 
-            if (score < 100) { //if bot cant beat decision tree bot, there is no reason spending time playing the other bots
-                return score;
-            }
+            // if (score < 100) { //if bot cant beat decision tree bot, there is no reason spending time playing the other bots
+            //     return score;
+            // }
 
-            for(int i = 0; i < 2; i++) {
+
+            // Keeps playing MctsBot untill it looses
+            for(int i = 0; i < 6; i++) {
                 aauBot = new Aau903Bot();
                 aauBot.Params = new MCTSHyperparameters(uniqueFileName);
                 var gameResult = PlayGame(aauBot, mctsBot, timeout);
                 if (gameResult.Winner == PlayerEnum.PLAYER1) {
                     score += 1000;
+                }
+                else {
+                    return score;
                 }
             }
 

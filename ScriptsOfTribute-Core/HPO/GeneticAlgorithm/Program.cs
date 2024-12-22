@@ -10,13 +10,23 @@ class Program
         var crossover = new OnePointCrossover();
         var mutation = new UniformMutation(true);
         var fitness = new FitnessFunction(); // WE MADE THIS WOO
-        var chromosome = new Chromosome(); // ALSO THIS YIPPIE
+        var chromosome = new Chromosome(
+            iterationCompletionMillisecondsBuffer: 365.06,
+            uctExplorationConstant: 0.707,
+            forceDelayTurnEndInRollout: false,
+            includePlayMoveChanceNodes: true,
+            includeEndTurnChanceNodes: false,
+            chosenScoringMethod: "Heuristic",
+            rolloutTurnsBeforeHeuristic: 9,
+            reuseTree: false
+        );
         var population = new Population(100, 100, chromosome);
 
-        var ga = new GeneticAlgorithm(population, fitness, selection, crossover, mutation,
-        CrossoverProbability = 0.5,  // Adjust crossover probability
-        MutationProbability = 0.3,  // Adjust mutation probability)
+        var ga = new GeneticAlgorithm(population, fitness, selection, crossover, mutation
+        )
         {
+            CrossoverProbability = 0.5f,
+            MutationProbability = 0.3f,
             TaskExecutor = new ParallelTaskExecutor()
         };
         ga.GenerationRan += (sender, e) =>
