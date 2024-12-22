@@ -6,10 +6,6 @@ namespace Aau903Bot;
 
 public static class IsIdenticalExtensions{
 
-    public static List<long> PreciseChecks = new List<long>();
-
-    public static int Amount { get; internal set; }
-
     public static bool IsIdentical(this SeededGameState instance, SeededGameState other) {
 
         return ( 

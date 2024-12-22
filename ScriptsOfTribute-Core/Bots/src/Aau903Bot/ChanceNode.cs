@@ -6,16 +6,20 @@ namespace Aau903Bot;
 
 public class ChanceNode : Node
 {
+    public Node Parent;
     public Move AppliedMove;
     private Dictionary<int, List<Node>> knownPossibleOutcomes;
-    public ChanceNode(SeededGameState gameState, Node parent, Move appliedMove, Aau903Bot bot) : base(gameState, parent, new List<Move>(), bot)
+    public ChanceNode(SeededGameState gameState, Node parent, Move appliedMove, Aau903Bot bot) : base(gameState, new List<Move>(), bot)
     {
         AppliedMove = appliedMove;
         knownPossibleOutcomes = new Dictionary<int, List<Node>>();
+        Parent = parent;
     }
 
-    public override void Visit(out double score)
+    public override void Visit(out double score, int travelsDone)
     {   
+        travelsDone++;
+
         (var newState, var newMoves) = Parent.GameState.ApplyMove(AppliedMove, (ulong)Utility.Rng.Next());
 
         var child = Utility.FindOrBuildNode(newState, this, newMoves, Bot);
@@ -45,16 +49,16 @@ public class ChanceNode : Node
                     }
                 }
 
-                leastVisitedChild.Visit(out score);
+                leastVisitedChild.Visit(out score, travelsDone);
             }
             else
             {
-                child.Visit(out score);
+                child.Visit(out score, travelsDone);
             }
         }
         else
         {
-            child.Visit(out score);
+            child.Visit(out score, travelsDone);
         }
 
         TotalScore += score;

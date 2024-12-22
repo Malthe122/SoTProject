@@ -4,6 +4,7 @@ using ScriptsOfTribute.Serializers;
 using ScriptsOfTribute.Board;
 using ScriptsOfTribute;
 using System.Globalization;
+using ScriptsOfTribute.AI;
 
 namespace Aau903Bot;
 
@@ -21,8 +22,7 @@ class FitnessFunction : IFitness
         var INCLUDE_END_TURN_CHANCE_NODES = (bool)chromosome.GetGene(4).Value;
         var CHOSEN_SCORING_METHOD = (string)chromosome.GetGene(5).Value;
         var ROLLOUT_TURNS_BEFORE_HEURSISTIC = (int)chromosome.GetGene(6).Value;
-        var EQUAL_CHANCE_NODE_DISTRIBUTION = (bool)chromosome.GetGene(7).Value;
-        var REUSE_TREE = (bool)chromosome.GetGene(8).Value;
+        var REUSE_TREE = (bool)chromosome.GetGene(7).Value;
 
         var data = new Dictionary<string, string>
         {
@@ -33,7 +33,6 @@ class FitnessFunction : IFitness
             {"INCLUDE_END_TURN_CHANCE_NODES", INCLUDE_END_TURN_CHANCE_NODES.ToString(CultureInfo.InvariantCulture)},
             {"CHOSEN_SCORING_METHOD", CHOSEN_SCORING_METHOD},
             {"ROLLOUT_TURNS_BEFORE_HEURSISTIC", ROLLOUT_TURNS_BEFORE_HEURSISTIC.ToString(CultureInfo.InvariantCulture)},
-            {"EQUAL_CHANCE_NODE_DISTRIBUTION", EQUAL_CHANCE_NODE_DISTRIBUTION.ToString(CultureInfo.InvariantCulture)},
             {"REUSE_TREE", REUSE_TREE.ToString(CultureInfo.InvariantCulture)},
         };
         Settings.SaveEnvFile(uniqueFileName, data);
@@ -41,17 +40,79 @@ class FitnessFunction : IFitness
         double score = 0.0;
         try {
             var timeout = 10;
+            var aauBot = new Aau903Bot();
+            aauBot.Params = new MCTSHyperparameters(uniqueFileName);
 
-            // BOTS CONFIG
-            var bot1 = new Aau903Bot(uniqueFileName);
-            var bot2 = new MCTSBot();
+            // built-in bots ranked by winrate
+            var randomBot = new RandomBot();
+            var maxPrestigeBot = new MaxPrestigeBot();
+            var decisionTreeBot = new DecisionTreeBot();
+            var mctsBot = new MCTSBot();
 
-            // GAME CONFIG
-            var game = new ScriptsOfTribute.AI.ScriptsOfTribute(bot1, bot2, TimeSpan.FromSeconds(timeout));
+            // competition bots ranked by winrate
+            // var sakkirinBot = new Sakkirin();
+            // // ToT skipped for now, cause it needs to be used differently cause its written in Python
+            // var soisMctsBot = new SOISMCTS();
+            // var hqlBot = new HQL_BOT();
+            // var bestMcts3 = new BestMCTS3();
 
-            var (endGameState, fullGameState) = game.Play();
-            var seededGameState = new SeededGameState(fullGameState);
-            score = ScoreEndOfGame(endGameState, seededGameState);
+
+            // Games
+            for(int i = 0; i < 2; i++) {
+                aauBot = new Aau903Bot();
+                aauBot.Params = new MCTSHyperparameters(uniqueFileName);
+                var gameResult = PlayGame(aauBot, randomBot, timeout);
+                if (gameResult.Winner == PlayerEnum.PLAYER1) {
+                    score += 1;
+                }
+            }
+
+            if (score < 1) { //if bot cant beat random bot, there is no reason spending time playing the other bots
+                return score;
+            }
+
+            for(int i = 0; i < 2; i++) {
+                aauBot = new Aau903Bot();
+                aauBot.Params = new MCTSHyperparameters(uniqueFileName);
+                var gameResult = PlayGame(aauBot, maxPrestigeBot, timeout);
+                if (gameResult.Winner == PlayerEnum.PLAYER1) {
+                    score += 10;
+                }
+            }
+
+            if (score < 10) { //if bot cant beat max prestige bot, there is no reason spending time playing the other bots
+                return score;
+            }
+
+            for(int i = 0; i < 2; i++) {
+                aauBot = new Aau903Bot();
+                aauBot.Params = new MCTSHyperparameters(uniqueFileName);
+                var gameResult = PlayGame(aauBot, decisionTreeBot, timeout);
+                if (gameResult.Winner == PlayerEnum.PLAYER1) {
+                    score += 100;
+                }
+            }
+
+            if (score < 100) { //if bot cant beat decision tree bot, there is no reason spending time playing the other bots
+                return score;
+            }
+
+            for(int i = 0; i < 2; i++) {
+                aauBot = new Aau903Bot();
+                aauBot.Params = new MCTSHyperparameters(uniqueFileName);
+                var gameResult = PlayGame(aauBot, mctsBot, timeout);
+                if (gameResult.Winner == PlayerEnum.PLAYER1) {
+                    score += 1000;
+                }
+            }
+
+            return score;
+
+            // if (score < 1000) { //if bot cant beat mctsBot bot, there is no reason spending time playing the other bots
+            //     return score;
+            // }
+
+            // TODO add the compition bots here, for a new GA (and remove the built in ones or most of them), when we have a solution that beats mcts
         }
         finally
         {
@@ -59,6 +120,19 @@ class FitnessFunction : IFitness
         }
 
         return score;
+    }
+
+    /// <summary>
+    /// Sometimes exceptions happens in the framework. In these cases, we will replay the game. This is not bot specific exceptions, as in these cases, the game runner 
+    /// will simply grant the victory to the opponent instead of rethrowing the exception
+    /// </summary>
+    private EndGameState PlayGame(AI bot1, AI bot2, int timeout) {
+        try {
+            return new ScriptsOfTribute.AI.ScriptsOfTribute(bot1, bot2, TimeSpan.FromSeconds(timeout)).Play().Item1;
+        }
+        catch{
+            return PlayGame(bot1, bot2, timeout);
+        }
     }
 
     private double ScoreEndOfGame(EndGameState endGameState, SeededGameState gameState)

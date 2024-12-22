@@ -5,32 +5,33 @@ namespace Aau903Bot;
 
 public class Node
 {
-    /// <summary>
-    /// Has to be stored like a seeded game state although its a bit non-intuitive, but this is the object type that applyMove method returns.
-    /// However we never want to actually reuse the seed inside the object, so when we call apply move on the seeded state, we need to call it
-    /// with a new random seed which is a possible argument for the applyMove method
-    /// </summary>
-    public Node? Parent = null;
-    public Dictionary<Move, Node> MoveToChildNode;
+    public Dictionary<MoveContainer, Node> MoveToChildNode;
     public int VisitCount = 0;
     public double TotalScore = 0;
     public int GameStateHash { get; private set; }
     public SeededGameState GameState { get; private set; }
-    public List<Move> PossibleMoves;
+    public List<MoveContainer> PossibleMoves;
     internal Aau903Bot Bot;
 
-    public Node(SeededGameState gameState, Node parent, List<Move> possibleMoves, Aau903Bot bot)
+    public Node(SeededGameState gameState, List<Move> possibleMoves, Aau903Bot bot)
     {
         GameState = gameState;
-        Parent = parent;
-        PossibleMoves = possibleMoves;
-        MoveToChildNode = new Dictionary<Move, Node>();
+        PossibleMoves = Utility.BuildUniqueMovesContainers(possibleMoves);
+        MoveToChildNode = new Dictionary<MoveContainer, Node>();
         ApplyAllDeterministicAndObviousMoves();
         Bot = bot;
     }
 
-    public virtual void Visit(out double score)
+    public virtual void Visit(out double score, int travelsDone)
     {
+        travelsDone++;
+
+        if (travelsDone > Bot.Params.MAX_TREE_TRAVELS) {
+            score = Score();
+            TotalScore += score;
+            VisitCount++;
+        }
+
         var playerId = GameState.CurrentPlayer.PlayerID;
 
         if (GameState.GameEndState == null)
@@ -43,12 +44,12 @@ public class Node
             else if (PossibleMoves.Count > MoveToChildNode.Count)
             {
                 var expandedChild = Expand();
-                expandedChild.Visit(out score);
+                expandedChild.Visit(out score, travelsDone++);
             }
             else
             {
                 var selectedChild = Select();
-                selectedChild.Visit(out score);
+                selectedChild.Visit(out score, travelsDone++);
 
                 if (selectedChild.GameState.CurrentPlayer.PlayerID != playerId)
                 {
@@ -68,23 +69,23 @@ public class Node
 
     internal Node Expand()
     {
-        foreach (var move in PossibleMoves)
+        foreach (var moveContainer in PossibleMoves)
         {
-            if (!MoveToChildNode.ContainsKey(move))
+            if (!MoveToChildNode.Keys.Any(mc => mc.Move.IsIdentical(moveContainer.Move)))
             {
-                if ((Bot.Params.INCLUDE_PLAY_MOVE_CHANCE_NODES && move.IsNonDeterministic())
-                    || Bot.Params.INCLUDE_END_TURN_CHANCE_NODES && move.Command == CommandEnum.END_TURN)
+                if ((Bot.Params.INCLUDE_PLAY_MOVE_CHANCE_NODES && moveContainer.Move.IsNonDeterministic())
+                    || Bot.Params.INCLUDE_END_TURN_CHANCE_NODES && moveContainer.Move.Command == CommandEnum.END_TURN)
                 {
-                    var newChild = new ChanceNode(GameState, this, move, Bot);
-                    MoveToChildNode.Add(move, newChild);
+                    var newChild = new ChanceNode(GameState, this, moveContainer.Move, Bot);
+                    MoveToChildNode.Add(new MoveContainer(moveContainer.Move), newChild);
                     return newChild;
                 }
                 else
                 {
                     ulong randomSeed = (ulong)Utility.Rng.Next();
-                    var (newGameState, newPossibleMoves) = GameState.ApplyMove(move, randomSeed);
+                    var (newGameState, newPossibleMoves) = GameState.ApplyMove(moveContainer.Move, randomSeed);
                     var newChild = Utility.FindOrBuildNode(newGameState, this, newPossibleMoves, Bot);
-                    MoveToChildNode.Add(move, newChild);
+                    MoveToChildNode.Add(new MoveContainer(moveContainer.Move), newChild);
                     return newChild;
                 }
             }
@@ -121,14 +122,14 @@ public class Node
             {
                 if (rolloutPossibleMoves.Count > 1)
                 {
-                    rolloutPossibleMoves.RemoveAll(move => move.Command == CommandEnum.END_TURN);
+                    rolloutPossibleMoves.RemoveAll(moveContainer => moveContainer.Move.Command == CommandEnum.END_TURN);
                 }
             }
 
             var chosenIndex = Utility.Rng.Next(rolloutPossibleMoves.Count);
             var moveToMake = rolloutPossibleMoves[chosenIndex];
 
-            var (newGameState, newPossibleMoves) = rolloutGameState.ApplyMove(moveToMake);
+            var (newGameState, newPossibleMoves) = rolloutGameState.ApplyMove(moveToMake.Move);
 
             if (newGameState.CurrentPlayer != rolloutPlayer)
             {
@@ -137,7 +138,7 @@ public class Node
             }
 
             rolloutGameState = newGameState;
-            rolloutPossibleMoves = newPossibleMoves;
+            rolloutPossibleMoves = Utility.BuildUniqueMovesContainers(newPossibleMoves);
         }
 
         var stateScore = Utility.UseBestMCTS3Heuristic(rolloutGameState, true);
@@ -155,7 +156,7 @@ public class Node
         double result = 0;
         var rolloutGameState = GameState;
         var rolloutPlayerId = rolloutGameState.CurrentPlayer.PlayerID;
-        var rolloutPossibleMoves = new List<Move>(PossibleMoves);
+        var rolloutPossibleMoves = new List<MoveContainer>(PossibleMoves);
 
         for (int i = 0; i < Bot.Params.NUMBER_OF_ROLLOUTS; i++)
         {
@@ -167,15 +168,15 @@ public class Node
                 {
                     if (rolloutPossibleMoves.Count > 1)
                     {
-                        rolloutPossibleMoves.RemoveAll(move => move.Command == CommandEnum.END_TURN);
+                        rolloutPossibleMoves.RemoveAll(moveContainer => moveContainer.Move.Command == CommandEnum.END_TURN);
                     }
                 }
                 var chosenIndex = Utility.Rng.Next(rolloutPossibleMoves.Count);
                 var moveToMake = rolloutPossibleMoves[chosenIndex];
 
-                var (newGameState, newPossibleMoves) = rolloutGameState.ApplyMove(moveToMake);
+                var (newGameState, newPossibleMoves) = rolloutGameState.ApplyMove(moveToMake.Move);
                 rolloutGameState = newGameState;
-                rolloutPossibleMoves = newPossibleMoves;
+                rolloutPossibleMoves = Utility.BuildUniqueMovesContainers(newPossibleMoves);
             }
 
             if (rolloutGameState.GameEndState.Winner != PlayerEnum.NO_PLAYER_SELECTED)
@@ -201,7 +202,7 @@ public class Node
 
         foreach (var childNode in MoveToChildNode.Values)
         {
-            double confidence = childNode.GetConfidenceScore();
+            double confidence = childNode.GetConfidenceScore(VisitCount);
             if (confidence > maxConfidence)
             {
                 maxConfidence = confidence;
@@ -212,13 +213,15 @@ public class Node
         return highestConfidenceChild;
     }
 
-    public double GetConfidenceScore()
+    /// <param name="parentVisitCount"> Must be supplied here as Nodes does not have a single fixed parent becuase of tree-reusal</param>
+    /// <returns></returns>
+    public double GetConfidenceScore(int parentVisitCount)
     {
         switch (Bot.Params.CHOSEN_EVALUATION_METHOD)
         {
             case EvaluationMethod.UCT:
                 double exploitation = TotalScore / VisitCount;
-                double exploration = Bot.Params.UCT_EXPLORATION_CONSTANT * Math.Sqrt(Math.Log(Parent.VisitCount) / VisitCount);
+                double exploration = Bot.Params.UCT_EXPLORATION_CONSTANT * Math.Sqrt(Math.Log(parentVisitCount) / VisitCount);
                 return exploitation + exploration;
             case EvaluationMethod.Custom:
                 return TotalScore - VisitCount;
@@ -229,24 +232,26 @@ public class Node
 
     internal void ApplyAllDeterministicAndObviousMoves()
     {
-        foreach (Move currMove in PossibleMoves)
+        foreach (var currMove in PossibleMoves)
         {
-            if (currMove.Command == CommandEnum.PLAY_CARD)
+            if (currMove.Move.Command == CommandEnum.PLAY_CARD)
             {
-                if (Utility.OBVIOUS_ACTION_PLAYS.Contains(((SimpleCardMove)currMove).Card.CommonId))
+                if (Utility.OBVIOUS_ACTION_PLAYS.Contains(((SimpleCardMove)currMove.Move).Card.CommonId))
                 {
                     // TODO consider if some of the choice cards are also obvious moves, since the choice will be a new move
                     // or how to handle this issue
-                    (GameState, PossibleMoves) = GameState.ApplyMove(currMove, (ulong)Utility.Rng.Next());
+                    (GameState, var possibleMoves) = GameState.ApplyMove(currMove.Move, (ulong)Utility.Rng.Next());
+                    PossibleMoves = Utility.BuildUniqueMovesContainers(possibleMoves);
                     ApplyAllDeterministicAndObviousMoves();
                     break;
                 }
             }
-            else if (currMove.Command == CommandEnum.ACTIVATE_AGENT)
+            else if (currMove.Move.Command == CommandEnum.ACTIVATE_AGENT)
             {
-                if (Utility.OBVIOUS_AGENT_EFFECTS.Contains(((SimpleCardMove)currMove).Card.CommonId))
+                if (Utility.OBVIOUS_AGENT_EFFECTS.Contains(((SimpleCardMove)currMove.Move).Card.CommonId))
                 {
-                    (GameState, PossibleMoves) = GameState.ApplyMove(currMove, (ulong)Utility.Rng.Next());
+                    (GameState, var possibleMoves) = GameState.ApplyMove(currMove.Move, (ulong)Utility.Rng.Next());
+                    PossibleMoves = Utility.BuildUniqueMovesContainers(possibleMoves);
                     ApplyAllDeterministicAndObviousMoves();
                     break;
                 }
