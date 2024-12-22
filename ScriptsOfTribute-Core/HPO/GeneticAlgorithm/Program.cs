@@ -11,13 +11,13 @@ class Program
         var mutation = new UniformMutation(true);
         var fitness = new FitnessFunction(); // WE MADE THIS WOO
         var chromosome = new Chromosome(
-            iterationCompletionMillisecondsBuffer: 365.06,
-            uctExplorationConstant: 0.707,
-            forceDelayTurnEndInRollout: false,
+            iterationCompletionMillisecondsBuffer: 266.986,
+            uctExplorationConstant: 0.684,
+            forceDelayTurnEndInRollout: true,
             includePlayMoveChanceNodes: true,
             includeEndTurnChanceNodes: false,
             chosenScoringMethod: "Heuristic",
-            rolloutTurnsBeforeHeuristic: 9,
+            rolloutTurnsBeforeHeuristic: 5,
             reuseTree: false
         );
         var population = new Population(100, 100, chromosome);

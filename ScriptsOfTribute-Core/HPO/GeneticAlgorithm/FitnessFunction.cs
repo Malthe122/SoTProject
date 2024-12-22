@@ -5,6 +5,10 @@ using ScriptsOfTribute.Board;
 using ScriptsOfTribute;
 using System.Globalization;
 using ScriptsOfTribute.AI;
+using Sakkarin;
+using SOISMCTS_;
+using hql_bot;
+using BestMCTS3_;
 
 namespace Aau903Bot;
 
@@ -50,74 +54,64 @@ class FitnessFunction : IFitness
             var mctsBot = new MCTSBot();
 
             // competition bots ranked by winrate
-            // var sakkirinBot = new Sakkirin();
-            // // ToT skipped for now, cause it needs to be used differently cause its written in Python
-            // var soisMctsBot = new SOISMCTS();
-            // var hqlBot = new HQL_BOT();
-            // var bestMcts3 = new BestMCTS3();
+            var sakkirinBot = new Sakkirin();
+            // ToT skipped for now, cause it needs to be used differently cause its written in Python
+            var soisMctsBot = new SOISMCTS();
+            // var hqlBot = new HQL_BOT(); I could not make this run
+            var bestMcts3 = new BestMCTS3_.BestMCTS3();
 
 
             // Games
+            for(int i = 0; i < 2; i++) {
+                aauBot = new Aau903Bot();
+                aauBot.Params = new MCTSHyperparameters(uniqueFileName);
+                var gameResult = PlayGame(aauBot, sakkirinBot, timeout);
+                if (gameResult.Winner == PlayerEnum.PLAYER1) {
+                    score += 1;
+                }
+            }
+
+            if (score < 1) { //if bot cant beat sakkirin bot, there is no reason spending time playing the other bots
+                return score;
+            }
+
+            for(int i = 0; i < 2; i++) {
+                aauBot = new Aau903Bot();
+                aauBot.Params = new MCTSHyperparameters(uniqueFileName);
+                var gameResult = PlayGame(aauBot, soisMctsBot, timeout);
+                if (gameResult.Winner == PlayerEnum.PLAYER1) {
+                    score += 10;
+                }
+            }
+
+            if (score < 10) { //if bot cant beat max soismcts bot, there is no reason spending time playing the other bots
+                return score;
+            }
+
+            // I could not make the hql bot run
             // for(int i = 0; i < 2; i++) {
             //     aauBot = new Aau903Bot();
             //     aauBot.Params = new MCTSHyperparameters(uniqueFileName);
-            //     var gameResult = PlayGame(aauBot, randomBot, timeout);
-            //     if (gameResult.Winner == PlayerEnum.PLAYER1) {
-            //         score += 1;
-            //     }
-            // }
-
-            // if (score < 1) { //if bot cant beat random bot, there is no reason spending time playing the other bots
-            //     return score;
-            // }
-
-            // for(int i = 0; i < 2; i++) {
-            //     aauBot = new Aau903Bot();
-            //     aauBot.Params = new MCTSHyperparameters(uniqueFileName);
-            //     var gameResult = PlayGame(aauBot, maxPrestigeBot, timeout);
-            //     if (gameResult.Winner == PlayerEnum.PLAYER1) {
-            //         score += 10;
-            //     }
-            // }
-
-            // if (score < 10) { //if bot cant beat max prestige bot, there is no reason spending time playing the other bots
-            //     return score;
-            // }
-
-            // for(int i = 0; i < 2; i++) {
-            //     aauBot = new Aau903Bot();
-            //     aauBot.Params = new MCTSHyperparameters(uniqueFileName);
-            //     var gameResult = PlayGame(aauBot, decisionTreeBot, timeout);
+            //     var gameResult = PlayGame(aauBot, hqlBot, timeout);
             //     if (gameResult.Winner == PlayerEnum.PLAYER1) {
             //         score += 100;
             //     }
             // }
 
-            // if (score < 100) { //if bot cant beat decision tree bot, there is no reason spending time playing the other bots
+            // if (score < 100) { //if bot cant beat hql bot, there is no reason spending time playing the other bots
             //     return score;
             // }
 
-
-            // Keeps playing MctsBot untill it looses
-            for(int i = 0; i < 6; i++) {
+            for(int i = 0; i < 2; i++) {
                 aauBot = new Aau903Bot();
                 aauBot.Params = new MCTSHyperparameters(uniqueFileName);
-                var gameResult = PlayGame(aauBot, mctsBot, timeout);
+                var gameResult = PlayGame(aauBot, bestMcts3, timeout);
                 if (gameResult.Winner == PlayerEnum.PLAYER1) {
                     score += 1000;
-                }
-                else {
-                    return score;
                 }
             }
 
             return score;
-
-            // if (score < 1000) { //if bot cant beat mctsBot bot, there is no reason spending time playing the other bots
-            //     return score;
-            // }
-
-            // TODO add the compition bots here, for a new GA (and remove the built in ones or most of them), when we have a solution that beats mcts
         }
         finally
         {
