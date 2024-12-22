@@ -6,14 +6,16 @@ class Program
 {
     static void Main(string[] args)
     {
-        var selection = new EliteSelection();
+        var selection = new RouletteWheelSelection();
         var crossover = new OnePointCrossover();
         var mutation = new UniformMutation(true);
         var fitness = new FitnessFunction(); // WE MADE THIS WOO
         var chromosome = new Chromosome(); // ALSO THIS YIPPIE
         var population = new Population(100, 100, chromosome);
 
-        var ga = new GeneticAlgorithm(population, fitness, selection, crossover, mutation)
+        var ga = new GeneticAlgorithm(population, fitness, selection, crossover, mutation,
+        CrossoverProbability = 0.5,  // Adjust crossover probability
+        MutationProbability = 0.3,  // Adjust mutation probability)
         {
             TaskExecutor = new ParallelTaskExecutor()
         };
@@ -29,7 +31,7 @@ class Program
             }
         };
 
-        ga.Termination = new GenerationNumberTermination(200);
+        ga.Termination = new GenerationNumberTermination(100);
 
         Console.WriteLine("GA running...");
         ga.Start();

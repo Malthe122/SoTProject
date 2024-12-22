@@ -207,7 +207,7 @@ public static class Utility
                 catch(Exception e) {
                     var error = "Somehow two identical states were both added to hashmap.\n";
                     error += "State hashes:\n";
-                    bot.NodeGameStateHashMap[result.GameStateHash].ToList().ForEach(n => {error += n.GameStateHashMap + "\n";});
+                    bot.NodeGameStateHashMap[result.GameStateHash].ToList().ForEach(n => {error += n.GameStateHash + "\n";});
                     error += "Full states:\n";
                     bot.NodeGameStateHashMap[result.GameStateHash].ToList().ForEach(n => n.GameState.Log());
                 }
