@@ -25,8 +25,8 @@ class Program
         var ga = new GeneticAlgorithm(population, fitness, selection, crossover, mutation
         )
         {
-            CrossoverProbability = 0.5f,
-            MutationProbability = 0.3f,
+            CrossoverProbability = 0.2f,
+            MutationProbability = 0.6f,
             TaskExecutor = new ParallelTaskExecutor()
         };
         ga.GenerationRan += (sender, e) =>

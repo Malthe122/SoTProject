@@ -62,7 +62,7 @@ class FitnessFunction : IFitness
 
 
             // Games
-            for(int i = 0; i < 2; i++) {
+            for(int i = 0; i < 5; i++) {
                 aauBot = new Aau903Bot();
                 aauBot.Params = new MCTSHyperparameters(uniqueFileName);
                 var gameResult = PlayGame(aauBot, sakkirinBot, timeout);
@@ -75,12 +75,12 @@ class FitnessFunction : IFitness
                 return score;
             }
 
-            for(int i = 0; i < 2; i++) {
+            for(int i = 0; i < 5; i++) {
                 aauBot = new Aau903Bot();
                 aauBot.Params = new MCTSHyperparameters(uniqueFileName);
                 var gameResult = PlayGame(aauBot, soisMctsBot, timeout);
                 if (gameResult.Winner == PlayerEnum.PLAYER1) {
-                    score += 10;
+                    score += 2;
                 }
             }
 
@@ -102,12 +102,12 @@ class FitnessFunction : IFitness
             //     return score;
             // }
 
-            for(int i = 0; i < 2; i++) {
+            for(int i = 0; i < 5; i++) {
                 aauBot = new Aau903Bot();
                 aauBot.Params = new MCTSHyperparameters(uniqueFileName);
                 var gameResult = PlayGame(aauBot, bestMcts3, timeout);
                 if (gameResult.Winner == PlayerEnum.PLAYER1) {
-                    score += 1000;
+                    score += 3;
                 }
             }
 
