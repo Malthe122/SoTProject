@@ -84,7 +84,7 @@ class FitnessFunction : IFitness
                 }
             }
 
-            if (score < 10) { //if bot cant beat max soismcts bot, there is no reason spending time playing the other bots
+            if (score < 2) { //if bot cant beat max soismcts bot, there is no reason spending time playing the other bots
                 return score;
             }
 
