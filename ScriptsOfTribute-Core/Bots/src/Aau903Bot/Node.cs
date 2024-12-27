@@ -22,15 +22,17 @@ public class Node
         Bot = bot;
     }
 
-    public virtual void Visit(out double score, int travelsDone)
+    public virtual void Visit(out double score, List<Node> visitedNodes)
     {
-        travelsDone++;
 
-        if (travelsDone > Bot.Params.MAX_TREE_TRAVELS) {
+        if (visitedNodes.Contains(this)) {
             score = Score();
             TotalScore += score;
             VisitCount++;
+            return;
         }
+
+        visitedNodes.Add(this);
 
         var playerId = GameState.CurrentPlayer.PlayerID;
 
