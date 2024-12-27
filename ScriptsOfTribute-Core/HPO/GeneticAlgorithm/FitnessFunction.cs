@@ -84,9 +84,9 @@ class FitnessFunction : IFitness
                 }
             }
 
-            if (score < 2) { //if bot cant beat max soismcts bot, there is no reason spending time playing the other bots
-                return score;
-            }
+            // if (score < 10) { //if bot cant beat max soismcts bot, there is no reason spending time playing the other bots
+            //     return score;
+            // }
 
             // I could not make the hql bot run
             // for(int i = 0; i < 2; i++) {
