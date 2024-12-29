@@ -30,7 +30,7 @@ public class Aau903Bot : AI
         Console.WriteLine("@@@ Winner was " + state.Winner + " @@@");
 
         if (state.Reason == GameEndReason.INCORRECT_MOVE) {
-            string errorMessage = state.Winner == PlayerEnum.PLAYER1 ? PlayerEnum.PLAYER2.ToString() : PlayerEnum.PLAYER1.ToString() + " played illegal move\n";
+            string errorMessage = (state.Winner == PlayerEnum.PLAYER1 ? PlayerEnum.PLAYER2.ToString() : PlayerEnum.PLAYER1.ToString()) + " played illegal move\n";
                 errorMessage += "Environment was:\n";
                 errorMessage += "ITERATION_COMPLETION_MILLISECONDS_BUFFER: " + Params.ITERATION_COMPLETION_MILLISECONDS_BUFFER + "\n";
                 errorMessage += "UCT_EXPLORATION_CONSTANT: " + Params.UCT_EXPLORATION_CONSTANT + "\n";
