@@ -46,12 +46,12 @@ public class Node
             else if (PossibleMoves.Count > MoveToChildNode.Count)
             {
                 var expandedChild = Expand();
-                expandedChild.Visit(out score, travelsDone++);
+                expandedChild.Visit(out score, visitedNodes);
             }
             else
             {
                 var selectedChild = Select();
-                selectedChild.Visit(out score, travelsDone++);
+                selectedChild.Visit(out score, visitedNodes);
 
                 if (selectedChild.GameState.CurrentPlayer.PlayerID != playerId)
                 {
