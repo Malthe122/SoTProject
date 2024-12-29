@@ -11,14 +11,14 @@ class Program
         var mutation = new UniformMutation(true);
         var fitness = new FitnessFunction(); // WE MADE THIS WOO
         var chromosome = new Chromosome(
-            iterationCompletionMillisecondsBuffer: 266.986,
-            uctExplorationConstant: 0.684,
+            iterationCompletionMillisecondsBuffer: 329.513,
+            uctExplorationConstant: 1.27,
             forceDelayTurnEndInRollout: true,
-            includePlayMoveChanceNodes: true,
+            includePlayMoveChanceNodes: false,
             includeEndTurnChanceNodes: false,
-            chosenScoringMethod: "Heuristic",
-            rolloutTurnsBeforeHeuristic: 5,
-            reuseTree: false
+            chosenScoringMethod: "RolloutTurnsCompletionsThenHeuristic",
+            rolloutTurnsBeforeHeuristic: 7,
+            reuseTree: true
         );
         var population = new Population(100, 100, chromosome);
 
@@ -41,7 +41,7 @@ class Program
             }
         };
 
-        ga.Termination = new GenerationNumberTermination(100);
+        ga.Termination = new GenerationNumberTermination(1000);
 
         Console.WriteLine("GA running...");
         ga.Start();
