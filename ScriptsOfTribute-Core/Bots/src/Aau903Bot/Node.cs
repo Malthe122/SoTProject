@@ -22,15 +22,17 @@ public class Node
         Bot = bot;
     }
 
-    public virtual void Visit(out double score, int travelsDone)
+    public virtual void Visit(out double score, List<Node> visitedNodes)
     {
-        travelsDone++;
 
-        if (travelsDone > Bot.Params.MAX_TREE_TRAVELS) {
+        if (visitedNodes.Contains(this)) {
             score = Score();
             TotalScore += score;
             VisitCount++;
+            return;
         }
+
+        visitedNodes.Add(this);
 
         var playerId = GameState.CurrentPlayer.PlayerID;
 
@@ -44,12 +46,12 @@ public class Node
             else if (PossibleMoves.Count > MoveToChildNode.Count)
             {
                 var expandedChild = Expand();
-                expandedChild.Visit(out score, travelsDone++);
+                expandedChild.Visit(out score, visitedNodes);
             }
             else
             {
                 var selectedChild = Select();
-                selectedChild.Visit(out score, travelsDone++);
+                selectedChild.Visit(out score, visitedNodes);
 
                 if (selectedChild.GameState.CurrentPlayer.PlayerID != playerId)
                 {

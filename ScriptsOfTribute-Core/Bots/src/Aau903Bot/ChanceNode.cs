@@ -16,10 +16,8 @@ public class ChanceNode : Node
         Parent = parent;
     }
 
-    public override void Visit(out double score, int travelsDone)
+    public override void Visit(out double score, List<Node> visitedNodes)
     {   
-        travelsDone++;
-
         (var newState, var newMoves) = Parent.GameState.ApplyMove(AppliedMove, (ulong)Utility.Rng.Next());
 
         var child = Utility.FindOrBuildNode(newState, this, newMoves, Bot);
@@ -49,16 +47,16 @@ public class ChanceNode : Node
                     }
                 }
 
-                leastVisitedChild.Visit(out score, travelsDone);
+                leastVisitedChild.Visit(out score, visitedNodes);
             }
             else
             {
-                child.Visit(out score, travelsDone);
+                child.Visit(out score, visitedNodes);
             }
         }
         else
         {
-            child.Visit(out score, travelsDone);
+            child.Visit(out score, visitedNodes);
         }
 
         TotalScore += score;
