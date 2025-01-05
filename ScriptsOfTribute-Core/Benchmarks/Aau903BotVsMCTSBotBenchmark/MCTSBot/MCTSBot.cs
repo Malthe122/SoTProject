@@ -5,12 +5,12 @@ using ScriptsOfTribute.Serializers;
 using System.Diagnostics;
 using ScriptsOfTribute.Board.CardAction;
 using ScriptsOfTribute.Board.Cards;
-using CsvLoggerLibrary;
 
 namespace MCTSBot;
 
 public class Node
 {
+
     private int patronFavour = 50;
     private int patronNeutral = 10;
     private int patronUnfavour = -50;
@@ -368,16 +368,8 @@ public class MCTSBot : AI
     private bool startOfGame = true;
     private readonly SeededRandom rng = new(botSeed);
 
-    // Required attributes for the benchmark to work
-    private CsvBenchmarkLogger logger;
-    private TimeSpan timeout;
-    private readonly SeededRandom anotherRng;
-
-    public MCTSBot(TimeSpan timeout, SeededRandom anotherRng, CsvBenchmarkLogger logger)
+    public MCTSBot()
     {
-        this.logger = logger;
-        this.timeout = timeout;
-        this.anotherRng = anotherRng;
         this.PrepareForGame();
     }
 
