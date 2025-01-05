@@ -16,7 +16,7 @@ public class ChanceNode : Node
         Parent = parent;
     }
 
-    public override void Visit(out double score, List<Node> visitedNodes)
+    public override void Visit(out double score, HashSet<Node> visitedNodes)
     {   
         (var newState, var newMoves) = Parent.GameState.ApplyMove(AppliedMove, (ulong)Utility.Rng.Next());
 

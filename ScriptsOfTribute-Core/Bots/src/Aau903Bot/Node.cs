@@ -22,7 +22,7 @@ public class Node
         Bot = bot;
     }
 
-    public virtual void Visit(out double score, List<Node> visitedNodes)
+    public virtual void Visit(out double score, HashSet<Node> visitedNodes)
     {
 
         if (visitedNodes.Contains(this)) {
@@ -55,7 +55,7 @@ public class Node
 
                 if (selectedChild.GameState.CurrentPlayer.PlayerID != playerId)
                 {
-                    score *= -1; //TODO check if this is also correct with the heuristic. The heurisitc evaluation might not be zero-sum
+                    score *= -1; // this assumes the score is representing a winrate in a zero-sum-game format
                 }
             }
         }
