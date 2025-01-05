@@ -8,7 +8,7 @@ public class CsvBenchmarkLogger
     private bool _headersWritten;
     private const string ResultsFolder = "results";
 
-    public CsvBenchmarkLogger(string fileName)
+    public CsvBenchmarkLogger(string fileName = "results.csv")
     {
         Directory.CreateDirectory(ResultsFolder);
         _filePath = Path.Combine(ResultsFolder, fileName);
