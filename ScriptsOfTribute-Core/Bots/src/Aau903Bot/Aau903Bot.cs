@@ -71,7 +71,7 @@ public class Aau903Bot : AI
             {
                 for (int i = 0; i < Params.ITERATIONS; i++)
                 {
-                    rootNode.Visit(out double score, new List<Node>());
+                    rootNode.Visit(out double score, new HashSet<Node>());
                 }
             }
             else
@@ -85,7 +85,7 @@ public class Aau903Bot : AI
                     // var iterationTimer = new Stopwatch();
                     // iterationTimer.Start();
                     // iterationCounter++;
-                    rootNode.Visit(out double score, new List<Node>());
+                    rootNode.Visit(out double score, new HashSet<Node>());
                     // iterationTimer.Stop();
                     // Console.WriteLine("Iteration took: " + iterationTimer.ElapsedMilliseconds + " milliseconds");
                 }
