@@ -9,24 +9,15 @@ class Program
         var selection = new RouletteWheelSelection();
         var crossover = new OnePointCrossover();
         var mutation = new UniformMutation(true);
-        var fitness = new FitnessFunction(); // WE MADE THIS WOO
-        var chromosome = new Chromosome(
-            iterationCompletionMillisecondsBuffer: 266.986,
-            uctExplorationConstant: 0.684,
-            forceDelayTurnEndInRollout: true,
-            includePlayMoveChanceNodes: true,
-            includeEndTurnChanceNodes: false,
-            chosenScoringMethod: "Heuristic",
-            rolloutTurnsBeforeHeuristic: 5,
-            reuseTree: false
-        );
+        var fitness = new FitnessFunction();
+        var chromosome = new Chromosome();
         var population = new Population(100, 100, chromosome);
 
         var ga = new GeneticAlgorithm(population, fitness, selection, crossover, mutation
         )
         {
-            CrossoverProbability = 0.2f,
-            MutationProbability = 0.6f,
+            CrossoverProbability = 0.9f,
+            MutationProbability = 0.1f,
             TaskExecutor = new ParallelTaskExecutor()
         };
         ga.GenerationRan += (sender, e) =>
