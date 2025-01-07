@@ -17,7 +17,7 @@ class Program
         )
         {
             CrossoverProbability = 0.9f,
-            MutationProbability = 0.1f,
+            MutationProbability = 0.2f,
             TaskExecutor = new ParallelTaskExecutor()
         };
         ga.GenerationRan += (sender, e) =>

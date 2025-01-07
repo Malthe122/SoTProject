@@ -21,23 +21,19 @@ class FitnessFunction : IFitness
 
         var ITERATION_COMPLETION_MILLISECONDS_BUFFER = (double)chromosome.GetGene(0).Value;
         var UCT_EXPLORATION_CONSTANT = (double)chromosome.GetGene(1).Value;
-        var FORCE_DELAY_TURN_END_IN_ROLLOUT = (bool)chromosome.GetGene(2).Value;
-        var INCLUDE_PLAY_MOVE_CHANCE_NODES = (bool)chromosome.GetGene(3).Value;
-        var INCLUDE_END_TURN_CHANCE_NODES = (bool)chromosome.GetGene(4).Value;
-        var CHOSEN_SCORING_METHOD = (string)chromosome.GetGene(5).Value;
-        var ROLLOUT_TURNS_BEFORE_HEURSISTIC = (int)chromosome.GetGene(6).Value;
-        var REUSE_TREE = (bool)chromosome.GetGene(7).Value;
+        var INCLUDE_PLAY_MOVE_CHANCE_NODES = (bool)chromosome.GetGene(2).Value;
+        var INCLUDE_END_TURN_CHANCE_NODES = (bool)chromosome.GetGene(3).Value;
+        var CHOSEN_SCORING_METHOD = (string)chromosome.GetGene(4).Value;
+        var ROLLOUT_TURNS_BEFORE_HEURSISTIC = (int)chromosome.GetGene(5).Value;
 
         var data = new Dictionary<string, string>
         {
             {"ITERATION_COMPLETION_MILLISECONDS_BUFFER", ITERATION_COMPLETION_MILLISECONDS_BUFFER.ToString(CultureInfo.InvariantCulture)},
             {"UCT_EXPLORATION_CONSTANT", UCT_EXPLORATION_CONSTANT.ToString(CultureInfo.InvariantCulture)},
-            {"FORCE_DELAY_TURN_END_IN_ROLLOUT", FORCE_DELAY_TURN_END_IN_ROLLOUT.ToString(CultureInfo.InvariantCulture)},
             {"INCLUDE_PLAY_MOVE_CHANCE_NODES", INCLUDE_PLAY_MOVE_CHANCE_NODES.ToString(CultureInfo.InvariantCulture)},
             {"INCLUDE_END_TURN_CHANCE_NODES", INCLUDE_END_TURN_CHANCE_NODES.ToString(CultureInfo.InvariantCulture)},
             {"CHOSEN_SCORING_METHOD", CHOSEN_SCORING_METHOD},
             {"ROLLOUT_TURNS_BEFORE_HEURSISTIC", ROLLOUT_TURNS_BEFORE_HEURSISTIC.ToString(CultureInfo.InvariantCulture)},
-            {"REUSE_TREE", REUSE_TREE.ToString(CultureInfo.InvariantCulture)},
         };
         Settings.SaveEnvFile(uniqueFileName, data);
 
@@ -67,7 +63,7 @@ class FitnessFunction : IFitness
                 aauBot.Params = new MCTSHyperparameters(uniqueFileName);
                 var gameResult = PlayGame(aauBot, sakkirinBot, timeout);
                 if (gameResult.Winner == PlayerEnum.PLAYER1) {
-                    score += 1;
+                    score += 20;
                 }
             }
 
@@ -80,7 +76,7 @@ class FitnessFunction : IFitness
                 aauBot.Params = new MCTSHyperparameters(uniqueFileName);
                 var gameResult = PlayGame(aauBot, soisMctsBot, timeout);
                 if (gameResult.Winner == PlayerEnum.PLAYER1) {
-                    score += 2;
+                    score += 60;
                 }
             }
 
@@ -107,7 +103,7 @@ class FitnessFunction : IFitness
                 aauBot.Params = new MCTSHyperparameters(uniqueFileName);
                 var gameResult = PlayGame(aauBot, bestMcts3, timeout);
                 if (gameResult.Winner == PlayerEnum.PLAYER1) {
-                    score += 3;
+                    score += 80;
                 }
             }
 

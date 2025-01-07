@@ -41,14 +41,13 @@ public class MCTSHyperparameters
         ITERATION_COMPLETION_MILLISECONDS_BUFFER = config.GetValue("ITERATION_COMPLETION_MILLISECONDS_BUFFER", 100.0);
         UCT_EXPLORATION_CONSTANT = config.GetValue("UCT_EXPLORATION_CONSTANT", 1.41421356237);
         NUMBER_OF_ROLLOUTS = config.GetValue("NUMBER_OF_ROLLOUTS", 1);
-        FORCE_DELAY_TURN_END_IN_ROLLOUT = config.GetValue("FORCE_DELAY_TURN_END_IN_ROLLOUT", true);
+        FORCE_DELAY_TURN_END_IN_ROLLOUT = true;
         INCLUDE_PLAY_MOVE_CHANCE_NODES = config.GetValue("INCLUDE_PLAY_MOVE_CHANCE_NODES", false);
         INCLUDE_END_TURN_CHANCE_NODES = config.GetValue("INCLUDE_END_TURN_CHANCE_NODES", false);
         CHOSEN_EVALUATION_METHOD = Enum.Parse<EvaluationMethod>(config.GetValue("CHOSEN_EVALUATION_METHOD", "UCT")!);
         CHOSEN_SCORING_METHOD = Enum.Parse<ScoringMethod>(config.GetValue("CHOSEN_SCORING_METHOD", "Rollout")!);
         ROLLOUT_TURNS_BEFORE_HEURSISTIC = config.GetValue("ROLLOUT_TURNS_BEFORE_HEURSISTIC", 3);
-        EQUAL_CHANCE_NODE_DISTRIBUTION = config.GetValue("EQUAL_CHANCE_NODE_DISTRIBUTION", true);
-        REUSE_TREE = config.GetValue("REUSE_TREE", true);
+        REUSE_TREE = true;
     }
 
     public override string ToString()
