@@ -54,22 +54,22 @@ public class Chromosome : ChromosomeBase
 
     public bool INCLUDE_PLAY_MOVE_CHANCE_NODES
     {
-        get { return (bool)GetGene(3).Value; }
+        get { return (bool)GetGene(2).Value; }
     }
 
     public bool INCLUDE_END_TURN_CHANCE_NODES
     {
-        get { return (bool)GetGene(4).Value; }
+        get { return (bool)GetGene(3).Value; }
     }
 
     public string CHOSEN_SCORING_METHOD
     {
-        get { return (string)GetGene(5).Value; }
+        get { return (string)GetGene(4).Value; }
     }
 
     public int ROLLOUT_TURNS_BEFORE_HEURSISTIC
     {
-        get { return (int)GetGene(6).Value; }
+        get { return (int)GetGene(5).Value; }
     }
 
 
